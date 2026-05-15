@@ -476,19 +476,30 @@ window.Nutrition = (() => {
     if (lib.length === 0) { section.classList.add('hidden'); return; }
     section.classList.remove('hidden');
     list.innerHTML = lib.map(m => `
-      <button class="nutr-quick-fav-chip" data-fav-id="${m.id}" title="${m.name}">
-        <span>${m.name}</span>
-        <span class="nutr-quick-fav-cal">${m.calories} kcal</span>
-      </button>
+      <div class="nutr-quick-fav-chip" data-fav-id="${m.id}">
+        <div class="nutr-quick-fav-info">
+          <span>${m.name}</span>
+          <span class="nutr-quick-fav-cal">${m.calories} kcal</span>
+        </div>
+        <span class="nutr-quick-fav-del" data-del-id="${m.id}" title="Supprimer">✕</span>
+      </div>
     `).join('');
-    list.querySelectorAll('.nutr-quick-fav-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const meal = getMealLib().find(m => m.id == btn.dataset.favId);
+    list.querySelectorAll('.nutr-quick-fav-chip').forEach(chip => {
+      chip.addEventListener('click', e => {
+        if (e.target.closest('.nutr-quick-fav-del')) return;
+        const meal = getMealLib().find(m => m.id == chip.dataset.favId);
         if (!meal) return;
         const d = getData();
         d.meals.push({ id: Date.now(), name: meal.name, calories: meal.calories, protein: meal.protein, carbs: meal.carbs, fat: meal.fat });
         saveData(d);
         render();
+      });
+    });
+    list.querySelectorAll('.nutr-quick-fav-del').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        removeMealFromLib(parseInt(btn.dataset.delId));
+        renderQuickFavorites();
       });
     });
   }
