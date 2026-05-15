@@ -668,6 +668,15 @@ window.Today = (() => {
     const profile = App.state.profile;
     if (!profile) return;
 
+    // Bloque si aucune série validée
+    const hasAnyValidated = Object.values(completedSets).some(setMap =>
+      Object.values(setMap).some(v => v === true || (v && v.left && v.right))
+    );
+    if (!hasAnyValidated) {
+      alert('Valide au moins une série avant de terminer la séance.');
+      return;
+    }
+
     const duration = sessionStartTime
       ? Math.round((Date.now() - sessionStartTime) / 1000)
       : 0;
