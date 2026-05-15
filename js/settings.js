@@ -448,7 +448,7 @@ window.Settings = (() => {
 
   /* ─── Réinitialisation ────────────────────────────────── */
   function initReset() {
-    document.getElementById('btn-reset')?.addEventListener('click', () => {
+    document.getElementById('btn-reset-app')?.addEventListener('click', () => {
       openModal('modal-reset');
     });
 
