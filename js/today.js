@@ -681,6 +681,13 @@ window.Today = (() => {
       ? Math.round((Date.now() - sessionStartTime) / 1000)
       : 0;
 
+    // Bloque si la séance a duré moins de 3 minutes
+    if (duration < 180) {
+      const remaining = Math.ceil((180 - duration) / 60);
+      alert(`La séance doit durer au moins 3 minutes. Encore ${remaining} minute${remaining > 1 ? 's' : ''}.`);
+      return;
+    }
+
     // Calcule le volume total
     let totalVolume = 0;
     document.querySelectorAll('.set-weight-input').forEach(input => {
