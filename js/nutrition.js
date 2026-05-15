@@ -100,8 +100,8 @@ window.Nutrition = (() => {
 
   /* ─── Calories brûlées par la marche (pas du jour) ─── */
   function getStepsBurned() {
-    const key  = 'daily_' + todayKey();
-    const data = App.local.get(key) || {};
+    const today = new Date().toISOString().split('T')[0];
+    const data  = App.local.get('daily_' + today) || {};
     return Math.round((data.steps || 0) * 0.04);
   }
 
