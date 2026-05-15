@@ -44,9 +44,16 @@ window.History = (() => {
   }
 
   /* ─── Suppression d'une séance ──────────────────────── */
-  function deleteSession(sessionId) {
+  async function deleteSession(sessionId) {
     App.state.sessions = App.state.sessions.filter(s => s.id !== sessionId);
     App.local.set('sessions', App.state.sessions);
+
+    // Supprime aussi dans Supabase (session_exercises supprimé en cascade)
+    if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
+      await App.supabase.from('sessions').delete().eq('id', sessionId)
+        .then(({ error }) => { if (error) console.warn(error.message); });
+    }
+
     render(App.state.sessions);
   }
 
