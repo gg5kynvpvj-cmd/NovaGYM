@@ -1,0 +1,881 @@
+/* ═══════════════════════════════════════════════════════════
+   NovaGYM — Page "Aujourd'hui"
+   Affiche la séance du jour, gère débutant/avancé,
+   exercices unilatéraux, suivi des séries, fin de séance
+   ═══════════════════════════════════════════════════════════ */
+
+window.Today = (() => {
+
+  // État local de la séance en cours
+  let currentExercises = [];
+  let sessionType      = 'rest';
+  let completedSets    = {};  // { exerciseId: { setIndex: done } }
+  let sessionStartTime = null;
+
+  /* ─── Carte quotidienne (pas + défis personnels) ────── */
+  function dailyStorageKey() {
+    return 'daily_' + new Date().toISOString().split('T')[0];
+  }
+  function getDailyData() {
+    const d = App.local.get(dailyStorageKey()) || {};
+    return { steps: d.steps || 0, challenges: d.challenges || {} };
+  }
+  function saveDailyData(data) {
+    App.local.set(dailyStorageKey(), data);
+  }
+  function getStepsGoal() {
+    return parseInt(App.local.get('steps_goal')) || 10000;
+  }
+  function getCustomChallenges() {
+    return App.local.get('custom_challenges') || [];
+  }
+  function saveCustomChallenges(list) {
+    App.local.set('custom_challenges', list);
+  }
+
+  function renderDailyCard() {
+    const data   = getDailyData();
+    const goal   = getStepsGoal();
+    const steps  = data.steps;
+    const kcal   = Math.round(steps * 0.04);
+    const pct    = Math.min(100, goal > 0 ? (steps / goal) * 100 : 0);
+
+    // Pas
+    const stepsInput = document.getElementById('steps-input');
+    if (stepsInput && document.activeElement !== stepsInput) stepsInput.value = steps;
+
+
+    const kcalLabel = document.getElementById('steps-kcal-label');
+    if (kcalLabel) kcalLabel.textContent = `~${kcal} kcal`;
+
+    const fill = document.getElementById('steps-fill');
+    if (fill) fill.style.width = pct + '%';
+
+    // Défis personnels
+    const list = document.getElementById('challenges-list');
+    if (!list) return;
+
+    const stepsOk   = steps >= goal;
+    const customs   = getCustomChallenges();
+
+    list.innerHTML = `
+      <div class="challenge-row steps-goal-row${stepsOk ? ' done' : ''}" title="Appuyer pour modifier l'objectif">
+        <span class="challenge-emoji">👟</span>
+        <span class="challenge-label">${goal.toLocaleString('fr-FR')} pas <span class="steps-goal-edit-hint">✎</span></span>
+        <span class="challenge-status">${stepsOk ? '✓' : ''}</span>
+      </div>
+    ` + customs.map(c => `
+      <div class="challenge-row${data.challenges[c.id] ? ' done' : ''}" data-challenge="${c.id}">
+        <span class="challenge-emoji">🎯</span>
+        <span class="challenge-label">${c.label}</span>
+        <span class="challenge-status">${data.challenges[c.id] ? '✓' : ''}</span>
+        <button class="challenge-del-btn" data-del="${c.id}" title="Supprimer">✕</button>
+      </div>
+    `).join('');
+
+    // Modifier l'objectif de pas en cliquant sur la ligne
+    list.querySelector('.steps-goal-row')?.addEventListener('click', () => {
+      const inp = prompt('Objectif de pas par jour :', goal);
+      const val = parseInt(inp);
+      if (val > 0) {
+        App.local.set('steps_goal', val);
+        renderDailyCard();
+      }
+    });
+
+    // Toggle défi
+    list.querySelectorAll('[data-challenge]').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.challenge-del-btn')) return;
+        const d = getDailyData();
+        d.challenges[row.dataset.challenge] = !d.challenges[row.dataset.challenge];
+        saveDailyData(d);
+        renderDailyCard();
+      });
+    });
+    // Supprimer défi
+    list.querySelectorAll('.challenge-del-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id  = btn.dataset.del;
+        const upd = getCustomChallenges().filter(c => c.id !== id);
+        saveCustomChallenges(upd);
+        const d = getDailyData();
+        delete d.challenges[id];
+        saveDailyData(d);
+        renderDailyCard();
+      });
+    });
+  }
+
+  function initDailyCard() {
+    // Compteur de pas
+    const stepsInput = document.getElementById('steps-input');
+    if (stepsInput) {
+      stepsInput.addEventListener('input', () => {
+        const d = getDailyData();
+        d.steps = Math.max(0, parseInt(stepsInput.value) || 0);
+        saveDailyData(d);
+        renderDailyCard();
+      });
+    }
+    document.querySelectorAll('.steps-adj-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const d = getDailyData();
+        d.steps = Math.max(0, d.steps + parseInt(btn.dataset.adj));
+        saveDailyData(d);
+        renderDailyCard();
+      });
+    });
+
+
+    // Ajouter un défi personnalisé
+    const addInput = document.getElementById('challenge-add-input');
+    const addBtn   = document.getElementById('btn-add-challenge');
+    function addChallenge() {
+      const label = addInput?.value?.trim();
+      if (!label) return;
+      const list = getCustomChallenges();
+      list.push({ id: 'c_' + Date.now(), label });
+      saveCustomChallenges(list);
+      if (addInput) addInput.value = '';
+      renderDailyCard();
+    }
+    addBtn?.addEventListener('click', addChallenge);
+    addInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addChallenge(); }
+    });
+  }
+
+  /* ─── Formatage de la date ───────────────────────────── */
+  function getTodayLabel() {
+    const opts = { weekday:'long', day:'numeric', month:'long' };
+    const str  = new Date().toLocaleDateString('fr-FR', opts);
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  /* ─── Refresh header ─────────────────────────────────── */
+  function refreshHeader() {
+    const profile = App.state.profile;
+    const name    = profile?.username || 'Champion';
+
+    document.getElementById('greeting-name').textContent = name;
+    document.getElementById('today-date').textContent    = getTodayLabel();
+
+    // Pilule calories
+    if (profile) {
+      const cal = Programs.calculateCalories(profile);
+      const pill = document.getElementById('today-calories-pill');
+      if (pill) pill.textContent = `${cal.calories} kcal`;
+    }
+  }
+
+  /* ─── Render exercices ───────────────────────────────── */
+  function renderExerciseCard(exercise, index) {
+    const profile     = App.state.profile;
+    let currentSets   = exercise.defaultSets || 3;
+    let currentReps   = exercise.defaultReps || 10;
+
+    if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
+
+    const card = document.createElement('div');
+    card.className = 'exercise-card';
+    card.dataset.exerciseId = exercise.id;
+
+    /* ── Header ── */
+    const header = document.createElement('div');
+    header.className = 'exercise-card-header';
+    header.style.cursor = 'pointer';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'exercise-name';
+    nameEl.textContent = exercise.name;
+    header.appendChild(nameEl);
+
+    const headerRight = document.createElement('div');
+    headerRight.className = 'exercise-header-right';
+
+    // Info (tous les utilisateurs)
+    const infoBtn = document.createElement('button');
+    infoBtn.className = 'exercise-info-btn';
+    infoBtn.textContent = '?';
+    infoBtn.title = 'Voir la fiche exercice';
+    infoBtn.addEventListener('click', (e) => { e.stopPropagation(); openExerciseDetail(exercise); });
+    headerRight.appendChild(infoBtn);
+
+    // Éditer nom (tous les utilisateurs)
+    const editBtn = document.createElement('button');
+    editBtn.className = 'exercise-info-btn';
+    editBtn.title = 'Renommer';
+    editBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const newName = prompt('Nom de l\'exercice :', exercise.name);
+      if (newName?.trim()) { exercise.name = newName.trim(); nameEl.textContent = exercise.name; }
+    });
+    headerRight.appendChild(editBtn);
+
+    // Supprimer (tous les utilisateurs)
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'exercise-info-btn exercise-delete-btn';
+    deleteBtn.title = 'Supprimer';
+    deleteBtn.textContent = '✕';
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentExercises = currentExercises.filter(ex => ex.id !== exercise.id);
+      delete completedSets[exercise.id];
+      card.remove();
+      updateProgress();
+    });
+    headerRight.appendChild(deleteBtn);
+
+    // Chevron
+    const chevron = document.createElement('span');
+    chevron.className = 'exercise-chevron';
+    chevron.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    headerRight.appendChild(chevron);
+
+    header.appendChild(headerRight);
+    card.appendChild(header);
+
+    /* ── Corps dépliable ── */
+    const collapseBody = document.createElement('div');
+    collapseBody.className = 'exercise-collapse-body';
+
+    /* Méta avec contrôles +/- */
+    const meta = document.createElement('div');
+    meta.className = 'exercise-meta';
+
+    function makeCtrl(label, initVal, min, max, onChange) {
+      const item = document.createElement('div');
+      item.className = 'exercise-meta-item';
+      const lbl = document.createElement('span');
+      lbl.className = 'meta-label';
+      lbl.textContent = label;
+      item.appendChild(lbl);
+
+      const ctrl = document.createElement('div');
+      ctrl.className = 'meta-ctrl';
+
+      const minus = document.createElement('button');
+      minus.className = 'meta-ctrl-btn';
+      minus.textContent = '−';
+      minus.type = 'button';
+
+      const valEl = document.createElement('span');
+      valEl.className = 'meta-ctrl-val';
+      valEl.textContent = initVal;
+
+      const plus = document.createElement('button');
+      plus.className = 'meta-ctrl-btn';
+      plus.textContent = '+';
+      plus.type = 'button';
+
+      let val = initVal;
+      minus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (val <= min) return;
+        val--;
+        valEl.textContent = val;
+        onChange(val);
+      });
+      plus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (val >= max) return;
+        val++;
+        valEl.textContent = val;
+        onChange(val);
+      });
+
+      ctrl.appendChild(minus);
+      ctrl.appendChild(valEl);
+      ctrl.appendChild(plus);
+      item.appendChild(ctrl);
+      return item;
+    }
+
+    const setsRow = document.createElement('div');
+    setsRow.className = 'sets-row';
+
+    // Contrôle Séries
+    const setsMetaItem = makeCtrl('Séries', currentSets, 1, 10, (v) => {
+      const diff = v - setsRow.children.length;
+      if (diff > 0) {
+        for (let i = 0; i < diff; i++) {
+          const idx = setsRow.children.length;
+          setsRow.appendChild(exercise.isUnilateral
+            ? buildUnilateralSet(exercise, idx, currentReps, () => customRest)
+            : buildRegularSet(exercise, idx, currentReps, () => customRest));
+        }
+      } else {
+        for (let i = 0; i < -diff; i++) {
+          const last = setsRow.lastElementChild;
+          if (last && !last.classList.contains('done')) last.remove();
+        }
+      }
+      currentSets = setsRow.children.length;
+      updateProgress();
+    });
+
+    // Contrôle Reps
+    const repsMetaItem = makeCtrl('Reps', currentReps, 1, 50, (v) => {
+      currentReps = v;
+      setsRow.querySelectorAll('.set-reps-label').forEach((el, i) => {
+        const isFailure = profile?.series_type === 'fixed_failure' && i === setsRow.children.length - 1;
+        el.textContent = `${v} reps${isFailure ? " (à l'échec)" : ''}`;
+      });
+    });
+
+    // Repos — éditable, sauvegardé en mémoire par exercice
+    let customRest = parseInt(App.local.get('rest_' + exercise.id)) || exercise.restSeconds || 90;
+    function fmtRest(s) {
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    }
+    const restItem = document.createElement('div');
+    restItem.className = 'exercise-meta-item';
+    const restLbl = document.createElement('span');
+    restLbl.className = 'meta-label';
+    restLbl.textContent = 'Repos';
+    const restValEl = document.createElement('span');
+    restValEl.className = 'meta-value meta-rest-btn';
+    restValEl.title = 'Appuyer pour modifier';
+    restValEl.textContent = fmtRest(customRest);
+    restValEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const inp = prompt('Durée de repos (secondes) :', customRest);
+      const val = parseInt(inp);
+      if (val > 0) {
+        customRest = val;
+        App.local.set('rest_' + exercise.id, val);
+        restValEl.textContent = fmtRest(customRest);
+      }
+    });
+    restItem.appendChild(restLbl);
+    restItem.appendChild(restValEl);
+
+    meta.appendChild(setsMetaItem);
+    meta.appendChild(repsMetaItem);
+    meta.appendChild(restItem);
+    collapseBody.appendChild(meta);
+
+    // Collapsed par défaut
+    card.classList.add('collapsed');
+    chevron.style.transform = 'rotate(-90deg)';
+    header.addEventListener('click', () => {
+      const collapsed = card.classList.toggle('collapsed');
+      chevron.style.transform = collapsed ? 'rotate(-90deg)' : '';
+    });
+
+    // Lignes de séries
+    for (let i = 0; i < currentSets; i++) {
+      setsRow.appendChild(exercise.isUnilateral
+        ? buildUnilateralSet(exercise, i, currentReps, () => customRest)
+        : buildRegularSet(exercise, i, currentReps, () => customRest));
+    }
+    collapseBody.appendChild(setsRow);
+
+    // Bouton ajouter série (tous les utilisateurs)
+    const addSetBtn = document.createElement('button');
+    addSetBtn.className = 'add-exercise-btn';
+    addSetBtn.style.cssText = 'margin-top:10px;font-size:13px;';
+    addSetBtn.textContent = '+ Ajouter une série';
+    addSetBtn.addEventListener('click', () => {
+      const idx = setsRow.children.length;
+      setsRow.appendChild(exercise.isUnilateral
+        ? buildUnilateralSet(exercise, idx, currentReps, () => customRest)
+        : buildRegularSet(exercise, idx, currentReps, () => customRest));
+      currentSets = setsRow.children.length;
+      updateProgress();
+    });
+    collapseBody.appendChild(addSetBtn);
+
+    card.appendChild(collapseBody);
+    return card;
+  }
+
+  /* ─── Série standard ─────────────────────────────────── */
+  function buildRegularSet(exercise, index, reps, getRestFn) {
+    const item = document.createElement('div');
+    item.className = 'set-item';
+
+    const isFailure = App.state.profile?.series_type === 'fixed_failure' && index === (exercise.defaultSets - 1);
+    const repTarget  = isFailure ? '∞' : reps;
+
+    item.innerHTML = `
+      <span class="set-number">S${index + 1}</span>
+      <span class="set-reps-label">×${repTarget}</span>
+      <input class="set-reps-input" type="number" placeholder="reps" min="0" step="1">
+      <input class="set-weight-input" type="number" placeholder="kg" min="0" step="0.5">
+      <button class="set-check-btn" type="button">✓</button>
+    `;
+
+    const checkBtn = item.querySelector('.set-check-btn');
+    checkBtn.addEventListener('click', () => {
+      const done = !checkBtn.classList.contains('done');
+      checkBtn.classList.toggle('done', done);
+      item.classList.toggle('done', done);
+
+      if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
+      completedSets[exercise.id][index] = done;
+
+      if (done) Timer.start(getRestFn ? getRestFn() : undefined);
+      checkCardCompletion(exercise.id);
+      updateProgress();
+    });
+
+    return item;
+  }
+
+  /* ─── Série unilatérale (G/D) ────────────────────────── */
+  function buildUnilateralSet(exercise, index, reps, getRestFn) {
+    const item = document.createElement('div');
+    item.className = 'set-item-unilateral';
+
+    item.innerHTML = `
+      <span class="set-number">S${index + 1}</span>
+      <span class="set-reps-label">×${reps}</span>
+      <input class="set-reps-input" type="number" placeholder="reps" min="0" step="1">
+      <input class="set-weight-input" type="number" placeholder="kg" min="0" step="0.5">
+      <div class="unilateral-checks">
+        <button class="unilateral-btn" data-side="left" type="button">G</button>
+        <button class="unilateral-btn" data-side="right" type="button">D</button>
+      </div>
+    `;
+
+    if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
+    if (!completedSets[exercise.id][index]) completedSets[exercise.id][index] = { left: false, right: false };
+
+    item.querySelectorAll('.unilateral-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const side = btn.dataset.side;
+        const done = !btn.classList.contains('done');
+        btn.classList.toggle('done', done);
+        completedSets[exercise.id][index][side] = done;
+
+        // Lance timer si les deux côtés sont complétés
+        const both = completedSets[exercise.id][index].left && completedSets[exercise.id][index].right;
+        item.classList.toggle('done', both);
+        if (both) Timer.start(getRestFn ? getRestFn() : undefined);
+
+        checkCardCompletion(exercise.id);
+        updateProgress();
+      });
+    });
+
+    return item;
+  }
+
+  /* ─── Vérifier si toutes les séries d'un exercice sont faites ─ */
+  function checkCardCompletion(exerciseId) {
+    const card = document.querySelector(`.exercise-card[data-exercise-id="${exerciseId}"]`);
+    if (!card) return;
+
+    const checks = card.querySelectorAll('.set-check-btn');
+    const uniLeft  = card.querySelectorAll('.unilateral-btn[data-side="left"]');
+    const uniRight = card.querySelectorAll('.unilateral-btn[data-side="right"]');
+
+    let allDone = true;
+    if (checks.length > 0) {
+      allDone = [...checks].every(c => c.classList.contains('done'));
+    } else if (uniLeft.length > 0) {
+      allDone = [...uniLeft].every(c => c.classList.contains('done'))
+             && [...uniRight].every(c => c.classList.contains('done'));
+    }
+
+    card.classList.toggle('completed', allDone);
+  }
+
+  /* ─── Progression ────────────────────────────────────── */
+  function updateProgress() {
+    const done  = document.querySelectorAll('.exercise-card.completed').length;
+    const total = currentExercises.length;
+    document.getElementById('session-progress-text').textContent = `${done} / ${total}`;
+
+    // Affiche le bouton "Terminer" si tous les exercices sont faits
+    const finishBtn = document.getElementById('btn-finish-session');
+    if (finishBtn) finishBtn.classList.toggle('hidden', done < total || total === 0);
+  }
+
+  /* ─── Fiche exercice (modal) ─────────────────────────── */
+  function openExerciseDetail(exercise) {
+    const content = document.getElementById('exercise-detail-content');
+    if (!content) return;
+
+    const muscleTags = (exercise.muscles || []).map(m => `<span class="muscle-tag">${m}</span>`).join('');
+    const tipItems   = (exercise.tips || []).map(t => `
+      <div class="tip-item">
+        <span class="tip-icon">✓</span>
+        <span class="tip-text">${t}</span>
+      </div>
+    `).join('');
+
+    content.innerHTML = `
+      <h2 class="exercise-detail-name">${exercise.name}</h2>
+      <p class="exercise-detail-muscles">${(exercise.muscles || []).join(' · ')}</p>
+
+      <div class="detail-section">
+        <p class="detail-section-title">Le mouvement</p>
+        <p class="detail-description">${exercise.description || 'Description non disponible.'}</p>
+      </div>
+
+      <div class="detail-section">
+        <p class="detail-section-title">Muscles travaillés</p>
+        <div class="detail-muscles-list">${muscleTags}</div>
+      </div>
+
+      <div class="detail-section">
+        <p class="detail-section-title">Comment bien l'exécuter</p>
+        <div class="tips-list">${tipItems}</div>
+      </div>
+    `;
+
+    document.getElementById('modal-exercise')?.classList.remove('hidden');
+  }
+
+  /* ─── Fin de séance ──────────────────────────────────── */
+  async function finishSession() {
+    const profile = App.state.profile;
+    if (!profile) return;
+
+    const duration = sessionStartTime
+      ? Math.round((Date.now() - sessionStartTime) / 1000)
+      : 0;
+
+    // Calcule le volume total
+    let totalVolume = 0;
+    document.querySelectorAll('.set-weight-input').forEach(input => {
+      const val = parseFloat(input.value);
+      if (val > 0) totalVolume += val;
+    });
+
+    // Collecte les poids et reps par exercice
+    const exercisesData = currentExercises.map(ex => {
+      const card = document.querySelector(`.exercise-card[data-exercise-id="${ex.id}"]`);
+      const setItems = card ? [...card.querySelectorAll('.set-item, .set-item-unilateral')] : [];
+      const weights = [];
+      const reps    = [];
+      setItems.forEach(item => {
+        const w = parseFloat(item.querySelector('.set-weight-input')?.value);
+        const r = parseInt(item.querySelector('.set-reps-input')?.value);
+        weights.push(isNaN(w) ? null : w);
+        reps.push(isNaN(r) ? null : r);
+      });
+      return { id: ex.id, name: ex.name, weights, reps };
+    });
+
+    const session = {
+      id:         'session_' + Date.now(),
+      user_id:    App.state.user?.id,
+      date:       new Date().toISOString().split('T')[0],
+      type:       sessionType,
+      duration,
+      completed:  true,
+      volume:     totalVolume,
+      exercises:  exercisesData,
+    };
+
+    // Sauvegarde locale
+    const sessions = App.local.get('sessions') || [];
+    sessions.unshift(session);
+    App.local.set('sessions', sessions);
+    App.state.sessions = sessions;
+
+    // Réinitialise l'état de séance (permet un re-render propre si on revient sur Today)
+    currentExercises = [];
+    completedSets    = {};
+    sessionStartTime = null;
+
+    // Sauvegarde Supabase
+    if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
+      await App.supabase.from('sessions').insert({
+        user_id:   session.user_id,
+        date:      session.date,
+        type:      session.type,
+        duration:  session.duration,
+        completed: true,
+        volume:    totalVolume,
+      }).then(({ error }) => { if (error) console.warn(error.message); });
+    }
+
+    Timer.hideWidget();
+
+    // Vérifie les badges
+    const newBadges = await Badges.check(App.state.user?.id);
+
+    // Check semaine complète
+    const weekComplete = await Badges.checkWeekComplete(sessions);
+
+    if (weekComplete) {
+      showCelebration(
+        '🏆',
+        'Semaine complète !',
+        `Bravo ${profile.username} ! Tu as complété toute ta semaine d'entraînement. Continue comme ça, tu es sur la bonne voie !`
+      );
+    } else if (newBadges.length > 0) {
+      const b = newBadges[0];
+      showCelebration(b.emoji, 'Nouveau badge !', `Tu as débloqué : ${b.name}`);
+    } else {
+      showCelebration(
+        '🎉',
+        'Séance terminée !',
+        `Bravo ${profile.username} ! ${currentExercises.length} exercices complétés. Récupère bien.`
+      );
+    }
+
+    // Recharge l'historique et les stats
+    await History.load();
+    await Stats.refresh();
+  }
+
+  /* ─── Modal célébration ──────────────────────────────── */
+  function showCelebration(emoji, title, body) {
+    document.getElementById('celebration-emoji').textContent = emoji;
+    document.getElementById('celebration-title').textContent = title;
+    document.getElementById('celebration-body').textContent  = body;
+    document.getElementById('modal-celebration')?.classList.remove('hidden');
+  }
+
+  /* ─── Render complet de la page Today ───────────────── */
+  function render() {
+    const profile = App.state.profile;
+    if (!profile) return;
+
+    refreshHeader();
+    renderDailyCard();
+
+    // Si une séance est en cours, ne pas re-rendre les exercices
+    // (évite de perdre les valeurs saisies en changeant d'onglet)
+    if (currentExercises.length > 0) return;
+
+    sessionType = Programs.getTodayType(profile);
+    const isRest = sessionType === 'rest';
+
+    document.getElementById('rest-day-card')?.classList.toggle('hidden', !isRest);
+    document.getElementById('session-container')?.classList.toggle('hidden', isRest);
+
+    if (isRest) {
+      Timer.hideWidget();
+      return;
+    }
+
+    // Badge du type de séance
+    const typeName = Programs.SESSION_NAMES[sessionType] || sessionType;
+    document.getElementById('session-type-badge').textContent = typeName;
+
+    // Charge les exercices
+    currentExercises = Programs.getExercisesForType(sessionType, profile.program_type, profile.level, profile.location);
+    completedSets    = {};
+    sessionStartTime = Date.now();
+
+    const list = document.getElementById('exercise-list');
+    list.innerHTML = '';
+
+    currentExercises.forEach((ex, i) => {
+      list.appendChild(renderExerciseCard(ex, i));
+    });
+
+    // Bouton ajouter exercice — pour TOUS les utilisateurs
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-exercise-btn';
+    addBtn.id = 'btn-add-exercise-today';
+    addBtn.textContent = '+ Ajouter un exercice';
+    addBtn.addEventListener('click', openExercisePicker);
+    list.appendChild(addBtn);
+
+    updateProgress();
+  }
+
+  /* ─── Picker d'exercices ─────────────────────────────── */
+  const ALL_CATEGORIES = [
+    { key: 'polyarticular', label: '⭐ Polyarticulaires' },
+    { key: 'pectoraux',     label: 'Pectoraux' },
+    { key: 'dos',           label: 'Dos' },
+    { key: 'epaules',       label: 'Épaules' },
+    { key: 'biceps',        label: 'Biceps' },
+    { key: 'triceps',       label: 'Triceps' },
+    { key: 'abdominaux',    label: 'Abdominaux' },
+    { key: 'quadriceps',    label: 'Quadriceps' },
+    { key: 'ischio',        label: 'Ischio-jambiers' },
+    { key: 'fessiers',      label: 'Fessiers' },
+    { key: 'mollets',       label: 'Mollets' },
+  ];
+
+  function openExercisePicker() {
+    const modal   = document.getElementById('modal-exercise-picker');
+    const catList = document.getElementById('picker-categories');
+    const exList  = document.getElementById('picker-exercise-list');
+    const search  = document.getElementById('picker-search');
+    if (!modal) return;
+
+    // Rend les catégories
+    catList.innerHTML = ALL_CATEGORIES.map(c =>
+      `<button class="picker-cat-btn" data-cat="${c.key}">${c.label}</button>`
+    ).join('');
+
+    let activeCat = null;
+
+    function showCategory(cat) {
+      activeCat = cat;
+      catList.querySelectorAll('.picker-cat-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.cat === cat)
+      );
+      const exercises = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(cat) : (window.EXERCISES?.[cat] || []);
+      renderPickerExercises(exercises);
+    }
+
+    function renderPickerExercises(list) {
+      const q = search?.value?.toLowerCase() || '';
+      const filtered = q ? list.filter(e => e.name?.toLowerCase().includes(q)
+        || (e.muscles || []).some(m => m.toLowerCase().includes(q))) : list;
+
+      if (filtered.length === 0) {
+        exList.innerHTML = `<p class="picker-empty">Aucun exercice trouvé</p>`;
+        return;
+      }
+      exList.innerHTML = filtered.map(ex => `
+        <button class="picker-ex-btn" data-id="${ex.id}" data-cat="${activeCat || ''}">
+          <span class="picker-ex-name">${ex.name}</span>
+          <span class="picker-ex-muscles">${(ex.muscles || []).slice(0,2).join(', ')}</span>
+        </button>
+      `).join('');
+
+      exList.querySelectorAll('.picker-ex-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const resolved = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(activeCat) : (window.EXERCISES?.[activeCat] || []);
+          const exercise = resolved.find(e => e.id === btn.dataset.id);
+          if (!exercise) return;
+          addPickedExercise(exercise);
+          closeModal('modal-exercise-picker');
+        });
+      });
+    }
+
+    // Search live
+    if (search) {
+      search.value = '';
+      search.oninput = () => {
+        if (!activeCat) return;
+        const exercises = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(activeCat) : (window.EXERCISES?.[activeCat] || []);
+        renderPickerExercises(exercises);
+      };
+    }
+
+    // Event delegation catégories
+    catList.onclick = (e) => {
+      const btn = e.target.closest('.picker-cat-btn');
+      if (btn) showCategory(btn.dataset.cat);
+    };
+
+    // Affiche la première catégorie par défaut
+    showCategory(ALL_CATEGORIES[0].key);
+    modal.classList.remove('hidden');
+  }
+
+  function addPickedExercise(exercise) {
+    // Évite les doublons d'id
+    if (currentExercises.some(e => e.id === exercise.id)) {
+      exercise = { ...exercise, id: exercise.id + '_' + Date.now() };
+    }
+    if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
+    currentExercises.push(exercise);
+
+    const list    = document.getElementById('exercise-list');
+    const addBtn  = document.getElementById('btn-add-exercise-today');
+    const card    = renderExerciseCard(exercise, currentExercises.length - 1);
+    if (addBtn) list.insertBefore(card, addBtn);
+    else list.appendChild(card);
+    updateProgress();
+  }
+
+  function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+
+  /* ─── Changement de type de séance ───────────────────── */
+  function initSessionTypeChange() {
+    document.getElementById('btn-change-session-type')?.addEventListener('click', () => {
+      const modal    = document.getElementById('modal-session-type');
+      const typeList = document.getElementById('session-type-list');
+      if (!modal || !typeList) return;
+
+      typeList.innerHTML = Object.entries(Programs.SESSION_NAMES)
+        .filter(([k]) => k !== 'rest')
+        .map(([k, v]) => `
+          <button class="picker-ex-btn" data-type="${k}">
+            <span class="picker-ex-name">${v}</span>
+          </button>
+        `).join('');
+
+      typeList.querySelectorAll('[data-type]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          sessionType = btn.dataset.type;
+          document.getElementById('session-type-badge').textContent =
+            Programs.SESSION_NAMES[sessionType] || sessionType;
+
+          const profile = App.state.profile;
+          currentExercises = Programs.getExercisesForType(
+            sessionType, profile?.program_type, profile?.level, profile?.location
+          );
+          completedSets    = {};
+          sessionStartTime = Date.now();
+
+          const list = document.getElementById('exercise-list');
+          list.innerHTML = '';
+          currentExercises.forEach((ex, i) => list.appendChild(renderExerciseCard(ex, i)));
+
+          const addBtn = document.createElement('button');
+          addBtn.className = 'add-exercise-btn';
+          addBtn.id = 'btn-add-exercise-today';
+          addBtn.textContent = '+ Ajouter un exercice';
+          addBtn.addEventListener('click', openExercisePicker);
+          list.appendChild(addBtn);
+
+          updateProgress();
+          closeModal('modal-session-type');
+        });
+      });
+
+      modal.classList.remove('hidden');
+    });
+
+    document.getElementById('modal-session-type')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+    document.getElementById('btn-close-session-type')?.addEventListener('click', () => {
+      closeModal('modal-session-type');
+    });
+  }
+
+  /* ─── Init ───────────────────────────────────────────── */
+  function init() {
+    document.getElementById('btn-close-exercise')?.addEventListener('click', () => {
+      document.getElementById('modal-exercise')?.classList.add('hidden');
+    });
+
+    document.getElementById('btn-close-exercise-picker')?.addEventListener('click', () => {
+      closeModal('modal-exercise-picker');
+    });
+    document.getElementById('modal-exercise-picker')?.addEventListener('click', function(e) {
+      if (e.target === this) closeModal('modal-exercise-picker');
+    });
+
+    document.getElementById('btn-finish-session')?.addEventListener('click', () => {
+      if (confirm('Terminer la séance ?')) finishSession();
+    });
+
+    document.getElementById('btn-close-celebration')?.addEventListener('click', () => {
+      document.getElementById('modal-celebration')?.classList.add('hidden');
+    });
+
+    document.getElementById('modal-exercise')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+    document.getElementById('modal-celebration')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+
+    initSessionTypeChange();
+    initDailyCard();
+  }
+
+  return { init, render, openExercisePicker };
+
+})();

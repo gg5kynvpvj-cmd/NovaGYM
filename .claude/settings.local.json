@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(ls -R \"c:\\\\Users\\\\jules\\\\Desktop\\\\NovaGYM\")",
+      "PowerShell(head -100)",
+      "WebFetch(domain:novagym-pro.netlify.app)",
+      "Read(//c/Users/jules/Desktop/**)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\jules\\\\Desktop\\\\NovaGYM\" -Recurse -Force)",
+      "Bash(Select-Object FullName, Length)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(node_modules\\\\.bin\\\\vite --version)",
+      "PowerShell(\\(Get-Content \"c:\\\\Users\\\\jules\\\\Desktop\\\\NovaGYM\\\\index.html\" | Measure-Object -Line\\).Lines)",
+      "Bash(git --version)"
+    ]
+  }
+}
