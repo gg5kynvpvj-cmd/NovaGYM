@@ -322,18 +322,13 @@ window.Today = (() => {
     // Contrôle Reps
     const repsMetaItem = makeCtrl('Reps', currentReps, 1, 50, (v) => {
       currentReps = v;
-      // Met à jour les labels visibles (input non rempli et input caché)
-      setsRow.querySelectorAll('.set-reps-label, .uni-reps-lbl').forEach((el, i) => {
+      setsRow.querySelectorAll('.set-reps-label').forEach((el, i) => {
         const setItem = el.closest('.set-item, .set-item-unilateral');
-        const inp = el.classList.contains('uni-reps-lbl')
-          ? (el.classList.contains('uni-reps-label-left')
-              ? setItem?.querySelector('.uni-reps-left')
-              : setItem?.querySelector('.uni-reps-right'))
-          : setItem?.querySelector('.set-reps-input');
-        if (inp?.value) return; // reps déjà saisies — ne pas écraser
-        if (inp?.style.display !== 'none' && inp?.style.display !== '') return; // input visible — ne pas écraser
-        const isFailure = el.classList.contains('set-reps-label') && profile?.series_type === 'fixed_failure' && i === setsRow.children.length - 1;
-        el.textContent = `${v} reps${isFailure ? " (à l'échec)" : ''}`;
+        const inp = setItem?.querySelector('.set-reps-input, .uni-reps-left');
+        if (inp?.value) return;
+        const isFailure = profile?.series_type === 'fixed_failure' && i === setsRow.children.length - 1;
+        el.textContent = `×${v}${isFailure ? " (à l'échec)" : ''}`;
+        el.style.display = '';
       });
     });
 
@@ -414,30 +409,19 @@ window.Today = (() => {
 
     item.innerHTML = `
       <span class="set-number">${index === 0 ? 'W' : 'S' + index}</span>
-      <span class="set-reps-label">${repTarget} reps${isFailure ? " (à l'échec)" : ''}</span>
-      <input class="set-reps-input" type="number" placeholder="" min="0" step="1" style="display:none">
+      <span class="set-reps-label">×${repTarget}${isFailure ? " (à l'échec)" : ''}</span>
+      <input class="set-reps-input" type="number" placeholder="" min="0" step="1">
       <input class="set-weight-input" type="number" placeholder="kg" min="0" step="0.5">
       <button class="set-check-btn" type="button">✓</button>
     `;
 
     const repsInput = item.querySelector('.set-reps-input');
     const repsLabel = item.querySelector('.set-reps-label');
-
-    function showInput() {
-      repsLabel.style.display = 'none';
-      repsInput.style.display = '';
-      repsInput.focus();
+    if (repsInput && repsLabel) {
+      repsInput.addEventListener('input', () => {
+        repsLabel.style.display = repsInput.value ? 'none' : '';
+      });
     }
-    function showLabel() {
-      repsInput.style.display = 'none';
-      repsLabel.style.display = '';
-    }
-
-    repsLabel.addEventListener('click', showInput);
-    repsInput.addEventListener('blur', () => { if (!repsInput.value) showLabel(); });
-    repsInput.addEventListener('input', () => {
-      if (repsInput.value) repsLabel.style.display = 'none';
-    });
 
     const checkBtn = item.querySelector('.set-check-btn');
     checkBtn.addEventListener('click', () => {
@@ -468,15 +452,13 @@ window.Today = (() => {
       </div>
       <div class="uni-side-row" data-side="left">
         <span class="uni-side-label">G</span>
-        <span class="uni-reps-label-left uni-reps-lbl">${reps} reps</span>
-        <input class="set-reps-input uni-reps-left" type="number" placeholder="" min="0" step="1" style="display:none">
+        <input class="set-reps-input uni-reps-left" type="number" placeholder="" min="0" step="1">
         <input class="set-weight-input uni-weight-left" type="number" placeholder="kg" min="0" step="0.5">
         <button class="unilateral-btn" data-side="left" type="button">✓</button>
       </div>
       <div class="uni-side-row" data-side="right">
         <span class="uni-side-label">D</span>
-        <span class="uni-reps-label-right uni-reps-lbl">${reps} reps</span>
-        <input class="set-reps-input uni-reps-right" type="number" placeholder="" min="0" step="1" style="display:none">
+        <input class="set-reps-input uni-reps-right" type="number" placeholder="" min="0" step="1">
         <input class="set-weight-input uni-weight-right" type="number" placeholder="kg" min="0" step="0.5">
         <button class="unilateral-btn" data-side="right" type="button">✓</button>
       </div>
@@ -489,15 +471,6 @@ window.Today = (() => {
     const weightL = item.querySelector('.uni-weight-left');
     const repsR   = item.querySelector('.uni-reps-right');
     const weightR = item.querySelector('.uni-weight-right');
-    const lblL    = item.querySelector('.uni-reps-label-left');
-    const lblR    = item.querySelector('.uni-reps-label-right');
-
-    function wireUniReps(inp, lbl) {
-      lbl.addEventListener('click', () => { lbl.style.display = 'none'; inp.style.display = ''; inp.focus(); });
-      inp.addEventListener('blur',  () => { if (!inp.value) { inp.style.display = 'none'; lbl.style.display = ''; } });
-    }
-    wireUniReps(repsL, lblL);
-    wireUniReps(repsR, lblR);
 
     item.querySelectorAll('.unilateral-btn').forEach(btn => {
       btn.addEventListener('click', () => {
