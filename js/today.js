@@ -681,6 +681,7 @@ window.Today = (() => {
     { key: 'ischio',        label: 'Ischio-jambiers' },
     { key: 'fessiers',      label: 'Fessiers' },
     { key: 'mollets',       label: 'Mollets' },
+    { key: 'custom',        label: '✎ Mes exercices' },
   ];
 
   function openExercisePicker() {
@@ -702,15 +703,24 @@ window.Today = (() => {
       catList.querySelectorAll('.picker-cat-btn').forEach(b =>
         b.classList.toggle('active', b.dataset.cat === cat)
       );
-      const exercises = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(cat) : (window.EXERCISES?.[cat] || []);
+      let exercises;
+      if (cat === 'custom') {
+        exercises = getCustomExercises().map(e => ({ ...e, _cat: 'custom' }));
+      } else {
+        exercises = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(cat) : (window.EXERCISES?.[cat] || []);
+      }
       renderPickerExercises(exercises);
     }
 
     function getAllExercises() {
       const all = [];
       ALL_CATEGORIES.forEach(c => {
-        const exs = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(c.key) : (window.EXERCISES?.[c.key] || []);
-        exs.forEach(e => all.push({ ...e, _cat: c.key }));
+        if (c.key === 'custom') {
+          getCustomExercises().forEach(e => all.push({ ...e, _cat: 'custom' }));
+        } else {
+          const exs = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(c.key) : (window.EXERCISES?.[c.key] || []);
+          exs.forEach(e => all.push({ ...e, _cat: c.key }));
+        }
       });
       return all;
     }
@@ -725,20 +735,43 @@ window.Today = (() => {
         return;
       }
       exList.innerHTML = filtered.map(ex => {
-        const cat = ex._cat || activeCat || '';
+        const cat      = ex._cat || activeCat || '';
+        const isCustom = ex.isCustom || cat === 'custom';
         const catLabel = showCat ? (ALL_CATEGORIES.find(c => c.key === cat)?.label || '') : '';
+        const delIcon  = isCustom
+          ? `<span class="picker-ex-del-icon" data-del-id="${ex.id}" title="Supprimer">🗑</span>`
+          : '';
         return `
-          <button class="picker-ex-btn" data-id="${ex.id}" data-cat="${cat}">
+          <button class="picker-ex-btn${isCustom ? ' picker-ex-custom' : ''}" data-id="${ex.id}" data-cat="${cat}">
             <span class="picker-ex-name">${ex.name}${catLabel ? `<span class="picker-ex-cat"> · ${catLabel}</span>` : ''}</span>
             <span class="picker-ex-muscles">${(ex.muscles || []).slice(0,2).join(', ')}</span>
+            ${delIcon}
           </button>`;
       }).join('');
 
       exList.querySelectorAll('.picker-ex-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const cat = btn.dataset.cat;
-          const resolved = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(cat) : (window.EXERCISES?.[cat] || []);
-          const exercise = resolved.find(e => e.id === btn.dataset.id);
+        btn.addEventListener('click', (e) => {
+          // Delete icon on custom exercise
+          const delIcon = e.target.closest('.picker-ex-del-icon');
+          if (delIcon) {
+            if (confirm('Supprimer définitivement cet exercice personnalisé ?')) {
+              deleteCustomExercise(delIcon.dataset.delId);
+              if (activeCat === 'custom') {
+                showCategory('custom');
+              } else {
+                renderPickerExercises(getAllExercises(), true);
+              }
+            }
+            return;
+          }
+          // Add exercise to session
+          const exId = btn.dataset.id;
+          const cat  = btn.dataset.cat;
+          let exercise = getCustomExercises().find(ex => ex.id === exId);
+          if (!exercise) {
+            const resolved = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(cat) : (window.EXERCISES?.[cat] || []);
+            exercise = resolved.find(ex => ex.id === exId);
+          }
           if (!exercise) return;
           addPickedExercise(exercise);
           closeModal('modal-exercise-picker');
@@ -862,6 +895,19 @@ window.Today = (() => {
     document.getElementById('btn-close-session-type')?.addEventListener('click', () => {
       closeModal('modal-session-type');
     });
+  }
+
+  /* ─── Exercices personnalisés (stockage) ────────────── */
+  function getCustomExercises() {
+    return App.local.get('custom_exercises') || [];
+  }
+  function saveCustomExercise(ex) {
+    const list = getCustomExercises();
+    list.push(ex);
+    App.local.set('custom_exercises', list);
+  }
+  function deleteCustomExercise(id) {
+    App.local.set('custom_exercises', getCustomExercises().filter(e => e.id !== id));
   }
 
   /* ─── Bibliothèque de séances ───────────────────────── */
@@ -1003,6 +1049,22 @@ window.Today = (() => {
 
     modal.classList.remove('hidden');
 
+    // Bouton delete — visible uniquement pour les exercices personnalisés
+    const delBtn = document.getElementById('btn-ee-delete');
+    if (delBtn) {
+      delBtn.classList.toggle('hidden', !exercise.isCustom);
+      delBtn.onclick = () => {
+        if (confirm(`Supprimer définitivement l'exercice "${exercise.name}" ?`)) {
+          deleteCustomExercise(exercise.id);
+          currentExercises = currentExercises.filter(e => e.id !== exercise.id);
+          delete completedSets[exercise.id];
+          closeModal('modal-edit-exercise');
+          reRenderExerciseList();
+          updateProgress();
+        }
+      };
+    }
+
     // Bouton + ajouter série
     document.getElementById('btn-ee-add-set').onclick = () => {
       exercise.sets_config.push({ type: 'S', reps: 10 });
@@ -1023,7 +1085,7 @@ window.Today = (() => {
         isFailure: row.querySelector('.ee-set-failure')?.checked || false,
       }));
 
-      exercise.name       = newName;
+      exercise.name        = newName;
       exercise.restSeconds = newRest;
       App.local.set('rest_' + exercise.id, newRest);
       if (nameEl) nameEl.textContent = newName;
@@ -1141,6 +1203,7 @@ window.Today = (() => {
         isUnilateral: uni,
         isCustom:    true,
       };
+      saveCustomExercise(customEx);
       addPickedExercise(customEx);
       closeModal('modal-create-exercise');
     });
