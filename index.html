@@ -790,6 +790,33 @@
     </div>
   </div>
 
+  <!-- Éditeur exercice (📝) -->
+  <div id="modal-edit-exercise" class="modal-overlay hidden">
+    <div class="modal-sheet modal-sheet-full">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">Modifier l'exercice</h2>
+        <button id="btn-close-edit-exercise" class="modal-close">✕</button>
+      </div>
+      <div class="create-exercise-form">
+        <div class="input-group">
+          <label class="input-label">Nom</label>
+          <input id="ee-name" type="text" class="input-field">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Repos entre séries (secondes)</label>
+          <input id="ee-rest" type="number" min="0" max="600" step="15" class="input-field" inputmode="numeric">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Séries</label>
+          <div id="ee-sets-list" class="ee-sets-list"></div>
+          <button id="btn-ee-add-set" class="btn-secondary" style="margin-top:8px;width:100%">+ Ajouter une série</button>
+        </div>
+        <button id="btn-ee-save" class="btn-primary btn-full">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Changer type de séance -->
   <div id="modal-session-type" class="modal-overlay hidden">
     <div class="modal-sheet">

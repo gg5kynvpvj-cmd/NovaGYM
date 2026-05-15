@@ -1796,6 +1796,9 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .create-exercise-form { padding: 0 20px 30px; display: flex; flex-direction: column; gap: 14px; }
 .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); cursor: pointer; }
 .toggle-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+.ee-sets-list { display: flex; flex-direction: column; gap: 8px; }
+.ee-set-row { display: flex; align-items: center; gap: 8px; }
+.ee-set-row .input-field { padding: 8px 10px; font-size: 14px; }
 
 .picker-search-input {
   width: 100%;

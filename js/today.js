@@ -198,11 +198,27 @@ window.Today = (() => {
     updateProgress();
   }
 
+  /* ─── Config de séries par défaut ───────────────────── */
+  function defaultSetsConfig(exercise) {
+    const total = exercise.defaultSets || 3;
+    const reps  = exercise.defaultReps || 10;
+    const cfg   = [{ type: 'W', reps: Math.round(reps * 1.5) }];
+    for (let i = 1; i < total; i++) cfg.push({ type: 'S', reps });
+    return cfg;
+  }
+
+  /* ─── Étiquette d'une série (W1, S1, S2…) ───────────── */
+  function setLabel(setsConfig, index) {
+    const type = (setsConfig[index]?.type) || 'S';
+    const n    = setsConfig.slice(0, index + 1).filter(s => (s.type || 'S') === type).length;
+    return `${type}${n}`;
+  }
+
   /* ─── Render exercices ───────────────────────────────── */
   function renderExerciseCard(exercise, index) {
-    const profile     = App.state.profile;
-    let currentSets   = exercise.defaultSets || 3;
-    let currentReps   = exercise.defaultReps || 10;
+    const profile = App.state.profile;
+    if (!exercise.sets_config) exercise.sets_config = defaultSetsConfig(exercise);
+    if (!exercise.restSeconds) exercise.restSeconds = 90;
 
     if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
 
@@ -244,16 +260,12 @@ window.Today = (() => {
     infoBtn.addEventListener('click', (e) => { e.stopPropagation(); openExerciseDetail(exercise); });
     headerRight.appendChild(infoBtn);
 
-    // Éditer nom (tous les utilisateurs)
+    // Éditer exercice (ouvre le modal éditeur)
     const editBtn = document.createElement('button');
     editBtn.className = 'exercise-info-btn';
-    editBtn.title = 'Renommer';
+    editBtn.title = 'Modifier l\'exercice';
     editBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`;
-    editBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const newName = prompt('Nom de l\'exercice :', exercise.name);
-      if (newName?.trim()) { exercise.name = newName.trim(); nameEl.textContent = exercise.name; }
-    });
+    editBtn.addEventListener('click', (e) => { e.stopPropagation(); openExerciseEditor(exercise, nameEl); });
     headerRight.appendChild(editBtn);
 
     // Supprimer (tous les utilisateurs)
@@ -283,126 +295,6 @@ window.Today = (() => {
     const collapseBody = document.createElement('div');
     collapseBody.className = 'exercise-collapse-body';
 
-    /* Méta avec contrôles +/- */
-    const meta = document.createElement('div');
-    meta.className = 'exercise-meta';
-
-    function makeCtrl(label, initVal, min, max, onChange) {
-      const item = document.createElement('div');
-      item.className = 'exercise-meta-item';
-      const lbl = document.createElement('span');
-      lbl.className = 'meta-label';
-      lbl.textContent = label;
-      item.appendChild(lbl);
-
-      const ctrl = document.createElement('div');
-      ctrl.className = 'meta-ctrl';
-
-      const minus = document.createElement('button');
-      minus.className = 'meta-ctrl-btn';
-      minus.textContent = '−';
-      minus.type = 'button';
-
-      const valEl = document.createElement('span');
-      valEl.className = 'meta-ctrl-val';
-      valEl.textContent = initVal;
-
-      const plus = document.createElement('button');
-      plus.className = 'meta-ctrl-btn';
-      plus.textContent = '+';
-      plus.type = 'button';
-
-      let val = initVal;
-      minus.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (val <= min) return;
-        val--;
-        valEl.textContent = val;
-        onChange(val);
-      });
-      plus.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (val >= max) return;
-        val++;
-        valEl.textContent = val;
-        onChange(val);
-      });
-
-      ctrl.appendChild(minus);
-      ctrl.appendChild(valEl);
-      ctrl.appendChild(plus);
-      item.appendChild(ctrl);
-      return item;
-    }
-
-    const setsRow = document.createElement('div');
-    setsRow.className = 'sets-row';
-
-    // Contrôle Séries
-    const setsMetaItem = makeCtrl('Séries', currentSets, 1, 10, (v) => {
-      const diff = v - setsRow.children.length;
-      if (diff > 0) {
-        for (let i = 0; i < diff; i++) {
-          const idx = setsRow.children.length;
-          setsRow.appendChild(exercise.isUnilateral
-            ? buildUnilateralSet(exercise, idx, currentReps, () => customRest)
-            : buildRegularSet(exercise, idx, currentReps, () => customRest));
-        }
-      } else {
-        for (let i = 0; i < -diff; i++) {
-          const last = setsRow.lastElementChild;
-          if (last && !last.classList.contains('done')) last.remove();
-        }
-      }
-      currentSets = setsRow.children.length;
-      updateProgress();
-    });
-
-    // Contrôle Reps
-    const repsMetaItem = makeCtrl('Reps', currentReps, 1, 50, (v) => {
-      currentReps = v;
-      setsRow.querySelectorAll('.set-reps-label').forEach((el, i) => {
-        const setItem = el.closest('.set-item, .set-item-unilateral');
-        const inp = setItem?.querySelector('.set-reps-input, .uni-reps-left');
-        if (inp?.value) return;
-        const isFailure = profile?.series_type === 'fixed_failure' && i === setsRow.children.length - 1;
-        el.textContent = `×${v}${isFailure ? " (à l'échec)" : ''}`;
-        el.style.display = '';
-      });
-    });
-
-    // Repos — éditable, sauvegardé en mémoire par exercice
-    let customRest = parseInt(App.local.get('rest_' + exercise.id)) || exercise.restSeconds || 90;
-    function fmtRest(s) {
-      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-    }
-    const restItem = document.createElement('div');
-    restItem.className = 'exercise-meta-item';
-    const restLbl = document.createElement('span');
-    restLbl.className = 'meta-label';
-    restLbl.textContent = 'Repos';
-    const restValEl = document.createElement('span');
-    restValEl.className = 'meta-value meta-rest-btn';
-    restValEl.title = 'Appuyer pour modifier';
-    restValEl.textContent = fmtRest(customRest);
-    restValEl.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const inp = prompt('Durée de repos (secondes) :', customRest);
-      const val = parseInt(inp);
-      if (val > 0) {
-        customRest = val;
-        App.local.set('rest_' + exercise.id, val);
-        restValEl.textContent = fmtRest(customRest);
-      }
-    });
-    restItem.appendChild(restLbl);
-    restItem.appendChild(restValEl);
-
-    meta.appendChild(setsMetaItem);
-    meta.appendChild(repsMetaItem);
-    meta.appendChild(restItem);
-    collapseBody.appendChild(meta);
-
     // Collapsed par défaut
     card.classList.add('collapsed');
     chevron.style.transform = 'rotate(-90deg)';
@@ -411,43 +303,36 @@ window.Today = (() => {
       chevron.style.transform = collapsed ? 'rotate(-90deg)' : '';
     });
 
-    // Lignes de séries
-    for (let i = 0; i < currentSets; i++) {
-      setsRow.appendChild(exercise.isUnilateral
-        ? buildUnilateralSet(exercise, i, currentReps, () => customRest)
-        : buildRegularSet(exercise, i, currentReps, () => customRest));
-    }
-    collapseBody.appendChild(setsRow);
+    // Lignes de séries depuis sets_config
+    const setsRow = document.createElement('div');
+    setsRow.className = 'sets-row';
+    card._setsRow    = setsRow;
+    const getRestFn  = () => parseInt(App.local.get('rest_' + exercise.id)) || exercise.restSeconds || 90;
 
-    // Bouton ajouter série (tous les utilisateurs)
-    const addSetBtn = document.createElement('button');
-    addSetBtn.className = 'add-exercise-btn';
-    addSetBtn.style.cssText = 'margin-top:10px;font-size:13px;';
-    addSetBtn.textContent = '+ Ajouter une série';
-    addSetBtn.addEventListener('click', () => {
-      const idx = setsRow.children.length;
+    exercise.sets_config.forEach((sc, i) => {
       setsRow.appendChild(exercise.isUnilateral
-        ? buildUnilateralSet(exercise, idx, currentReps, () => customRest)
-        : buildRegularSet(exercise, idx, currentReps, () => customRest));
-      currentSets = setsRow.children.length;
-      updateProgress();
+        ? buildUnilateralSet(exercise, i, sc.reps, getRestFn)
+        : buildRegularSet(exercise, i, sc, getRestFn));
     });
-    collapseBody.appendChild(addSetBtn);
 
+    collapseBody.appendChild(setsRow);
     card.appendChild(collapseBody);
     return card;
   }
 
   /* ─── Série standard ─────────────────────────────────── */
-  function buildRegularSet(exercise, index, reps, getRestFn) {
+  function buildRegularSet(exercise, index, setConfig, getRestFn) {
+    const sc        = (typeof setConfig === 'object' && setConfig !== null) ? setConfig : { type: 'S', reps: setConfig || 10 };
+    const reps      = sc.reps || 10;
+    const isFailure = sc.isFailure || false;
+    const repTarget = isFailure ? '∞' : reps;
+    const label     = setLabel(exercise.sets_config || [], index);
+
     const item = document.createElement('div');
     item.className = 'set-item';
 
-    const isFailure = App.state.profile?.series_type === 'fixed_failure' && index === (exercise.defaultSets - 1);
-    const repTarget  = isFailure ? '∞' : reps;
-
     item.innerHTML = `
-      <span class="set-number">${index === 0 ? 'W' : 'S' + index}</span>
+      <span class="set-number">${label}</span>
       <span class="set-reps-label${isFailure ? ' failure' : ''}">×${repTarget}</span>
       <input class="set-reps-input" type="number" placeholder="${isFailure ? '∞' : ''}" min="0" step="1">
       <input class="set-weight-input" type="number" placeholder="kg" min="0" step="0.5">
@@ -1035,6 +920,79 @@ window.Today = (() => {
     });
   }
 
+  /* ─── Éditeur d'exercice (modal 📝) ─────────────────── */
+  function openExerciseEditor(exercise, nameEl) {
+    const modal = document.getElementById('modal-edit-exercise');
+    if (!modal) return;
+    if (!exercise.sets_config) exercise.sets_config = defaultSetsConfig(exercise);
+
+    // Pré-remplit le nom
+    document.getElementById('ee-name').value = exercise.name;
+
+    // Pré-remplit le repos
+    const restVal = parseInt(App.local.get('rest_' + exercise.id)) || exercise.restSeconds || 90;
+    document.getElementById('ee-rest').value = restVal;
+
+    // Rend la liste des séries
+    renderEditorSets(exercise.sets_config);
+
+    modal.classList.remove('hidden');
+
+    // Bouton + ajouter série
+    document.getElementById('btn-ee-add-set').onclick = () => {
+      exercise.sets_config.push({ type: 'S', reps: 10 });
+      renderEditorSets(exercise.sets_config);
+    };
+
+    // Sauvegarde
+    document.getElementById('btn-ee-save').onclick = () => {
+      const newName = document.getElementById('ee-name').value.trim();
+      const newRest = parseInt(document.getElementById('ee-rest').value) || 90;
+      if (!newName) return;
+
+      // Récupère les sets depuis le formulaire
+      const rows = document.querySelectorAll('.ee-set-row');
+      exercise.sets_config = Array.from(rows).map(row => ({
+        type:      row.querySelector('.ee-set-type').value,
+        reps:      parseInt(row.querySelector('.ee-set-reps').value) || 10,
+        isFailure: row.querySelector('.ee-set-failure')?.checked || false,
+      }));
+
+      exercise.name       = newName;
+      exercise.restSeconds = newRest;
+      App.local.set('rest_' + exercise.id, newRest);
+      if (nameEl) nameEl.textContent = newName;
+
+      closeModal('modal-edit-exercise');
+      reRenderExerciseList();
+    };
+  }
+
+  function renderEditorSets(setsConfig) {
+    const container = document.getElementById('ee-sets-list');
+    if (!container) return;
+    container.innerHTML = setsConfig.map((sc, i) => `
+      <div class="ee-set-row" data-idx="${i}">
+        <select class="ee-set-type input-field" style="width:70px">
+          <option value="W"${sc.type === 'W' ? ' selected' : ''}>W</option>
+          <option value="S"${sc.type !== 'W' ? ' selected' : ''}>S</option>
+        </select>
+        <input class="ee-set-reps input-field" type="number" value="${sc.reps || 10}" min="1" max="100" style="width:65px" inputmode="numeric">
+        <label class="toggle-row" style="gap:5px;font-size:12px">
+          <input class="ee-set-failure" type="checkbox"${sc.isFailure ? ' checked' : ''}> Échec
+        </label>
+        <button class="exercise-info-btn exercise-delete-btn ee-del-btn" data-idx="${i}" type="button">✕</button>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.ee-del-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setsConfig.splice(parseInt(btn.dataset.idx), 1);
+        renderEditorSets(setsConfig);
+      });
+    });
+  }
+
   function openWorkoutLib() {
     renderWorkoutLib();
     document.getElementById('modal-workout-lib')?.classList.remove('hidden');
@@ -1060,6 +1018,11 @@ window.Today = (() => {
       saveWorkoutToLib(name.trim(), currentExercises);
       renderWorkoutLib();
       alert('Séance sauvegardée !');
+    });
+
+    document.getElementById('btn-close-edit-exercise')?.addEventListener('click', () => closeModal('modal-edit-exercise'));
+    document.getElementById('modal-edit-exercise')?.addEventListener('click', function(e) {
+      if (e.target === this) closeModal('modal-edit-exercise');
     });
 
     document.getElementById('btn-close-exercise-picker')?.addEventListener('click', () => {
