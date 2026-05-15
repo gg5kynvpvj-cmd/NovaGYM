@@ -147,6 +147,10 @@ a { text-decoration: none; color: inherit; }
   transition: color 0.2s;
 }
 .btn-forgot:hover { color: var(--accent); }
+.auth-lang-picker { display: flex; gap: 8px; }
+.auth-lang-btn { flex: 1; padding: 8px 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card-2); color: var(--text-2); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+.auth-lang-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-15); font-weight: 700; }
+.auth-lang-btn:hover { border-color: var(--accent); }
 
 /* ── INPUT FIELDS ───────────────────────────────────────── */
 .input-group { display: flex; flex-direction: column; gap: 6px; }

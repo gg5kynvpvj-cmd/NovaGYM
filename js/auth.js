@@ -93,6 +93,14 @@ window.Auth = (() => {
 
   /* ─── REGISTER ───────────────────────────────────────── */
   function initRegister() {
+    document.querySelectorAll('.auth-lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.auth-lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (window.I18n) I18n.setLang(btn.dataset.lang);
+      });
+    });
+
     document.getElementById('form-register')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       clearError('register-error');
