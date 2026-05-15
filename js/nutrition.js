@@ -334,8 +334,10 @@ window.Nutrition = (() => {
   }
 
   /* ─── Scanner code-barres ────────────────────────────── */
+  let html5Scanner = null;
+
   function initBarcodeScanner() {
-    // Saisie manuelle du code-barres
+    // Saisie manuelle
     document.getElementById('meal-barcode')?.addEventListener('keydown', async (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -344,56 +346,45 @@ window.Nutrition = (() => {
       }
     });
 
-    const btn = document.getElementById('btn-scan-barcode');
-    if (!btn) return;
-
-    btn.addEventListener('click', async () => {
-      // Si un code est déjà saisi manuellement, on l'utilise directement
-      const manualInput = document.getElementById('meal-barcode');
-      const manualCode  = manualInput?.value?.trim();
+    // Bouton 📷
+    document.getElementById('btn-scan-barcode')?.addEventListener('click', async () => {
+      const manualCode = document.getElementById('meal-barcode')?.value?.trim();
       if (manualCode) {
-        manualInput.value = '';
+        document.getElementById('meal-barcode').value = '';
         await fetchProduct(manualCode);
         return;
       }
-      // Essaie BarcodeDetector (Chrome/Android)
-      if ('BarcodeDetector' in window) {
-        const input = document.createElement('input');
-        input.type    = 'file';
-        input.accept  = 'image/*';
-        input.capture = 'environment';
-        input.style.display = 'none';
-        document.body.appendChild(input);
-
-        input.addEventListener('change', async () => {
-          const file = input.files?.[0];
-          document.body.removeChild(input);
-          if (!file) return;
-
-          try {
-            const img      = await createImageBitmap(file);
-            const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'] });
-            const codes    = await detector.detect(img);
-            if (codes.length > 0) {
-              await fetchProduct(codes[0].rawValue);
-            } else {
-              fallbackManualEntry();
-            }
-          } catch (e) {
-            fallbackManualEntry();
-          }
-        });
-
-        input.click();
-      } else {
-        fallbackManualEntry();
-      }
+      openScanner();
     });
+
+    // Fermer scanner
+    document.getElementById('btn-close-scanner')?.addEventListener('click', closeScanner);
   }
 
-  function fallbackManualEntry() {
-    const code = prompt('Entrez le code-barres du produit :');
-    if (code?.trim()) fetchProduct(code.trim());
+  function openScanner() {
+    document.getElementById('modal-barcode-scanner')?.classList.remove('hidden');
+
+    if (typeof Html5Qrcode === 'undefined') return;
+
+    html5Scanner = new Html5Qrcode('barcode-scanner-view');
+    html5Scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 280, height: 100 } },
+      async (code) => {
+        await closeScanner();
+        await fetchProduct(code);
+      },
+      () => {}
+    ).catch(() => closeScanner());
+  }
+
+  async function closeScanner() {
+    document.getElementById('modal-barcode-scanner')?.classList.add('hidden');
+    if (html5Scanner) {
+      try { await html5Scanner.stop(); } catch(e) {}
+      try { html5Scanner.clear(); } catch(e) {}
+      html5Scanner = null;
+    }
   }
 
   /* ─── Sélecteur de période ───────────────────────────── */
