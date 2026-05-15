@@ -484,12 +484,10 @@
 
       <div class="nutrition-meals-header">
         <h3 class="card-title">Repas du jour</h3>
-        <button id="btn-add-meal" class="btn-add-meal">+ Ajouter</button>
-      </div>
-
-      <div id="nutr-quick-favs" class="nutr-quick-favs hidden">
-        <p class="nutr-quick-favs-label">Favoris</p>
-        <div id="nutr-quick-favs-list" class="nutr-quick-favs-list"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="btn-open-meal-favs" class="btn-meal-favs" title="Mes aliments favoris">⭐</button>
+          <button id="btn-add-meal" class="btn-add-meal">+ Ajouter</button>
+        </div>
       </div>
 
       <div id="nutr-meals-section">
@@ -656,6 +654,19 @@
       </div>
       <div id="workout-lib-list" class="workout-lib-list"></div>
       <button id="btn-save-workout-lib" class="btn-secondary btn-full" style="margin-top:12px">💾 Sauvegarder la séance actuelle</button>
+    </div>
+  </div>
+
+  <!-- Favoris repas -->
+  <div id="modal-meal-favs" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">Mes aliments favoris</h2>
+        <button id="btn-close-meal-favs" class="modal-close">✕</button>
+      </div>
+      <div id="meal-favs-modal-list" class="meal-favs-modal-list"></div>
+      <p id="meal-favs-empty" class="meal-favs-empty hidden">Aucun favori enregistré.<br>Ajoute un repas et coche "Sauvegarder dans mes favoris".</p>
     </div>
   </div>
 

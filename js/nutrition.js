@@ -175,7 +175,6 @@ window.Nutrition = (() => {
 
     // Liste repas
     renderMealsList(meals);
-    renderQuickFavorites();
 
     // Affiche section repas
     showSection('nutr-meals-section', true);
@@ -468,44 +467,66 @@ window.Nutrition = (() => {
   }
 
   /* ─── Favoris rapides sur l'onglet principal ─────────── */
-  function renderQuickFavorites() {
-    const lib     = getMealLib();
-    const section = document.getElementById('nutr-quick-favs');
-    const list    = document.getElementById('nutr-quick-favs-list');
-    if (!section || !list) return;
-    if (lib.length === 0) { section.classList.add('hidden'); return; }
-    section.classList.remove('hidden');
+  function renderFavsModal() {
+    const lib   = getMealLib();
+    const list  = document.getElementById('meal-favs-modal-list');
+    const empty = document.getElementById('meal-favs-empty');
+    if (!list) return;
+
+    if (lib.length === 0) {
+      list.innerHTML = '';
+      empty?.classList.remove('hidden');
+      return;
+    }
+    empty?.classList.add('hidden');
+
     list.innerHTML = lib.map(m => `
-      <div class="nutr-quick-fav-chip" data-fav-id="${m.id}">
-        <div class="nutr-quick-fav-info">
-          <span>${m.name}</span>
-          <span class="nutr-quick-fav-cal">${m.calories} kcal</span>
+      <div class="meal-favs-modal-row" data-fav-id="${m.id}">
+        <div class="meal-favs-modal-info">
+          <span class="meal-favs-modal-name">${m.name}</span>
+          <span class="meal-favs-modal-meta">P ${m.protein || 0}g · G ${m.carbs || 0}g · L ${m.fat || 0}g · ${m.calories} kcal</span>
         </div>
-        <span class="nutr-quick-fav-del" data-del-id="${m.id}" title="Supprimer">✕</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-fav-add" data-fav-id="${m.id}">+ Ajouter</button>
+          <button class="btn-fav-del" data-del-id="${m.id}" title="Supprimer">✕</button>
+        </div>
       </div>
     `).join('');
-    list.querySelectorAll('.nutr-quick-fav-chip').forEach(chip => {
-      chip.addEventListener('click', e => {
-        if (e.target.closest('.nutr-quick-fav-del')) return;
-        const meal = getMealLib().find(m => m.id == chip.dataset.favId);
+
+    list.querySelectorAll('.btn-fav-add').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const meal = getMealLib().find(m => m.id == btn.dataset.favId);
         if (!meal) return;
         const d = getData();
         d.meals.push({ id: Date.now(), name: meal.name, calories: meal.calories, protein: meal.protein, carbs: meal.carbs, fat: meal.fat });
         saveData(d);
+        document.getElementById('modal-meal-favs')?.classList.add('hidden');
         render();
       });
     });
-    list.querySelectorAll('.nutr-quick-fav-del').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
+
+    list.querySelectorAll('.btn-fav-del').forEach(btn => {
+      btn.addEventListener('click', () => {
         removeMealFromLib(parseInt(btn.dataset.delId));
-        renderQuickFavorites();
+        renderFavsModal();
       });
     });
   }
 
   /* ─── Init ───────────────────────────────────────────── */
   function init() {
+    // Bouton ⭐ favoris
+    document.getElementById('btn-open-meal-favs')?.addEventListener('click', () => {
+      renderFavsModal();
+      document.getElementById('modal-meal-favs')?.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-meal-favs')?.addEventListener('click', () => {
+      document.getElementById('modal-meal-favs')?.classList.add('hidden');
+    });
+    document.getElementById('modal-meal-favs')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+
     // Ouvrir modal ajout (ouverture manuelle — reset base)
     document.getElementById('btn-add-meal')?.addEventListener('click', () => {
       baseNutrition = null;
@@ -551,7 +572,7 @@ window.Nutrition = (() => {
 
       if (document.getElementById('meal-save-fav')?.checked) {
         saveMealToLib(meal);
-        renderQuickFavorites();
+        renderFavsModal();
       }
 
       baseNutrition = null;
