@@ -410,7 +410,7 @@ window.Today = (() => {
     item.innerHTML = `
       <span class="set-number">${index === 0 ? 'W' : 'S' + index}</span>
       <span class="set-reps-label">×${repTarget}</span>
-      <input class="set-reps-input" type="number" placeholder="reps" min="0" step="1">
+      <input class="set-reps-input" type="number" placeholder="" min="0" step="1">
       <input class="set-weight-input" type="number" placeholder="kg" min="0" step="0.5">
       <button class="set-check-btn" type="button">✓</button>
     `;
@@ -453,13 +453,13 @@ window.Today = (() => {
       </div>
       <div class="uni-side-row" data-side="left">
         <span class="uni-side-label">G</span>
-        <input class="set-reps-input uni-reps-left" type="number" placeholder="reps" min="0" step="1">
+        <input class="set-reps-input uni-reps-left" type="number" placeholder="" min="0" step="1">
         <input class="set-weight-input uni-weight-left" type="number" placeholder="kg" min="0" step="0.5">
         <button class="unilateral-btn" data-side="left" type="button">✓</button>
       </div>
       <div class="uni-side-row" data-side="right">
         <span class="uni-side-label">D</span>
-        <input class="set-reps-input uni-reps-right" type="number" placeholder="reps" min="0" step="1">
+        <input class="set-reps-input uni-reps-right" type="number" placeholder="" min="0" step="1">
         <input class="set-weight-input uni-weight-right" type="number" placeholder="kg" min="0" step="0.5">
         <button class="unilateral-btn" data-side="right" type="button">✓</button>
       </div>
