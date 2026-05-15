@@ -34,11 +34,11 @@
       <div class="auth-logo">
         <span class="logo-nova">Nova</span><span class="logo-gym">GYM</span>
       </div>
-      <p class="auth-subtitle">Ton coach fitness personnel</p>
+      <p class="auth-subtitle" data-i18n="auth.subtitle2">Ton coach fitness personnel</p>
 
       <div class="auth-tabs">
-        <button class="auth-tab active" data-tab="login">Connexion</button>
-        <button class="auth-tab" data-tab="register">Inscription</button>
+        <button class="auth-tab active" data-tab="login" data-i18n="auth.login_tab">Connexion</button>
+        <button class="auth-tab" data-tab="register" data-i18n="auth.register_tab">Inscription</button>
       </div>
 
       <form id="form-login" class="auth-form active">
@@ -56,7 +56,7 @@
           <span class="btn-loader hidden">···</span>
         </button>
         <button id="btn-forgot" type="button" class="btn-forgot">Mot de passe oublié ?</button>
-        <button id="btn-forgot-email" type="button" class="btn-forgot">Email oublié ?</button>
+        <button id="btn-forgot-email" type="button" class="btn-forgot" data-i18n="auth.forgot_email">Email oublié ?</button>
       </form>
 
       <form id="form-register" class="auth-form">
@@ -73,11 +73,11 @@
           <input id="register-password" type="password" placeholder="6 caractères min." minlength="6" autocomplete="new-password" required>
         </div>
         <div class="input-group">
-          <label class="input-label">Confirmer le mot de passe</label>
+          <label class="input-label" data-i18n="auth.confirm_pwd">Confirmer le mot de passe</label>
           <input id="register-password-confirm" type="password" placeholder="••••••" autocomplete="new-password" required>
         </div>
         <div class="input-group">
-          <label class="input-label">Langue</label>
+          <label class="input-label" data-i18n="auth.lang">Langue</label>
           <div class="auth-lang-picker">
             <button type="button" class="auth-lang-btn active" data-lang="fr">🇫🇷 Français</button>
             <button type="button" class="auth-lang-btn" data-lang="en">🇬🇧 English</button>
@@ -86,7 +86,7 @@
         </div>
         <p id="register-error" class="auth-error"></p>
         <button id="btn-register" type="submit" class="btn-primary btn-full">
-          <span class="btn-text">Créer mon compte</span>
+          <span class="btn-text" data-i18n="auth.create_account">Créer mon compte</span>
           <span class="btn-loader hidden">···</span>
         </button>
       </form>
@@ -124,11 +124,11 @@
             <input id="ob-age" type="number" placeholder="25" min="13" max="100" inputmode="numeric">
           </div>
           <div class="input-group half">
-            <label class="input-label">% graisse (opt.)</label>
+            <label class="input-label" data-i18n="ob.bodyfat2">% graisse (opt.)</label>
             <input id="ob-bodyfat" type="number" placeholder="15" min="2" max="60" step="0.5" inputmode="decimal">
           </div>
         </div>
-        <p class="ob-section-title">Genre</p>
+        <p class="ob-section-title" data-i18n="ob.gender">Genre</p>
         <div id="ob-gender" class="choice-pills">
           <button class="pill active" data-value="male">Homme</button>
           <button class="pill" data-value="female">Femme</button>
@@ -140,7 +140,7 @@
     <!-- Étape 2 -->
     <div id="ob-step-2" class="onboarding-step">
       <h1 class="ob-title">Ton objectif</h1>
-      <p class="ob-section-title">Objectif principal</p>
+      <p class="ob-section-title" data-i18n="ob.goal_title">Objectif principal</p>
       <div id="ob-goal" class="goal-cards">
         <div class="goal-card" data-value="bulk">
           <span class="goal-icon">💪</span>
@@ -158,7 +158,7 @@
           <span class="goal-desc">Perdre du gras</span>
         </div>
       </div>
-      <p class="ob-section-title">Alimentation</p>
+      <p class="ob-section-title" data-i18n="ob.diet_title">Alimentation</p>
       <div id="ob-diet" class="diet-cards">
         <div class="diet-card active" data-value="standard">Standard</div>
         <div class="diet-card" data-value="vegetarian">Végétarien</div>
@@ -173,47 +173,47 @@
     <!-- Étape 3 -->
     <div id="ob-step-3" class="onboarding-step">
       <h1 class="ob-title">Ton programme</h1>
-      <p class="ob-section-title">Type de programme</p>
+      <p class="ob-section-title" data-i18n="ob.program_title">Type de programme</p>
       <div id="ob-program" class="program-list">
         <div class="program-card active" data-value="ppl">
           <div class="program-card-left">
             <span class="program-name">PPL</span>
-            <span class="program-desc">Push / Pull / Legs — le plus efficace</span>
+            <span class="program-desc" data-i18n="ob.ppl_desc">Push / Pull / Legs — le plus efficace</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="upper_lower">
           <div class="program-card-left">
-            <span class="program-name">Upper / Lower</span>
-            <span class="program-desc">4 jours, haut/bas du corps</span>
+            <span class="program-name" data-i18n="ob.upper_lower">Upper / Lower</span>
+            <span class="program-desc" data-i18n="ob.upper_lower_desc">4 jours, haut/bas du corps</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="full_body">
           <div class="program-card-left">
             <span class="program-name">Full Body</span>
-            <span class="program-desc">Corps entier à chaque séance</span>
+            <span class="program-desc" data-i18n="ob.full_body_desc">Corps entier à chaque séance</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="bro_split">
           <div class="program-card-left">
             <span class="program-name">Bro Split</span>
-            <span class="program-desc">1 groupe musculaire par séance</span>
+            <span class="program-desc" data-i18n="ob.bro_split_desc">1 groupe musculaire par séance</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="home">
           <div class="program-card-left">
-            <span class="program-name">🏠 Maison</span>
-            <span class="program-desc">Sans matériel, entraînement à domicile</span>
+            <span class="program-name" data-i18n="ob.home_program">🏠 Maison</span>
+            <span class="program-desc" data-i18n="ob.home_program_desc">Sans matériel, entraînement à domicile</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="custom">
           <div class="program-card-left">
-            <span class="program-name">Personnalisé</span>
-            <span class="program-desc">Tu choisis tes exercices toi-même</span>
+            <span class="program-name" data-i18n="ob.custom_program">Personnalisé</span>
+            <span class="program-desc" data-i18n="ob.custom_program_desc">Tu choisis tes exercices toi-même</span>
           </div>
           <span class="program-check">✓</span>
         </div>
@@ -253,15 +253,15 @@
       <h1 class="ob-title">Jours d'entraînement</h1>
       <p class="ob-subtitle">Sélectionne les jours où tu t'entraînes.</p>
       <div id="ob-days" class="days-grid">
-        <button class="day-btn" data-day="monday">Lun</button>
-        <button class="day-btn" data-day="tuesday">Mar</button>
-        <button class="day-btn" data-day="wednesday">Mer</button>
-        <button class="day-btn" data-day="thursday">Jeu</button>
-        <button class="day-btn" data-day="friday">Ven</button>
-        <button class="day-btn" data-day="saturday">Sam</button>
-        <button class="day-btn" data-day="sunday">Dim</button>
+        <button class="day-btn" data-day="monday" data-i18n="days.mon">Lun</button>
+        <button class="day-btn" data-day="tuesday" data-i18n="days.tue">Mar</button>
+        <button class="day-btn" data-day="wednesday" data-i18n="days.wed">Mer</button>
+        <button class="day-btn" data-day="thursday" data-i18n="days.thu">Jeu</button>
+        <button class="day-btn" data-day="friday" data-i18n="days.fri">Ven</button>
+        <button class="day-btn" data-day="saturday" data-i18n="days.sat">Sam</button>
+        <button class="day-btn" data-day="sunday" data-i18n="days.sun">Dim</button>
       </div>
-      <p id="days-info" class="days-info">Sélectionne tes jours d'entraînement</p>
+      <p id="days-info" class="days-info" data-i18n="ob.days_hint">Sélectionne tes jours d'entraînement</p>
       <div class="ob-nav-row">
         <button class="btn-secondary btn-back" data-back="3">← Retour</button>
         <button id="btn-finish-onboarding" class="btn-primary">Voir mon programme →</button>
@@ -320,7 +320,7 @@
       <div class="daily-card">
         <div class="daily-steps-section">
           <div class="daily-section-header">
-            <span class="daily-section-label">👟 PAS QUOTIDIEN</span>
+            <span class="daily-section-label" data-i18n="today.steps">👟 PAS QUOTIDIEN</span>
             <span id="steps-kcal-label" class="steps-kcal-badge">~0 kcal</span>
           </div>
           <div class="daily-steps-counter-row">
@@ -334,10 +334,10 @@
         </div>
 
         <div class="daily-challenges-section">
-          <span class="daily-section-label">🏆 DÉFIS DU JOUR</span>
+          <span class="daily-section-label" data-i18n="today.challenges">🏆 DÉFIS DU JOUR</span>
           <div id="challenges-list" class="challenges-list"></div>
           <div class="challenge-add-row">
-            <input id="challenge-add-input" type="text" class="challenge-add-input" placeholder="Ajouter un défi...">
+            <input id="challenge-add-input" type="text" class="challenge-add-input" placeholder="Ajouter un défi..." data-i18n-ph="today.challenge_placeholder">
             <button id="btn-add-challenge" class="challenge-add-btn">+</button>
           </div>
         </div>
@@ -354,8 +354,8 @@
       <div id="session-container">
         <div class="session-header">
           <div class="session-type-row">
-            <button id="session-type-badge" class="session-type-badge">Séance</button>
-            <button id="btn-change-session-type" class="session-type-edit-btn" title="Changer de séance">
+            <button id="session-type-badge" class="session-type-badge" data-i18n="today.session_badge">Séance</button>
+            <button id="btn-change-session-type" class="session-type-edit-btn" title="Changer de séance" data-i18n="today.change_session">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
@@ -382,15 +382,15 @@
       <div class="stats-summary">
         <div class="stat-item">
           <span id="stat-total-sessions" class="stat-num">0</span>
-          <span class="stat-label">Séances</span>
+          <span class="stat-label" data-i18n="stats.sessions_lbl">Séances</span>
         </div>
         <div class="stat-item">
           <span id="stat-current-streak" class="stat-num">0</span>
-          <span class="stat-label">Streak</span>
+          <span class="stat-label" data-i18n="stats.streak_lbl">Streak</span>
         </div>
         <div class="stat-item">
           <span id="stat-total-badges" class="stat-num">0</span>
-          <span class="stat-label">Badges</span>
+          <span class="stat-label" data-i18n="stats.badges_lbl">Badges</span>
         </div>
       </div>
 
@@ -400,11 +400,11 @@
 
       <div class="stats-card">
         <div class="stats-card-header">
-          <h3 class="card-title">Volume</h3>
+          <h3 class="card-title" data-i18n="stats.volume_title">Volume</h3>
           <div class="chart-filter-btns">
-            <button class="chart-filter-btn active" data-range="7">1 sem</button>
-            <button class="chart-filter-btn" data-range="30">1 mois</button>
-            <button class="chart-filter-btn" data-range="365">1 an</button>
+            <button class="chart-filter-btn active" data-range="7" data-i18n="stats.week">1 sem</button>
+            <button class="chart-filter-btn" data-range="30" data-i18n="stats.month">1 mois</button>
+            <button class="chart-filter-btn" data-range="365" data-i18n="stats.year">1 an</button>
           </div>
         </div>
         <canvas id="scatter-chart"></canvas>
@@ -412,18 +412,18 @@
 
       <div class="stats-card">
         <div class="stats-card-header">
-          <h3 class="card-title">Reps totales</h3>
+          <h3 class="card-title" data-i18n="stats.reps_title">Reps totales</h3>
           <div class="chart-filter-btns" id="reps-filter-btns">
-            <button class="chart-filter-btn active" data-range="7">1 sem</button>
-            <button class="chart-filter-btn" data-range="30">1 mois</button>
-            <button class="chart-filter-btn" data-range="365">1 an</button>
+            <button class="chart-filter-btn active" data-range="7" data-i18n="stats.week">1 sem</button>
+            <button class="chart-filter-btn" data-range="30" data-i18n="stats.month">1 mois</button>
+            <button class="chart-filter-btn" data-range="365" data-i18n="stats.year">1 an</button>
           </div>
         </div>
         <canvas id="reps-chart"></canvas>
       </div>
 
       <div class="stats-card">
-        <h3 class="card-title">Badges</h3>
+        <h3 class="card-title" data-i18n="stats.badges_lbl">Badges</h3>
         <div id="badges-grid" class="badges-grid"></div>
       </div>
     </div>
@@ -450,9 +450,9 @@
 
       <div class="nutr-period-row">
         <select id="nutr-period" class="nutr-period-select">
-          <option value="today">Aujourd'hui</option>
-          <option value="week">Cette semaine</option>
-          <option value="month">Ce mois</option>
+          <option value="today" data-i18n="nutr.today">Aujourd'hui</option>
+          <option value="week" data-i18n="nutr.week">Cette semaine</option>
+          <option value="month" data-i18n="nutr.month">Ce mois</option>
         </select>
       </div>
 
@@ -465,7 +465,7 @@
           </div>
         </div>
         <div class="nutrition-ring-info">
-          <span class="nutrition-goal-label">Objectif</span>
+          <span class="nutrition-goal-label" data-i18n="nutr.goal">Objectif</span>
           <span id="nutr-goal" class="nutrition-goal-val">—</span>
           <span id="nutr-remaining" class="nutrition-remaining">—</span>
         </div>
@@ -475,7 +475,7 @@
       <div class="nutrition-macros-card">
         <div class="macro-bar-row">
           <div class="macro-bar-header">
-            <span>Protéines</span>
+            <span data-i18n="nutr.protein">Protéines</span>
             <span id="nutr-p-val">0 / — g</span>
           </div>
           <div class="macro-bar-track">
@@ -484,7 +484,7 @@
         </div>
         <div class="macro-bar-row">
           <div class="macro-bar-header">
-            <span>Glucides</span>
+            <span data-i18n="nutr.carbs">Glucides</span>
             <span id="nutr-c-val">0 / — g</span>
           </div>
           <div class="macro-bar-track">
@@ -493,7 +493,7 @@
         </div>
         <div class="macro-bar-row">
           <div class="macro-bar-header">
-            <span>Lipides</span>
+            <span data-i18n="nutr.fat">Lipides</span>
             <span id="nutr-f-val">0 / — g</span>
           </div>
           <div class="macro-bar-track">
@@ -503,10 +503,10 @@
       </div>
 
       <div class="nutrition-meals-header">
-        <h3 class="card-title">Repas du jour</h3>
+        <h3 class="card-title" data-i18n="nutr.meals_title">Repas du jour</h3>
         <div style="display:flex;gap:8px;align-items:center">
           <button id="btn-open-meal-favs" class="btn-meal-favs" title="Mes aliments favoris">⭐</button>
-          <button id="btn-add-meal" class="btn-add-meal">+ Ajouter</button>
+          <button id="btn-add-meal" class="btn-add-meal" data-i18n="nutr.add">+ Ajouter</button>
         </div>
       </div>
 
@@ -531,19 +531,19 @@
         </div>
       </div>
 
-      <p class="settings-section-title">PROFIL</p>
+      <p class="settings-section-title" data-i18n="set.profile_section">PROFIL</p>
       <div class="settings-section">
         <div id="btn-change-username" class="settings-item" style="cursor:pointer">
-          <span class="settings-item-label">Changer le pseudonyme</span>
+          <span class="settings-item-label" data-i18n="set.edit.username">Changer le pseudonyme</span>
           <span class="settings-arrow">›</span>
         </div>
         <div id="btn-edit-profile" class="settings-item" style="cursor:pointer">
-          <span class="settings-item-label">Modifier le profil physique</span>
+          <span class="settings-item-label" data-i18n="set.edit_physical">Modifier le profil physique</span>
           <span class="settings-arrow">›</span>
         </div>
       </div>
 
-      <p class="settings-section-title">PROGRAMME</p>
+      <p class="settings-section-title" data-i18n="set.program_section">PROGRAMME</p>
       <div class="settings-section">
         <div id="btn-change-program" class="settings-item" style="cursor:pointer">
           <span class="settings-item-label">Programme</span>
@@ -553,8 +553,8 @@
         <div class="settings-item">
           <span class="settings-item-label">Lieu</span>
           <div class="location-selector">
-            <button class="location-btn active" data-location="gym">🏋️ Salle</button>
-            <button class="location-btn" data-location="home">🏠 Maison</button>
+            <button class="location-btn active" data-location="gym" data-i18n="set.location_gym">🏋️ Salle</button>
+            <button class="location-btn" data-location="home" data-i18n="set.location_home">🏠 Maison</button>
           </div>
         </div>
         <div id="btn-change-series" class="settings-item" style="cursor:pointer">
@@ -567,13 +567,13 @@
         </div>
       </div>
 
-      <p class="settings-section-title">APPARENCE</p>
+      <p class="settings-section-title" data-i18n="set.appearance_section">APPARENCE</p>
       <div class="settings-section">
         <div class="settings-item">
-          <span class="settings-item-label">Thème</span>
+          <span class="settings-item-label" data-i18n="set.theme">Thème</span>
           <div class="theme-toggle-pills">
-            <button class="theme-pill active" data-theme="dark">🌙 Sombre</button>
-            <button class="theme-pill" data-theme="light">☀️ Clair</button>
+            <button class="theme-pill active" data-theme="dark" data-i18n="set.theme_dark">🌙 Sombre</button>
+            <button class="theme-pill" data-theme="light" data-i18n="set.theme_light">☀️ Clair</button>
           </div>
         </div>
         <div id="btn-change-lang" class="settings-item" style="cursor:pointer">
@@ -583,10 +583,10 @@
         </div>
       </div>
 
-      <p class="settings-section-title">DONNÉES</p>
+      <p class="settings-section-title" data-i18n="set.data_section">DONNÉES</p>
       <div class="settings-section">
         <div id="btn-export" class="settings-item" style="cursor:pointer">
-          <span class="settings-item-label">Exporter mes données</span>
+          <span class="settings-item-label" data-i18n="set.export">Exporter mes données</span>
           <span class="settings-arrow">›</span>
         </div>
         <div id="btn-help" class="settings-item" style="cursor:pointer">
@@ -669,11 +669,11 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Mes séances</h2>
+        <h2 class="modal-title" data-i18n="modal.workout_lib">Mes séances</h2>
         <button id="btn-close-workout-lib" class="modal-close">✕</button>
       </div>
       <div id="workout-lib-list" class="workout-lib-list"></div>
-      <button id="btn-save-workout-lib" class="btn-secondary btn-full" style="margin-top:12px">💾 Sauvegarder la séance actuelle</button>
+      <button id="btn-save-workout-lib" class="btn-secondary btn-full" style="margin-top:12px" data-i18n="modal.save_workout">💾 Sauvegarder la séance actuelle</button>
     </div>
   </div>
 
@@ -682,11 +682,11 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Mes aliments favoris</h2>
+        <h2 class="modal-title" data-i18n="modal.favs">Mes aliments favoris</h2>
         <button id="btn-close-meal-favs" class="modal-close">✕</button>
       </div>
       <div id="meal-favs-modal-list" class="meal-favs-modal-list"></div>
-      <p id="meal-favs-empty" class="meal-favs-empty hidden">Aucun favori enregistré.<br>Ajoute un repas et coche "Sauvegarder dans mes favoris".</p>
+      <p id="meal-favs-empty" class="meal-favs-empty hidden" data-i18n="modal.favs_empty">Aucun favori enregistré.<br>Ajoute un repas et coche "Sauvegarder dans mes favoris".</p>
     </div>
   </div>
 
@@ -695,10 +695,10 @@
     <div class="modal-sheet modal-sheet-full">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Ajouter un exercice</h2>
+        <h2 class="modal-title" data-i18n="modal.add_exercise">Ajouter un exercice</h2>
         <button id="btn-close-exercise-picker" class="modal-close">✕</button>
       </div>
-      <input id="picker-search" type="text" class="picker-search-input" placeholder="Rechercher un exercice...">
+      <input id="picker-search" type="text" class="picker-search-input" placeholder="Rechercher un exercice..." data-i18n-ph="modal.search_exercise">
       <div id="picker-categories" class="picker-categories"></div>
       <div id="picker-exercise-list" class="picker-exercise-list"></div>
     </div>
@@ -709,7 +709,7 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Choisir la séance</h2>
+        <h2 class="modal-title" data-i18n="modal.choose_session">Choisir la séance</h2>
         <button id="btn-close-session-type" class="modal-close">✕</button>
       </div>
       <div id="session-type-list"></div>
@@ -722,7 +722,7 @@
       <span id="celebration-emoji" class="celebration-emoji">🎉</span>
       <h2 id="celebration-title" class="celebration-title">Bravo !</h2>
       <p id="celebration-body" class="celebration-body"></p>
-      <button id="btn-close-celebration" class="btn-primary btn-full">Super !</button>
+      <button id="btn-close-celebration" class="btn-primary btn-full" data-i18n="modal.celebration_btn">Super !</button>
     </div>
   </div>
 
@@ -731,7 +731,7 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Ajouter un repas</h2>
+        <h2 class="modal-title" data-i18n="modal.add_meal">Ajouter un repas</h2>
         <button id="btn-close-add-meal" class="modal-close">✕</button>
       </div>
       <div id="meal-favorites-section" class="meal-favorites-section hidden">
@@ -739,14 +739,14 @@
         <div id="meal-favorites-list" class="meal-favorites-list"></div>
       </div>
       <div class="barcode-row">
-        <input id="meal-barcode" type="text" class="barcode-input" placeholder="Code-barres..." inputmode="numeric">
+        <input id="meal-barcode" type="text" class="barcode-input" placeholder="Code-barres..." inputmode="numeric" data-i18n-ph="meal.barcode_ph">
         <button id="btn-scan-barcode" class="btn-scan-barcode" type="button">📷</button>
       </div>
       <p id="meal-scan-note" class="meal-scan-note hidden"></p>
       <form id="form-add-meal" class="add-meal-form">
         <div class="meal-qty-row">
           <div class="input-group" style="flex:1">
-            <label class="input-label">Quantité (g)</label>
+            <label class="input-label" data-i18n="meal.qty">Quantité (g)</label>
             <div class="meal-qty-ctrl">
               <input type="number" id="meal-quantity" placeholder="100" min="1" step="1" inputmode="decimal">
               <span class="meal-qty-unit">g</span>
@@ -754,36 +754,36 @@
           </div>
         </div>
         <div class="input-group">
-          <label class="input-label">Nom</label>
-          <input id="meal-name" type="text" placeholder="Ex: Poulet grillé">
+          <label class="input-label" data-i18n="meal.name_lbl">Nom</label>
+          <input id="meal-name" type="text" placeholder="Ex: Poulet grillé" data-i18n-ph="meal.name_ph">
         </div>
         <div class="input-row">
           <div class="input-group half">
-            <label class="input-label">Calories</label>
+            <label class="input-label" data-i18n="meal.calories">Calories</label>
             <input id="meal-calories" type="number" placeholder="0" min="0" inputmode="decimal">
           </div>
           <div class="input-group half">
-            <label class="input-label">Protéines (g)</label>
+            <label class="input-label" data-i18n="meal.protein">Protéines (g)</label>
             <input id="meal-protein" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
           </div>
         </div>
         <div class="input-row">
           <div class="input-group half">
-            <label class="input-label">Glucides (g)</label>
+            <label class="input-label" data-i18n="meal.carbs">Glucides (g)</label>
             <input id="meal-carbs" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
           </div>
           <div class="input-group half">
-            <label class="input-label">Lipides (g)</label>
+            <label class="input-label" data-i18n="meal.fat">Lipides (g)</label>
             <input id="meal-fat" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
           </div>
         </div>
         <div class="meal-save-fav-row">
           <label class="meal-save-fav-label">
             <input type="checkbox" id="meal-save-fav">
-            Sauvegarder dans mes favoris
+            <span data-i18n="meal.save_fav">Sauvegarder dans mes favoris</span>
           </label>
         </div>
-        <button type="submit" class="btn-primary btn-full" style="margin-top:4px">Ajouter ce repas</button>
+        <button type="submit" class="btn-primary btn-full" style="margin-top:4px" data-i18n="meal.add_btn">Ajouter ce repas</button>
       </form>
     </div>
   </div>
@@ -793,49 +793,49 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Choisir un programme</h2>
+        <h2 class="modal-title" data-i18n="modal.program_title">Choisir un programme</h2>
         <button id="btn-close-program" class="modal-close">✕</button>
       </div>
       <div id="modal-program-list" class="program-list">
         <div class="program-card" data-value="ppl">
           <div class="program-card-left">
             <span class="program-name">PPL</span>
-            <span class="program-desc">Push / Pull / Legs — le plus efficace</span>
+            <span class="program-desc" data-i18n="ob.ppl_desc">Push / Pull / Legs — le plus efficace</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="upper_lower">
           <div class="program-card-left">
-            <span class="program-name">Upper / Lower</span>
-            <span class="program-desc">4 jours, haut/bas du corps</span>
+            <span class="program-name" data-i18n="ob.upper_lower">Upper / Lower</span>
+            <span class="program-desc" data-i18n="ob.upper_lower_desc">4 jours, haut/bas du corps</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="full_body">
           <div class="program-card-left">
             <span class="program-name">Full Body</span>
-            <span class="program-desc">Corps entier à chaque séance</span>
+            <span class="program-desc" data-i18n="ob.full_body_desc">Corps entier à chaque séance</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="bro_split">
           <div class="program-card-left">
             <span class="program-name">Bro Split</span>
-            <span class="program-desc">1 groupe musculaire par séance</span>
+            <span class="program-desc" data-i18n="ob.bro_split_desc">1 groupe musculaire par séance</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="home">
           <div class="program-card-left">
-            <span class="program-name">Maison</span>
-            <span class="program-desc">Sans matériel, à domicile</span>
+            <span class="program-name" data-i18n="ob.home_program">🏠 Maison</span>
+            <span class="program-desc" data-i18n="ob.home_program_desc">Sans matériel, à domicile</span>
           </div>
           <span class="program-check">✓</span>
         </div>
         <div class="program-card" data-value="custom">
           <div class="program-card-left">
-            <span class="program-name">Personnalisé</span>
-            <span class="program-desc">Tu choisis tes exercices toi-même</span>
+            <span class="program-name" data-i18n="ob.custom_program">Personnalisé</span>
+            <span class="program-desc" data-i18n="ob.custom_program_desc">Tu choisis tes exercices toi-même</span>
           </div>
           <span class="program-check">✓</span>
         </div>
@@ -848,7 +848,7 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Type de séries</h2>
+        <h2 class="modal-title" data-i18n="modal.series_title_lbl">Type de séries</h2>
         <button id="btn-close-series" class="modal-close">✕</button>
       </div>
       <div class="series-options">
@@ -875,19 +875,19 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Jours d'entraînement</h2>
+        <h2 class="modal-title" data-i18n="modal.days_title_lbl">Jours d'entraînement</h2>
         <button id="btn-close-days" class="modal-close">✕</button>
       </div>
       <div id="modal-days-grid" class="days-grid">
-        <button class="day-btn" data-day="monday">Lun</button>
-        <button class="day-btn" data-day="tuesday">Mar</button>
-        <button class="day-btn" data-day="wednesday">Mer</button>
-        <button class="day-btn" data-day="thursday">Jeu</button>
-        <button class="day-btn" data-day="friday">Ven</button>
-        <button class="day-btn" data-day="saturday">Sam</button>
-        <button class="day-btn" data-day="sunday">Dim</button>
+        <button class="day-btn" data-day="monday" data-i18n="days.mon">Lun</button>
+        <button class="day-btn" data-day="tuesday" data-i18n="days.tue">Mar</button>
+        <button class="day-btn" data-day="wednesday" data-i18n="days.wed">Mer</button>
+        <button class="day-btn" data-day="thursday" data-i18n="days.thu">Jeu</button>
+        <button class="day-btn" data-day="friday" data-i18n="days.fri">Ven</button>
+        <button class="day-btn" data-day="saturday" data-i18n="days.sat">Sam</button>
+        <button class="day-btn" data-day="sunday" data-i18n="days.sun">Dim</button>
       </div>
-      <button id="btn-save-days" class="btn-primary btn-full">Enregistrer</button>
+      <button id="btn-save-days" class="btn-primary btn-full" data-i18n="modal.save">Enregistrer</button>
     </div>
   </div>
 
@@ -896,14 +896,14 @@
     <div class="modal-sheet modal-sheet-small">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Changer le pseudonyme</h2>
+        <h2 class="modal-title" data-i18n="set.edit.username">Changer le pseudonyme</h2>
         <button id="btn-close-username" class="modal-close">✕</button>
       </div>
       <div class="input-group" style="margin-bottom:16px">
-        <label class="input-label">Nouveau pseudonyme</label>
-        <input id="edit-username-input" type="text" placeholder="TonPseudo">
+        <label class="input-label" data-i18n="modal.username_lbl">Nouveau pseudonyme</label>
+        <input id="edit-username-input" type="text" placeholder="TonPseudo" data-i18n-ph="modal.username_ph">
       </div>
-      <button id="btn-save-username" class="btn-primary btn-full">Enregistrer</button>
+      <button id="btn-save-username" class="btn-primary btn-full" data-i18n="modal.save">Enregistrer</button>
     </div>
   </div>
 
@@ -912,39 +912,39 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Modifier le profil</h2>
+        <h2 class="modal-title" data-i18n="modal.edit_physical">Modifier le profil</h2>
         <button id="btn-close-edit-profile" class="modal-close">✕</button>
       </div>
       <form id="form-edit-profile" class="edit-profile-form">
         <div class="input-row">
           <div class="input-group half">
-            <label class="input-label">Poids (kg)</label>
+            <label class="input-label" data-i18n="ob.weight">Poids (kg)</label>
             <input id="edit-weight" type="number" step="0.5" inputmode="decimal">
           </div>
           <div class="input-group half">
-            <label class="input-label">Taille (cm)</label>
+            <label class="input-label" data-i18n="ob.height">Taille (cm)</label>
             <input id="edit-height" type="number" inputmode="numeric">
           </div>
         </div>
         <div class="input-row">
           <div class="input-group half">
-            <label class="input-label">Âge</label>
+            <label class="input-label" data-i18n="ob.age">Âge</label>
             <input id="edit-age" type="number" inputmode="numeric">
           </div>
           <div class="input-group half">
-            <label class="input-label">% graisse</label>
+            <label class="input-label" data-i18n="ob.bodyfat2">% graisse</label>
             <input id="edit-bodyfat" type="number" step="0.5" inputmode="decimal">
           </div>
         </div>
         <div class="input-group">
-          <label class="input-label">Objectif</label>
+          <label class="input-label" data-i18n="modal.goal_lbl">Objectif</label>
           <div id="edit-goal" class="choice-pills">
-            <button type="button" class="pill" data-value="bulk">Masse</button>
-            <button type="button" class="pill" data-value="maintain">Maintien</button>
-            <button type="button" class="pill" data-value="cut">Sèche</button>
+            <button type="button" class="pill" data-value="bulk" data-i18n="ob.bulk">Masse</button>
+            <button type="button" class="pill" data-value="maintain" data-i18n="ob.maintain">Maintien</button>
+            <button type="button" class="pill" data-value="cut" data-i18n="ob.cut">Sèche</button>
           </div>
         </div>
-        <button type="submit" class="btn-primary btn-full">Enregistrer</button>
+        <button type="submit" class="btn-primary btn-full" data-i18n="modal.save">Enregistrer</button>
       </form>
     </div>
   </div>
@@ -954,12 +954,12 @@
     <div class="modal-sheet modal-sheet-small">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Réinitialiser</h2>
+        <h2 class="modal-title" data-i18n="modal.reset_title_lbl">Réinitialiser</h2>
       </div>
-      <p class="modal-body-text">Cette action supprime toutes tes données. Es-tu sûr ?</p>
+      <p class="modal-body-text" data-i18n="modal.reset.body">Cette action supprime toutes tes données. Es-tu sûr ?</p>
       <div style="display:flex;gap:12px">
-        <button id="btn-cancel-reset" class="btn-secondary" style="flex:1">Annuler</button>
-        <button id="btn-confirm-reset" class="btn-danger" style="flex:1">Réinitialiser</button>
+        <button id="btn-cancel-reset" class="btn-secondary" style="flex:1" data-i18n="modal.reset_cancel">Annuler</button>
+        <button id="btn-confirm-reset" class="btn-danger" style="flex:1" data-i18n="modal.reset_title_lbl">Réinitialiser</button>
       </div>
     </div>
   </div>
@@ -969,11 +969,11 @@
     <div class="modal-sheet modal-sheet-full">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Aide & FAQ</h2>
+        <h2 class="modal-title" data-i18n="help.title">Aide & FAQ</h2>
         <button id="btn-close-help" class="modal-close">✕</button>
       </div>
       <div class="help-content">
-        <p class="help-section-title">Questions fréquentes</p>
+        <p class="help-section-title" data-i18n="help.faq_title">Questions fréquentes</p>
         <div class="faq-list">
           <div class="faq-item">
             <button class="faq-question">Comment fonctionne le programme ? <span class="faq-arrow">›</span></button>
@@ -1017,7 +1017,7 @@
     <div class="modal-sheet modal-sheet-small">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Langue</h2>
+        <h2 class="modal-title" data-i18n="set.language">Langue</h2>
         <button id="btn-close-language" class="modal-close">✕</button>
       </div>
       <div class="lang-options">
@@ -1045,11 +1045,11 @@
     <div class="modal-sheet modal-sheet-full">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title">Scanner un produit</h2>
+        <h2 class="modal-title" data-i18n="modal.barcode">Scanner un produit</h2>
         <button id="btn-close-scanner" class="modal-close">✕</button>
       </div>
       <div id="barcode-scanner-view" style="width:100%"></div>
-      <p style="text-align:center;color:var(--text-2);font-size:13px;padding:12px 16px">Pointez la caméra vers le code-barres du produit</p>
+      <p style="text-align:center;color:var(--text-2);font-size:13px;padding:12px 16px" data-i18n="modal.barcode_hint">Pointez la caméra vers le code-barres du produit</p>
     </div>
   </div>
 
