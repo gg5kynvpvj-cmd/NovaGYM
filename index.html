@@ -421,7 +421,11 @@
         </div>
       </div>
 
-      <div class="weekly-calendar">
+      <div class="stats-card weekly-plan-card">
+        <div class="stats-card-header">
+          <h3 class="card-title">Planning</h3>
+          <button id="btn-reset-schedule" class="btn-ghost" style="font-size:12px;padding:4px 10px">↺ Réinitialiser</button>
+        </div>
         <div id="weekly-days" class="weekly-days"></div>
       </div>
 
@@ -701,6 +705,18 @@
       </div>
       <div id="workout-lib-list" class="workout-lib-list"></div>
       <button id="btn-save-workout-lib" class="btn-secondary btn-full" style="margin-top:12px" data-i18n="modal.save_workout">💾 Sauvegarder la séance actuelle</button>
+    </div>
+  </div>
+
+  <!-- Éditeur planning jour -->
+  <div id="modal-day-session" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-day-session-title">Modifier la séance</h2>
+        <button id="btn-close-day-session" class="modal-close">✕</button>
+      </div>
+      <div id="day-session-options" class="session-type-list" style="padding:0 20px 24px"></div>
     </div>
   </div>
 

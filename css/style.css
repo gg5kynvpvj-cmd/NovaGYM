@@ -1039,15 +1039,17 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
 }
+.weekly-plan-card { padding-bottom: 16px; }
 .week-day {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 6px 2px;
+  gap: 3px;
+  padding: 6px 2px 8px;
   border-radius: var(--radius-sm);
   transition: background 0.15s;
 }
+.week-day:active { background: var(--bg-card-2); }
 .week-day.today {
   background: var(--accent-15);
 }
@@ -1072,6 +1074,15 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   background: transparent;
 }
 .week-day-dot.has-session { background: var(--accent); }
+.week-day-session {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin: 2px 0 1px;
+  line-height: 1;
+}
+.week-day-session.rest { color: var(--text-3); }
 
 /* HISTORY ── */
 .history-header { margin-bottom: 4px; }

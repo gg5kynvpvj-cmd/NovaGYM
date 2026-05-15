@@ -103,6 +103,9 @@ window.Programs = (() => {
     if (!profile) return null;
     const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
     const todayName = dayNames[new Date().getDay()];
+    // Custom override wins over auto schedule
+    const custom = (typeof App !== 'undefined' ? App.local.get('custom_schedule') : null) || {};
+    if (custom[todayName]) return custom[todayName];
     const schedule = buildSchedule(profile.program_type, profile.training_days || []);
     return schedule[todayName] || 'rest';
   }

@@ -199,47 +199,107 @@ window.Stats = (() => {
     });
   }
 
-  /* ─── Calendrier hebdomadaire ────────────────────────── */
+  /* ─── Nom court d'un type de séance ─────────────────── */
+  const SESSION_SHORT = {
+    push: 'Push', pull: 'Pull', legs: 'Legs',
+    upper: 'Upper', lower: 'Lower', full_body: 'Full',
+    chest: 'Chest', back: 'Back', shoulders: 'Épaules', arms: 'Bras',
+    rest: 'Repos', home_push: 'Push', home_pull: 'Pull', home_legs: 'Legs', custom: 'Libre',
+  };
+
+  /* ─── Calendrier + planning hebdomadaire ─────────────── */
   function renderWeeklyCalendar() {
     const container = document.getElementById('weekly-days');
     if (!container) return;
 
+    const profile   = App.state.profile;
     const sessions  = App.state.sessions || [];
     const today     = new Date();
-    const dayOfWeek = today.getDay(); // 0=Sun
-    // Start on Monday
+    const dayOfWeek = today.getDay();
     const monday    = new Date(today);
     monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
 
-    const dayNames  = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    const DAYS_ORDER  = Programs.DAYS_ORDER;
+    const autoSched   = profile ? Programs.buildSchedule(profile.program_type, profile.training_days || []) : {};
+    const customSched = App.local.get('custom_schedule') || {};
+    const schedule    = { ...autoSched, ...customSched };
 
-    // Build set of session date strings (YYYY-MM-DD local)
     const sessionDates = new Set(sessions
       .filter(s => s.completed)
-      .map(s => {
-        const d = new Date(s.date || s.created_at);
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      })
+      .map(s => (s.date || s.created_at || '').slice(0, 10))
     );
+
+    const todayStr = today.toISOString().slice(0, 10);
 
     container.innerHTML = '';
     for (let i = 0; i < 7; i++) {
-      const day  = new Date(monday);
+      const day     = new Date(monday);
       day.setDate(monday.getDate() + i);
-      const key  = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
-      const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-      const isToday  = key === todayKey;
-      const hasSess  = sessionDates.has(key);
+      const dateStr = day.toISOString().slice(0, 10);
+      const dayKey  = DAYS_ORDER[i];
+      const isToday = dateStr === todayStr;
+      const hasDone = sessionDates.has(dateStr);
+      const sessType = schedule[dayKey] || 'rest';
+      const color    = Programs.SESSION_COLORS[sessType] || '#555555';
+      const isRest   = sessType === 'rest';
 
       const cell = document.createElement('div');
       cell.className = 'week-day' + (isToday ? ' today' : '');
+      cell.dataset.day = dayKey;
+      cell.style.cursor = 'pointer';
       cell.innerHTML = `
-        <span class="week-day-name">${dayNames[i]}</span>
+        <span class="week-day-name">${['L','M','M','J','V','S','D'][i]}</span>
         <span class="week-day-num">${day.getDate()}</span>
-        <span class="week-day-dot${hasSess ? ' has-session' : ''}"></span>
+        <span class="week-day-session${isRest ? ' rest' : ''}" style="${isRest ? '' : `color:${color}`}">${SESSION_SHORT[sessType] || sessType}</span>
+        <span class="week-day-dot${hasDone ? ' has-session' : ''}"></span>
       `;
+      cell.addEventListener('click', () => openDayEditor(dayKey, sessType));
       container.appendChild(cell);
     }
+  }
+
+  /* ─── Éditeur de journée du planning ────────────────── */
+  function openDayEditor(dayKey, currentType) {
+    const DAYS_FR_FULL = {
+      monday: 'Lundi', tuesday: 'Mardi', wednesday: 'Mercredi',
+      thursday: 'Jeudi', friday: 'Vendredi', saturday: 'Samedi', sunday: 'Dimanche',
+    };
+    const titleEl = document.getElementById('modal-day-session-title');
+    if (titleEl) titleEl.textContent = DAYS_FR_FULL[dayKey] || dayKey;
+
+    const optList = document.getElementById('day-session-options');
+    if (!optList) return;
+
+    const allTypes = { ...Programs.SESSION_NAMES, rest: 'Repos' };
+    optList.innerHTML = Object.entries(allTypes).map(([k, v]) => {
+      const color  = Programs.SESSION_COLORS[k] || '#555555';
+      const active = k === currentType ? 'border-color:' + color + ';background:' + color + '20' : '';
+      return `
+        <button class="picker-ex-btn" data-type="${k}" style="${active}">
+          <span class="picker-ex-name" style="color:${color}">${v}</span>
+        </button>
+      `;
+    }).join('');
+
+    optList.querySelectorAll('[data-type]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selected = btn.dataset.type;
+        const custom   = App.local.get('custom_schedule') || {};
+        const profile  = App.state.profile;
+        // If same as auto schedule, remove override (keep schedule clean)
+        const auto = profile ? Programs.buildSchedule(profile.program_type, profile.training_days || []) : {};
+        if (auto[dayKey] === selected) {
+          delete custom[dayKey];
+        } else {
+          custom[dayKey] = selected;
+        }
+        App.local.set('custom_schedule', custom);
+        document.getElementById('modal-day-session')?.classList.add('hidden');
+        renderWeeklyCalendar();
+      });
+    });
+
+    document.getElementById('modal-day-session')?.classList.remove('hidden');
   }
 
   /* ─── Compteurs ──────────────────────────────────────── */
@@ -328,6 +388,22 @@ window.Stats = (() => {
         repsRange = parseInt(btn.dataset.range);
         drawRepsChart(App.state.sessions || [], repsRange);
       });
+    });
+
+    // Planning — fermer modal jour
+    document.getElementById('btn-close-day-session')?.addEventListener('click', () => {
+      document.getElementById('modal-day-session')?.classList.add('hidden');
+    });
+    document.getElementById('modal-day-session')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+
+    // Planning — réinitialiser planning personnalisé
+    document.getElementById('btn-reset-schedule')?.addEventListener('click', () => {
+      if (confirm('Réinitialiser le planning selon ton programme ?')) {
+        App.local.set('custom_schedule', {});
+        renderWeeklyCalendar();
+      }
     });
 
     // Re-draw au resize pour que le canvas reste net
