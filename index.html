@@ -252,27 +252,35 @@
   <!-- ═══ APP ═══ -->
   <div id="page-app" class="page">
 
-    <!-- ─── TODAY ─── -->
-    <div id="tab-today" class="tab-content active">
-
-      <!-- Timer repos (sticky) -->
-      <div id="timer-widget" class="sticky-timer hidden">
-        <div class="timer-left">
-          <span class="timer-label">REPOS</span>
-          <span id="timer-display" class="timer-display">1:30</span>
+    <!-- Timer Dynamic Island (global, tous les onglets) -->
+    <div id="timer-widget" class="dynamic-island hidden">
+      <div class="di-collapsed" id="di-collapsed">
+        <span class="di-time" id="timer-display">1:30</span>
+        <button id="timer-toggle" class="di-toggle">▶</button>
+      </div>
+      <div class="di-expanded hidden" id="di-expanded">
+        <div class="di-top">
+          <span class="di-label">REPOS</span>
+          <span class="di-time-big" id="timer-display-big">1:30</span>
+          <div class="di-controls">
+            <button id="timer-toggle-big" class="di-toggle-big">▶</button>
+            <label class="toggle-switch">
+              <input id="toggle-timer-sound" type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
-        <div class="timer-presets">
+        <div class="di-presets">
           <button class="preset-btn" data-seconds="60">1 min</button>
           <button class="preset-btn" data-seconds="90">1:30</button>
           <button class="preset-btn" data-seconds="120">2 min</button>
           <button class="preset-btn" data-seconds="180">3 min</button>
         </div>
-        <button id="timer-toggle" class="timer-toggle">▶</button>
-        <label class="toggle-switch">
-          <input id="toggle-timer-sound" type="checkbox" checked>
-          <span class="toggle-slider"></span>
-        </label>
       </div>
+    </div>
+
+    <!-- ─── TODAY ─── -->
+    <div id="tab-today" class="tab-content active">
 
       <!-- Header -->
       <div class="today-header">
@@ -345,7 +353,7 @@
     <!-- ─── STATS ─── -->
     <div id="tab-stats" class="tab-content">
       <div class="tab-header-row">
-        <h1 class="page-title">Statistiques</h1>
+        <h1 class="page-title" data-i18n="stats.title">Statistiques</h1>
         <button class="profile-icon-btn" data-tab="stats">
           <span id="profile-icon-letter-stats">N</span>
         </button>
@@ -366,9 +374,32 @@
         </div>
       </div>
 
+      <div class="weekly-calendar">
+        <div id="weekly-days" class="weekly-days"></div>
+      </div>
+
       <div class="stats-card">
-        <h3 class="card-title">Volume d'entraînement (30 j)</h3>
+        <div class="stats-card-header">
+          <h3 class="card-title">Volume</h3>
+          <div class="chart-filter-btns">
+            <button class="chart-filter-btn active" data-range="7">1 sem</button>
+            <button class="chart-filter-btn" data-range="30">1 mois</button>
+            <button class="chart-filter-btn" data-range="365">1 an</button>
+          </div>
+        </div>
         <canvas id="scatter-chart"></canvas>
+      </div>
+
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <h3 class="card-title">Reps totales</h3>
+          <div class="chart-filter-btns" id="reps-filter-btns">
+            <button class="chart-filter-btn active" data-range="7">1 sem</button>
+            <button class="chart-filter-btn" data-range="30">1 mois</button>
+            <button class="chart-filter-btn" data-range="365">1 an</button>
+          </div>
+        </div>
+        <canvas id="reps-chart"></canvas>
       </div>
 
       <div class="stats-card">
@@ -380,7 +411,7 @@
     <!-- ─── HISTORY ─── -->
     <div id="tab-history" class="tab-content">
       <div class="tab-header-row">
-        <h1 class="page-title">Historique</h1>
+        <h1 class="page-title" data-i18n="history.title">Historique</h1>
         <button class="profile-icon-btn" data-tab="history">
           <span id="profile-icon-letter-history">N</span>
         </button>
@@ -391,7 +422,7 @@
     <!-- ─── NUTRITION ─── -->
     <div id="tab-nutrition" class="tab-content">
       <div class="tab-header-row">
-        <h1 class="page-title">Nutrition</h1>
+        <h1 class="page-title" data-i18n="nav.nutrition">Nutrition</h1>
         <button class="profile-icon-btn" data-tab="nutrition">
           <span id="profile-icon-letter-nutrition">N</span>
         </button>
@@ -557,7 +588,7 @@
             <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        <span class="nav-label">Aujourd'hui</span>
+        <span class="nav-label" data-i18n="nav.today">Aujourd'hui</span>
       </button>
       <button class="nav-item" data-tab="stats">
         <span class="nav-icon">
@@ -565,7 +596,7 @@
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        <span class="nav-label">Stats</span>
+        <span class="nav-label" data-i18n="nav.stats">Stats</span>
       </button>
       <button class="nav-item" data-tab="history">
         <span class="nav-icon">
@@ -574,7 +605,7 @@
             <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </span>
-        <span class="nav-label">Historique</span>
+        <span class="nav-label" data-i18n="nav.history">Historique</span>
       </button>
       <button class="nav-item" data-tab="nutrition">
         <span class="nav-icon">
@@ -582,7 +613,7 @@
             <path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
-        <span class="nav-label">Nutrition</span>
+        <span class="nav-label" data-i18n="nav.nutrition">Nutrition</span>
       </button>
       <button class="nav-item" data-tab="settings">
         <span class="nav-icon">
@@ -591,7 +622,7 @@
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="2"/>
           </svg>
         </span>
-        <span class="nav-label">Réglages</span>
+        <span class="nav-label" data-i18n="nav.settings">Réglages</span>
       </button>
     </nav>
   </div><!-- end page-app -->
@@ -607,6 +638,19 @@
         <button id="btn-close-exercise" class="modal-close">✕</button>
       </div>
       <div id="exercise-detail-content" class="exercise-detail-content"></div>
+    </div>
+  </div>
+
+  <!-- Bibliothèque de séances -->
+  <div id="modal-workout-lib" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">Mes séances</h2>
+        <button id="btn-close-workout-lib" class="modal-close">✕</button>
+      </div>
+      <div id="workout-lib-list" class="workout-lib-list"></div>
+      <button id="btn-save-workout-lib" class="btn-secondary btn-full" style="margin-top:12px">💾 Sauvegarder la séance actuelle</button>
     </div>
   </div>
 
@@ -654,6 +698,10 @@
         <h2 class="modal-title">Ajouter un repas</h2>
         <button id="btn-close-add-meal" class="modal-close">✕</button>
       </div>
+      <div id="meal-favorites-section" class="meal-favorites-section hidden">
+        <div class="meal-fav-label">Favoris</div>
+        <div id="meal-favorites-list" class="meal-favorites-list"></div>
+      </div>
       <div class="barcode-row">
         <input id="meal-barcode" type="text" class="barcode-input" placeholder="Code-barres..." inputmode="numeric">
         <button id="btn-scan-barcode" class="btn-scan-barcode" type="button">📷</button>
@@ -692,6 +740,12 @@
             <label class="input-label">Lipides (g)</label>
             <input id="meal-fat" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
           </div>
+        </div>
+        <div class="meal-save-fav-row">
+          <label class="meal-save-fav-label">
+            <input type="checkbox" id="meal-save-fav">
+            Sauvegarder dans mes favoris
+          </label>
         </div>
         <button type="submit" class="btn-primary btn-full" style="margin-top:4px">Ajouter ce repas</button>
       </form>
@@ -887,19 +941,35 @@
         <div class="faq-list">
           <div class="faq-item">
             <button class="faq-question">Comment fonctionne le programme ? <span class="faq-arrow">›</span></button>
-            <div class="faq-answer">NovaGYM génère ta séance du jour selon ton programme et tes jours d'entraînement. Marque tes séries pour valider la séance.</div>
+            <div class="faq-answer">NovaGYM génère ta séance du jour selon ton programme et tes jours d'entraînement. Marque tes séries pour valider la séance. Tu peux aussi ajouter des exercices personnalisés ou charger une séance depuis ta bibliothèque.</div>
           </div>
           <div class="faq-item">
-            <button class="faq-question">Mes données sont-elles sauvegardées ? <span class="faq-arrow">›</span></button>
-            <div class="faq-answer">Oui, tes données sont sauvegardées localement et synchronisées avec ton compte Supabase si tu es connecté.</div>
+            <button class="faq-question">Où sont sauvegardées mes données ? <span class="faq-arrow">›</span></button>
+            <div class="faq-answer">Tes données sont sauvegardées sur ton appareil (même sans connexion) ET sur nos serveurs sécurisés si tu es connecté à ton compte. Tu peux les exporter à tout moment depuis Réglages → Exporter mes données.</div>
           </div>
           <div class="faq-item">
             <button class="faq-question">Comment scanner un aliment ? <span class="faq-arrow">›</span></button>
-            <div class="faq-answer">Dans l'onglet Nutrition, saisis le code-barres ou utilise le scanner. Les données viennent d'Open Food Facts.</div>
+            <div class="faq-answer">Dans l'onglet Nutrition, appuie sur "Ajouter un repas" puis utilise le scanner 📷 pour scanner le code-barres. Les informations nutritionnelles sont importées automatiquement via Open Food Facts.</div>
           </div>
           <div class="faq-item">
             <button class="faq-question">Comment changer mon programme ? <span class="faq-arrow">›</span></button>
-            <div class="faq-answer">Va dans Réglages → Programme → choisis ton programme. Le changement est immédiat.</div>
+            <div class="faq-answer">Va dans Réglages → Programme → choisis ton programme. Le changement est immédiat. Si tu veux créer ton propre programme, choisis "Personnalisé" et construis ta séance avec la bibliothèque d'exercices.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Comment fonctionne le chronomètre ? <span class="faq-arrow">›</span></button>
+            <div class="faq-answer">Le chronomètre se lance automatiquement après chaque série validée. La durée de repos correspond à ton profil. Appuie sur la pilule en haut pour voir les options et changer la durée. Le son te prévient à 15 secondes et à la fin du repos.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Comment sauvegarder une séance favorite ? <span class="faq-arrow">›</span></button>
+            <div class="faq-answer">Pendant une séance, fais défiler jusqu'en bas et appuie sur "📚 Mes séances" puis "💾 Sauvegarder la séance actuelle". Tu peux ensuite recharger cette séance n'importe quand.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Puis-je utiliser NovaGYM sans connexion ? <span class="faq-arrow">›</span></button>
+            <div class="faq-answer">Oui ! NovaGYM fonctionne entièrement hors ligne. Tes données sont stockées sur ton téléphone et se synchronisent automatiquement dès que tu retrouves une connexion.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Comment contacter le support ? <span class="faq-arrow">›</span></button>
+            <div class="faq-answer">Pour toute question ou suggestion, écris-nous à <strong>NovaGYM-pro@proton.me</strong>. Nous répondons sous 24-48h.</div>
           </div>
         </div>
       </div>

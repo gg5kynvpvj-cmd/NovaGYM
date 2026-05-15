@@ -402,12 +402,21 @@ window.Today = (() => {
     const repTarget  = isFailure ? '∞' : reps;
 
     item.innerHTML = `
-      <span class="set-number">S${index + 1}</span>
+      <span class="set-number">${index === 0 ? 'W' : 'S' + index}</span>
       <span class="set-reps-label">×${repTarget}</span>
       <input class="set-reps-input" type="number" placeholder="reps" min="0" step="1">
       <input class="set-weight-input" type="number" placeholder="kg" min="0" step="0.5">
       <button class="set-check-btn" type="button">✓</button>
     `;
+
+    // Masquer le label ×reps quand l'utilisateur saisit une valeur
+    const repsInput = item.querySelector('.set-reps-input');
+    const repsLabel = item.querySelector('.set-reps-label');
+    if (repsInput && repsLabel) {
+      repsInput.addEventListener('input', () => {
+        repsLabel.style.display = repsInput.value ? 'none' : '';
+      });
+    }
 
     const checkBtn = item.querySelector('.set-check-btn');
     checkBtn.addEventListener('click', () => {
@@ -426,33 +435,56 @@ window.Today = (() => {
     return item;
   }
 
-  /* ─── Série unilatérale (G/D) ────────────────────────── */
+  /* ─── Série unilatérale (G/D avec duplication auto) ─── */
   function buildUnilateralSet(exercise, index, reps, getRestFn) {
     const item = document.createElement('div');
     item.className = 'set-item-unilateral';
 
     item.innerHTML = `
-      <span class="set-number">S${index + 1}</span>
-      <span class="set-reps-label">×${reps}</span>
-      <input class="set-reps-input" type="number" placeholder="reps" min="0" step="1">
-      <input class="set-weight-input" type="number" placeholder="kg" min="0" step="0.5">
-      <div class="unilateral-checks">
-        <button class="unilateral-btn" data-side="left" type="button">G</button>
-        <button class="unilateral-btn" data-side="right" type="button">D</button>
+      <div class="uni-header">
+        <span class="set-number">${index === 0 ? 'W' : 'S' + index}</span>
+        <span class="set-reps-label">×${reps}</span>
+      </div>
+      <div class="uni-side-row" data-side="left">
+        <span class="uni-side-label">G</span>
+        <input class="set-reps-input uni-reps-left" type="number" placeholder="reps" min="0" step="1">
+        <input class="set-weight-input uni-weight-left" type="number" placeholder="kg" min="0" step="0.5">
+        <button class="unilateral-btn" data-side="left" type="button">✓</button>
+      </div>
+      <div class="uni-side-row" data-side="right">
+        <span class="uni-side-label">D</span>
+        <input class="set-reps-input uni-reps-right" type="number" placeholder="reps" min="0" step="1">
+        <input class="set-weight-input uni-weight-right" type="number" placeholder="kg" min="0" step="0.5">
+        <button class="unilateral-btn" data-side="right" type="button">✓</button>
       </div>
     `;
 
     if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
     if (!completedSets[exercise.id][index]) completedSets[exercise.id][index] = { left: false, right: false };
 
+    const repsL   = item.querySelector('.uni-reps-left');
+    const weightL = item.querySelector('.uni-weight-left');
+    const repsR   = item.querySelector('.uni-reps-right');
+    const weightR = item.querySelector('.uni-weight-right');
+
     item.querySelectorAll('.unilateral-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const side = btn.dataset.side;
         const done = !btn.classList.contains('done');
         btn.classList.toggle('done', done);
+        item.querySelector(`.uni-side-row[data-side="${side}"]`)?.classList.toggle('done', done);
         completedSets[exercise.id][index][side] = done;
 
-        // Lance timer si les deux côtés sont complétés
+        // Auto-dupliquer vers l'autre côté si vide
+        if (done && side === 'left' && !repsR.value && !weightR.value) {
+          repsR.value   = repsL.value;
+          weightR.value = weightL.value;
+        }
+        if (done && side === 'right' && !repsL.value && !weightL.value) {
+          repsL.value   = repsR.value;
+          weightL.value = weightR.value;
+        }
+
         const both = completedSets[exercise.id][index].left && completedSets[exercise.id][index].right;
         item.classList.toggle('done', both);
         if (both) Timer.start(getRestFn ? getRestFn() : undefined);
@@ -682,6 +714,15 @@ window.Today = (() => {
     addBtn.addEventListener('click', openExercisePicker);
     list.appendChild(addBtn);
 
+    // Bouton bibliothèque de séances
+    const libBtn = document.createElement('button');
+    libBtn.className = 'add-exercise-btn';
+    libBtn.style.background = 'var(--bg-card-2)';
+    libBtn.style.color = 'var(--text-2)';
+    libBtn.textContent = '📚 Mes séances';
+    libBtn.addEventListener('click', openWorkoutLib);
+    list.appendChild(libBtn);
+
     updateProgress();
   }
 
@@ -844,10 +885,87 @@ window.Today = (() => {
     });
   }
 
+  /* ─── Bibliothèque de séances ───────────────────────── */
+  function getWorkoutLib() {
+    return App.local.get('workout_library') || [];
+  }
+
+  function saveWorkoutToLib(name, exercises) {
+    const lib = getWorkoutLib();
+    lib.push({ id: Date.now(), name, exercises: exercises.map(e => ({ id: e.id, name: e.name, muscles: e.muscles, defaultSets: e.defaultSets, defaultReps: e.defaultReps, isUnilateral: e.isUnilateral })) });
+    App.local.set('workout_library', lib);
+  }
+
+  function deleteWorkoutFromLib(id) {
+    App.local.set('workout_library', getWorkoutLib().filter(t => t.id !== id));
+    renderWorkoutLib();
+  }
+
+  function renderWorkoutLib() {
+    const list = document.getElementById('workout-lib-list');
+    if (!list) return;
+    const lib = getWorkoutLib();
+    if (lib.length === 0) {
+      list.innerHTML = `<div class="workout-lib-empty">Aucune séance sauvegardée.<br>Lance une séance puis sauvegarde-la ici !</div>`;
+      return;
+    }
+    list.innerHTML = lib.map(t => `
+      <div class="workout-lib-item">
+        <div class="workout-lib-info">
+          <div class="workout-lib-name">${t.name}</div>
+          <div class="workout-lib-meta">${t.exercises.length} exercice${t.exercises.length > 1 ? 's' : ''}</div>
+        </div>
+        <button class="workout-lib-load" data-lib-id="${t.id}">Charger</button>
+        <button class="workout-lib-del" data-del-id="${t.id}">✕</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.workout-lib-load').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const t = getWorkoutLib().find(t => t.id == btn.dataset.libId);
+        if (!t) return;
+        if (confirm(`Charger "${t.name}" ? Les exercices actuels seront remplacés.`)) {
+          const list2 = document.getElementById('exercise-list');
+          const addBtn2 = document.getElementById('btn-add-exercise-today');
+          currentExercises = [];
+          completedSets    = {};
+          if (list2 && addBtn2) {
+            while (list2.firstChild && list2.firstChild !== addBtn2) list2.removeChild(list2.firstChild);
+          }
+          t.exercises.forEach(ex => addPickedExercise({ ...ex }));
+          closeModal('modal-workout-lib');
+        }
+      });
+    });
+    list.querySelectorAll('.workout-lib-del').forEach(btn => {
+      btn.addEventListener('click', () => deleteWorkoutFromLib(parseInt(btn.dataset.delId)));
+    });
+  }
+
+  function openWorkoutLib() {
+    renderWorkoutLib();
+    document.getElementById('modal-workout-lib')?.classList.remove('hidden');
+  }
+
   /* ─── Init ───────────────────────────────────────────── */
   function init() {
     document.getElementById('btn-close-exercise')?.addEventListener('click', () => {
       document.getElementById('modal-exercise')?.classList.add('hidden');
+    });
+
+    // Bibliothèque de séances
+    document.getElementById('btn-close-workout-lib')?.addEventListener('click', () => {
+      closeModal('modal-workout-lib');
+    });
+    document.getElementById('modal-workout-lib')?.addEventListener('click', function(e) {
+      if (e.target === this) closeModal('modal-workout-lib');
+    });
+    document.getElementById('btn-save-workout-lib')?.addEventListener('click', () => {
+      if (currentExercises.length === 0) { alert('Ajoute des exercices avant de sauvegarder.'); return; }
+      const name = prompt('Nom de la séance :', `Séance ${new Date().toLocaleDateString('fr-FR', { weekday: 'long' })}`);
+      if (!name?.trim()) return;
+      saveWorkoutToLib(name.trim(), currentExercises);
+      renderWorkoutLib();
+      alert('Séance sauvegardée !');
     });
 
     document.getElementById('btn-close-exercise-picker')?.addEventListener('click', () => {
@@ -876,6 +994,6 @@ window.Today = (() => {
     initDailyCard();
   }
 
-  return { init, render, openExercisePicker };
+  return { init, render, openExercisePicker, openWorkoutLib };
 
 })();

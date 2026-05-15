@@ -16,7 +16,7 @@ window.I18n = (() => {
       'auth.create': 'Créer mon compte',
       // Nav
       'nav.today': "Aujourd'hui", 'nav.stats': 'Stats',
-      'nav.history': 'Historique', 'nav.settings': 'Réglages',
+      'nav.history': 'Historique', 'nav.nutrition': 'Nutrition', 'nav.settings': 'Réglages',
       // Onboarding
       'ob.step': 'Étape', 'ob.of': 'sur',
       'ob.step1.title': 'Dis-nous\nqui tu es',
@@ -137,7 +137,7 @@ window.I18n = (() => {
       'auth.username': 'Username', 'auth.forgot': 'Forgot password?',
       'auth.create': 'Create account',
       'nav.today': 'Today', 'nav.stats': 'Stats',
-      'nav.history': 'History', 'nav.settings': 'Settings',
+      'nav.history': 'History', 'nav.nutrition': 'Nutrition', 'nav.settings': 'Settings',
       'ob.step': 'Step', 'ob.of': 'of',
       'ob.step1.title': 'Tell us\nabout you',
       'ob.step1.sub': '100% personalized program',
@@ -244,7 +244,7 @@ window.I18n = (() => {
       'auth.username': 'Apodo', 'auth.forgot': '¿Olvidaste tu contraseña?',
       'auth.create': 'Crear cuenta',
       'nav.today': 'Hoy', 'nav.stats': 'Stats',
-      'nav.history': 'Historial', 'nav.settings': 'Ajustes',
+      'nav.history': 'Historial', 'nav.nutrition': 'Nutrición', 'nav.settings': 'Ajustes',
       'ob.step': 'Paso', 'ob.of': 'de',
       'ob.step1.title': 'Cuéntanos\nsobre ti',
       'ob.step1.sub': 'Programa 100% personalizado',

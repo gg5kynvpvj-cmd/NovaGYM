@@ -78,7 +78,7 @@ window.History = (() => {
             const wStr = w != null ? `${w}kg` : null;
             const rStr = r != null && r > 0 ? `${r}×` : null;
             const detail = [rStr, wStr].filter(Boolean).join(' / ');
-            return `S${i + 1}: ${detail || '—'}`;
+            return `${i === 0 ? 'W' : 'S' + i}: ${detail || '—'}`;
           }).join(' · ');
         })();
         return `

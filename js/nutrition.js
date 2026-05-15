@@ -399,6 +399,62 @@ window.Nutrition = (() => {
     });
   }
 
+  /* ─── Bibliothèque de repas (favoris) ───────────────── */
+  function getMealLib() {
+    return App.local.get('meal_library') || [];
+  }
+
+  function saveMealToLib(meal) {
+    const lib = getMealLib();
+    if (!lib.find(m => m.name === meal.name)) {
+      lib.push({ id: Date.now(), name: meal.name, calories: meal.calories, protein: meal.protein, carbs: meal.carbs, fat: meal.fat });
+      App.local.set('meal_library', lib);
+    }
+  }
+
+  function removeMealFromLib(id) {
+    App.local.set('meal_library', getMealLib().filter(m => m.id !== id));
+    renderMealFavorites();
+  }
+
+  function fillFormFromLib(meal) {
+    baseNutrition = null;
+    setMealField('meal-name', meal.name);
+    setMealField('meal-calories', meal.calories || '');
+    setMealField('meal-protein', meal.protein || '');
+    setMealField('meal-carbs', meal.carbs || '');
+    setMealField('meal-fat', meal.fat || '');
+  }
+
+  function renderMealFavorites() {
+    const lib = getMealLib();
+    const section = document.getElementById('meal-favorites-section');
+    const list    = document.getElementById('meal-favorites-list');
+    if (!section || !list) return;
+    if (lib.length === 0) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    list.innerHTML = lib.map(m => `
+      <div class="meal-fav-chip" data-fav-id="${m.id}">
+        <span class="meal-fav-name">${m.name}</span>
+        <span class="meal-fav-cal">${m.calories} kcal</span>
+        <span class="meal-fav-del" data-del-id="${m.id}">✕</span>
+      </div>
+    `).join('');
+    list.querySelectorAll('.meal-fav-chip').forEach(chip => {
+      chip.addEventListener('click', e => {
+        if (e.target.closest('.meal-fav-del')) return;
+        const meal = getMealLib().find(m => m.id == chip.dataset.favId);
+        if (meal) fillFormFromLib(meal);
+      });
+    });
+    list.querySelectorAll('.meal-fav-del').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        removeMealFromLib(parseInt(btn.dataset.delId));
+      });
+    });
+  }
+
   /* ─── Init ───────────────────────────────────────────── */
   function init() {
     // Ouvrir modal ajout (ouverture manuelle — reset base)
@@ -414,6 +470,7 @@ window.Nutrition = (() => {
       if (barcodeEl) barcodeEl.value = '';
       const noteEl = document.getElementById('meal-scan-note');
       if (noteEl) noteEl.classList.add('hidden');
+      renderMealFavorites();
       document.getElementById('modal-add-meal')?.classList.remove('hidden');
     });
 
@@ -438,9 +495,12 @@ window.Nutrition = (() => {
       const carbs    = parseFloat(document.getElementById('meal-carbs').value)    || 0;
       const fat      = parseFloat(document.getElementById('meal-fat').value)      || 0;
 
+      const meal = { id: Date.now(), name, quantity, calories, protein, carbs, fat };
       const data = getData();
-      data.meals.push({ id: Date.now(), name, quantity, calories, protein, carbs, fat });
+      data.meals.push(meal);
       saveData(data);
+
+      if (document.getElementById('meal-save-fav')?.checked) saveMealToLib(meal);
 
       baseNutrition = null;
       document.getElementById('form-add-meal').reset();

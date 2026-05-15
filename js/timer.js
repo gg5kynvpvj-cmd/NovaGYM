@@ -1,35 +1,81 @@
 /* ═══════════════════════════════════════════════════════════
-   NovaGYM — Chronomètre de repos STICKY
-   Reste visible en permanence quand actif (même en scrollant)
+   NovaGYM — Chronomètre Dynamic Island
+   iOS-compatible : AudioContext partagé, déverrouillé au 1er touch
    ═══════════════════════════════════════════════════════════ */
 
 window.Timer = (() => {
 
-  let seconds   = 90;   // Durée par défaut
-  let remaining = 0;
-  let running   = false;
-  let interval  = null;
+  let seconds      = 90;
+  let remaining    = 0;
+  let running      = false;
+  let interval     = null;
   let soundEnabled = true;
+  let isExpanded   = false;
 
-  const widget  = () => document.getElementById('timer-widget');
-  const display = () => document.getElementById('timer-display');
-  const toggle  = () => document.getElementById('timer-toggle');
+  /* ─── AudioContext partagé (iOS exige un seul contexte) ─── */
+  let _ctx = null;
 
-  /* ─── Affichage ──────────────────────────────────────── */
-  function formatTime(s) {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  function getCtx() {
+    if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)();
+    return _ctx;
+  }
+
+  function unlockAudio() {
+    try {
+      const ctx = getCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+    } catch (e) {}
+  }
+
+  /* ─── Refs DOM ───────────────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+
+  /* ─── Affichage ──────────────────────────────────────────── */
+  function fmt(s) {
+    return `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
   }
 
   function updateDisplay() {
-    const d = display();
-    if (!d) return;
-    d.textContent = formatTime(remaining);
-    d.classList.toggle('warning', remaining <= 15 && running);
+    const time      = fmt(remaining);
+    const isWarning = remaining <= 15 && running;
+
+    const ds = $('timer-display');
+    if (ds) { ds.textContent = time; ds.classList.toggle('warning', isWarning); }
+
+    const db = $('timer-display-big');
+    if (db) { db.textContent = time; db.classList.toggle('warning', isWarning); }
   }
 
-  /* ─── Contrôles ──────────────────────────────────────── */
+  function updateBtns() {
+    const icon = running ? '⏸' : '▶';
+    const bg   = running ? 'rgba(255,255,255,0.15)' : 'var(--accent)';
+    const col  = running ? '#fff' : '#000';
+    [$('timer-toggle'), $('timer-toggle-big')].forEach(btn => {
+      if (!btn) return;
+      btn.textContent     = icon;
+      btn.style.background = bg;
+      btn.style.color      = col;
+    });
+  }
+
+  /* ─── Expand / Collapse ──────────────────────────────────── */
+  function expand() {
+    isExpanded = true;
+    $('di-collapsed')?.classList.add('hidden');
+    $('di-expanded')?.classList.remove('hidden');
+  }
+
+  function collapse() {
+    isExpanded = false;
+    $('di-collapsed')?.classList.remove('hidden');
+    $('di-expanded')?.classList.add('hidden');
+  }
+
+  /* ─── Visibilité widget ──────────────────────────────────── */
+  function showWidget() { $('timer-widget')?.classList.remove('hidden'); }
+  function hideWidget()  { pause(); $('timer-widget')?.classList.add('hidden'); collapse(); }
+
+  /* ─── Contrôles ──────────────────────────────────────────── */
   function start(secs) {
     if (secs !== undefined) seconds = secs;
     remaining = seconds;
@@ -37,38 +83,43 @@ window.Timer = (() => {
     clearInterval(interval);
     interval = setInterval(tick, 1000);
     updateDisplay();
-    updateToggleBtn();
+    updateBtns();
     showWidget();
   }
 
   function pause() {
     running = false;
     clearInterval(interval);
-    updateToggleBtn();
+    updateBtns();
   }
 
   function resume() {
     if (remaining <= 0) { start(); return; }
     running  = true;
     interval = setInterval(tick, 1000);
-    updateToggleBtn();
+    updateBtns();
   }
 
   function reset() {
     pause();
     remaining = seconds;
-    running   = false;
     updateDisplay();
-    updateToggleBtn();
+    updateBtns();
+  }
+
+  function handleToggle() {
+    if (running) pause();
+    else if (remaining > 0) resume();
+    else start();
   }
 
   function tick() {
     if (remaining <= 0) {
       clearInterval(interval);
-      running = false;
+      running   = false;
       remaining = 0;
       updateDisplay();
-      updateToggleBtn();
+      updateBtns();
       playEndAlarm();
       return;
     }
@@ -77,97 +128,84 @@ window.Timer = (() => {
     updateDisplay();
   }
 
-  function updateToggleBtn() {
-    const btn = toggle();
-    if (!btn) return;
-    btn.textContent = running ? '⏸' : '▶';
-    btn.style.background = running ? '#333' : 'var(--accent)';
-    btn.style.color = running ? '#fff' : '#000';
+  /* ─── Sons ───────────────────────────────────────────────── */
+  function playBeeps(freqList, offsets, vol, dur) {
+    if (!soundEnabled) return;
+    try {
+      const ctx = getCtx();
+      ctx.resume().then(() => {
+        offsets.forEach((t, i) => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.connect(g);
+          g.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freqList[i] ?? freqList[0], ctx.currentTime + t);
+          g.gain.setValueAtTime(vol, ctx.currentTime + t);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + dur);
+          osc.start(ctx.currentTime + t);
+          osc.stop(ctx.currentTime + t + dur);
+        });
+      });
+    } catch (e) {}
   }
 
-  /* ─── Visibilité du widget ───────────────────────────── */
-  function showWidget() {
-    widget()?.classList.remove('hidden');
-  }
-
-  function hideWidget() {
-    pause();
-    widget()?.classList.add('hidden');
-  }
-
-  /* ─── Sons ───────────────────────────────────────────── */
-
-  // Alerte 15 secondes : 3 bips courts répétés
   function playWarningBeep() {
-    if (!soundEnabled) return;
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.3, 0.6].forEach(offset => {
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(660, ctx.currentTime + offset);
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.28, ctx.currentTime + offset);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.22);
-        osc.start(ctx.currentTime + offset);
-        osc.stop(ctx.currentTime + offset + 0.22);
-      });
-    } catch(e) {}
+    playBeeps([660, 660, 660], [0, 0.28, 0.56], 0.28, 0.22);
   }
 
-  // Alarme de fin : 5 bips forts et longs
   function playEndAlarm() {
-    if (!soundEnabled) return;
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.45, 0.9, 1.35, 1.8].forEach((offset, i) => {
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        // Légère montée de fréquence sur les derniers bips
-        osc.frequency.setValueAtTime(i < 3 ? 880 : 1040, ctx.currentTime + offset);
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.6, ctx.currentTime + offset);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.38);
-        osc.start(ctx.currentTime + offset);
-        osc.stop(ctx.currentTime + offset + 0.38);
-      });
-    } catch(e) {}
+    playBeeps([880, 880, 880, 1040, 1040], [0, 0.42, 0.84, 1.26, 1.68], 0.6, 0.36);
   }
 
-  /* ─── Init ───────────────────────────────────────────── */
+  /* ─── Init ───────────────────────────────────────────────── */
   function init() {
-    // Bouton play/pause
-    document.getElementById('timer-toggle')?.addEventListener('click', () => {
-      if (running) pause();
-      else if (remaining > 0) resume();
-      else start();
+    /* Déverrouiller l'audio dès le 1er geste (obligatoire sur iOS) */
+    const unlock = () => {
+      unlockAudio();
+      document.removeEventListener('touchstart', unlock, true);
+      document.removeEventListener('click', unlock, true);
+    };
+    document.addEventListener('touchstart', unlock, { capture: true, passive: true });
+    document.addEventListener('click', unlock, true);
+
+    /* Expand au tap sur la pilule collapsed */
+    $('di-collapsed')?.addEventListener('click', e => {
+      if (e.target.closest('#timer-toggle')) return; // laisse le bouton gérer
+      expand();
     });
 
-    // Presets
+    /* Collapse au clic hors du widget */
+    document.addEventListener('click', e => {
+      if (isExpanded && !e.target.closest('#timer-widget')) collapse();
+    });
+
+    /* Boutons play/pause */
+    $('timer-toggle')?.addEventListener('click', e => {
+      e.stopPropagation();
+      handleToggle();
+    });
+    $('timer-toggle-big')?.addEventListener('click', e => {
+      e.stopPropagation();
+      handleToggle();
+    });
+
+    /* Presets */
     document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const secs = parseInt(btn.dataset.seconds);
-        start(secs);
-        // Feedback visuel
-        document.querySelectorAll('.preset-btn').forEach(b => b.style.background = '');
-        btn.style.background = 'var(--accent)';
-        btn.style.color = '#000';
-        setTimeout(() => {
-          btn.style.background = '';
-          btn.style.color = '';
-        }, 400);
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        start(parseInt(btn.dataset.seconds));
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 400);
       });
     });
 
-    // Son (réglage depuis settings)
-    const soundToggle = document.getElementById('toggle-timer-sound');
+    /* Toggle son */
+    const soundToggle = $('toggle-timer-sound');
     if (soundToggle) {
       const stored = App.local.get('timer_sound');
-      soundEnabled = stored !== false;
+      soundEnabled       = stored !== false;
       soundToggle.checked = soundEnabled;
       soundToggle.addEventListener('change', () => {
         soundEnabled = soundToggle.checked;
@@ -176,13 +214,15 @@ window.Timer = (() => {
     }
 
     updateDisplay();
+    updateBtns();
   }
 
-  /* Démarrer depuis l'extérieur (ex: après avoir coché une série) */
-  function startDefault() {
-    start(seconds);
-  }
+  function startDefault() { start(seconds); }
 
-  return { init, start, pause, resume, reset, hideWidget, showWidget, startDefault, playEndAlarm, get running() { return running; } };
+  return {
+    init, start, pause, resume, reset,
+    hideWidget, showWidget, startDefault, playEndAlarm,
+    get running() { return running; }
+  };
 
 })();
