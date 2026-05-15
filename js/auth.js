@@ -44,7 +44,9 @@ window.Auth = (() => {
       const email = document.getElementById('login-email')?.value?.trim();
       if (!email) { showError('login-error', "Saisis ton email d'abord."); return; }
       if (App.supabase) {
-        await App.supabase.auth.resetPasswordForEmail(email);
+        await App.supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: 'https://www.novagympro.com'
+        });
       }
       showError('login-error', '📧 Email de réinitialisation envoyé !');
     });
