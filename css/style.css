@@ -1653,7 +1653,7 @@ input.set-reps-input { border-color: var(--accent-30); }
   height: 140px;
   flex-shrink: 0;
 }
-#nutrition-ring { display: block; }
+#nutrition-ring { display: block; width: 140px; height: 140px; }
 .nutrition-ring-center {
   position: absolute;
   inset: 0;
