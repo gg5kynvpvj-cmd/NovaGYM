@@ -704,6 +704,28 @@
     </div>
   </div>
 
+  <!-- Éditeur de séance sauvegardée -->
+  <div id="modal-edit-workout" class="modal-overlay hidden">
+    <div class="modal-sheet modal-sheet-full">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">Modifier la séance</h2>
+        <button id="btn-close-edit-workout" class="modal-close">✕</button>
+      </div>
+      <div class="create-exercise-form">
+        <div class="input-group">
+          <label class="input-label">Nom</label>
+          <input id="ew-name" type="text" class="input-field">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Exercices</label>
+          <div id="ew-exercises-list" class="ew-exercises-list"></div>
+        </div>
+        <button id="btn-ew-save" class="btn-primary btn-full">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Favoris repas -->
   <div id="modal-meal-favs" class="modal-overlay hidden">
     <div class="modal-sheet">

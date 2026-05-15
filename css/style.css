@@ -1800,6 +1800,17 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .ee-set-row { display: flex; align-items: center; gap: 8px; }
 .ee-set-row .input-field { padding: 8px 10px; font-size: 14px; }
 
+/* ─── Éditeur de séance sauvegardée ─────────────────────── */
+.ew-exercises-list { display: flex; flex-direction: column; gap: 8px; }
+.we-ex-row { display: flex; align-items: center; gap: 8px; background: var(--bg-card-2); border-radius: var(--radius-md); padding: 10px 12px; }
+.we-ex-name { flex: 1; font-size: 14px; font-weight: 600; }
+.we-ex-btns { display: flex; gap: 4px; flex-shrink: 0; }
+.we-ex-btn { font-size: 14px; padding: 4px 8px; border-radius: var(--radius-sm); background: var(--bg-card-3); color: var(--text-2); }
+.we-ex-btn:disabled { opacity: 0.3; }
+.we-ex-btn.we-ex-del { color: var(--danger, #f55); }
+.workout-lib-edit { color: var(--text-2); font-size: 15px; padding: 4px 8px; }
+.workout-lib-edit:active { color: var(--accent); }
+
 .picker-search-input {
   width: 100%;
   background: var(--bg-card-2);

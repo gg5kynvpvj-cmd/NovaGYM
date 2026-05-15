@@ -894,10 +894,14 @@ window.Today = (() => {
           <div class="workout-lib-name">${t.name}</div>
           <div class="workout-lib-meta">${t.exercises.length} exercice${t.exercises.length > 1 ? 's' : ''}</div>
         </div>
+        <button class="workout-lib-edit" data-edit-id="${t.id}" title="Modifier">✎</button>
         <button class="workout-lib-load" data-lib-id="${t.id}">Charger</button>
         <button class="workout-lib-del" data-del-id="${t.id}">✕</button>
       </div>
     `).join('');
+    list.querySelectorAll('.workout-lib-edit').forEach(btn => {
+      btn.addEventListener('click', () => openWorkoutEditor(parseInt(btn.dataset.editId)));
+    });
     list.querySelectorAll('.workout-lib-load').forEach(btn => {
       btn.addEventListener('click', () => {
         const t = getWorkoutLib().find(t => t.id == btn.dataset.libId);
@@ -918,6 +922,67 @@ window.Today = (() => {
     list.querySelectorAll('.workout-lib-del').forEach(btn => {
       btn.addEventListener('click', () => deleteWorkoutFromLib(parseInt(btn.dataset.delId)));
     });
+  }
+
+  /* ─── Éditeur de séance sauvegardée ─────────────────────── */
+  function openWorkoutEditor(workoutId) {
+    const lib     = getWorkoutLib();
+    const workout = lib.find(t => t.id === workoutId);
+    if (!workout) return;
+
+    let editingExercises = workout.exercises.map(e => ({ ...e }));
+
+    document.getElementById('ew-name').value = workout.name;
+
+    function renderEditorExercises() {
+      const container = document.getElementById('ew-exercises-list');
+      if (!container) return;
+      container.innerHTML = '';
+      editingExercises.forEach((ex, i) => {
+        const row = document.createElement('div');
+        row.className = 'we-ex-row';
+        row.innerHTML = `
+          <span class="we-ex-name">${ex.name}</span>
+          <div class="we-ex-btns">
+            <button class="we-ex-btn" data-up="${i}" ${i === 0 ? 'disabled' : ''}>↑</button>
+            <button class="we-ex-btn" data-down="${i}" ${i === editingExercises.length - 1 ? 'disabled' : ''}>↓</button>
+            <button class="we-ex-btn we-ex-del" data-del="${i}">✕</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      container.querySelectorAll('[data-up]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.up);
+          if (idx > 0) { [editingExercises[idx - 1], editingExercises[idx]] = [editingExercises[idx], editingExercises[idx - 1]]; renderEditorExercises(); }
+        });
+      });
+      container.querySelectorAll('[data-down]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.down);
+          if (idx < editingExercises.length - 1) { [editingExercises[idx], editingExercises[idx + 1]] = [editingExercises[idx + 1], editingExercises[idx]]; renderEditorExercises(); }
+        });
+      });
+      container.querySelectorAll('[data-del]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          editingExercises.splice(parseInt(btn.dataset.del), 1);
+          renderEditorExercises();
+        });
+      });
+    }
+
+    renderEditorExercises();
+    document.getElementById('modal-edit-workout')?.classList.remove('hidden');
+
+    document.getElementById('btn-ew-save').onclick = () => {
+      const newName = document.getElementById('ew-name').value.trim();
+      if (!newName) return;
+      workout.name      = newName;
+      workout.exercises = editingExercises;
+      App.local.set('workout_library', lib);
+      closeModal('modal-edit-workout');
+      renderWorkoutLib();
+    };
   }
 
   /* ─── Éditeur d'exercice (modal 📝) ─────────────────── */
@@ -1010,6 +1075,14 @@ window.Today = (() => {
     });
     document.getElementById('modal-workout-lib')?.addEventListener('click', function(e) {
       if (e.target === this) closeModal('modal-workout-lib');
+    });
+
+    // Éditeur de séance sauvegardée
+    document.getElementById('btn-close-edit-workout')?.addEventListener('click', () => {
+      closeModal('modal-edit-workout');
+    });
+    document.getElementById('modal-edit-workout')?.addEventListener('click', function(e) {
+      if (e.target === this) closeModal('modal-edit-workout');
     });
     document.getElementById('btn-save-workout-lib')?.addEventListener('click', () => {
       if (currentExercises.length === 0) { alert('Ajoute des exercices avant de sauvegarder.'); return; }
