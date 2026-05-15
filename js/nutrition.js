@@ -26,9 +26,11 @@ window.Nutrition = (() => {
 
   /* ─── Clés localStorage ──────────────────────────────── */
   function dayKey(date) {
-    return 'nutrition_' + (date instanceof Date
-      ? date.toISOString().split('T')[0]
-      : date);
+    const d = date instanceof Date ? date : new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return 'nutrition_' + y + '-' + m + '-' + day;
   }
 
   function todayKey() { return dayKey(new Date()); }
