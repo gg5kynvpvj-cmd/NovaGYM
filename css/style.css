@@ -780,6 +780,16 @@ input.set-reps-input {
   text-align: center;
 }
 input.set-reps-input { border-color: var(--accent-30); }
+
+/* Supprimer les spin buttons sur PC pour éviter l'élargissement des inputs */
+input.set-reps-input::-webkit-outer-spin-button,
+input.set-reps-input::-webkit-inner-spin-button,
+input.set-weight-input::-webkit-outer-spin-button,
+input.set-weight-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
+
+/* Label ∞ pour séries à l'échec */
+.set-reps-label.failure { color: var(--accent); font-size: 15px; }
 .set-check-btn {
   width: 32px;
   height: 32px;

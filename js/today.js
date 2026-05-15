@@ -409,8 +409,8 @@ window.Today = (() => {
 
     item.innerHTML = `
       <span class="set-number">${index === 0 ? 'W' : 'S' + index}</span>
-      <span class="set-reps-label">×${repTarget}${isFailure ? " (à l'échec)" : ''}</span>
-      <input class="set-reps-input" type="number" placeholder="" min="0" step="1">
+      <span class="set-reps-label${isFailure ? ' failure' : ''}">×${repTarget}</span>
+      <input class="set-reps-input" type="number" placeholder="${isFailure ? '∞' : ''}" min="0" step="1">
       <input class="set-weight-input" type="number" placeholder="kg" min="0" step="0.5">
       <button class="set-check-btn" type="button">✓</button>
     `;
