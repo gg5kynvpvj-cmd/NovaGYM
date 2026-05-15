@@ -82,9 +82,10 @@ window.Badges = (() => {
 
     const created    = profile?.created_at ? new Date(profile.created_at) : new Date();
     const daysSince  = Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24));
-    // Une seule séance par date calendaire compte (évite le farming)
-    const uniqueDates = new Set(sessions.filter(s => s.completed).map(s => s.date));
-    const totalDone  = uniqueDates.size;
+    // Max 2 séances par date calendaire comptent (évite le farming)
+    const dateCounts = {};
+    sessions.filter(s => s.completed).forEach(s => { dateCounts[s.date] = (dateCounts[s.date] || 0) + 1; });
+    const totalDone = Object.values(dateCounts).reduce((sum, n) => sum + Math.min(n, 2), 0);
     const streak     = calculateStreak(sessions);
 
     const conditions = {
