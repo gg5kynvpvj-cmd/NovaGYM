@@ -759,12 +759,14 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   color: var(--text-2);
   min-width: 24px;
 }
-.set-reps-label {
+.set-reps-label, .uni-reps-lbl {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-2);
   flex-shrink: 0;
-  min-width: 28px;
+  min-width: 52px;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--accent-30);
 }
 input.set-weight-input,
 input.set-reps-input {
