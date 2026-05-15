@@ -197,6 +197,26 @@ window.Auth = (() => {
 
   /* ─── Session persistante (démarrage app) ────────────── */
   async function checkSession() {
+    // Détecte le flux de réinitialisation de mot de passe
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('type') === 'recovery' && params.get('token_hash') && App.supabase) {
+      try {
+        const { data } = await App.supabase.auth.verifyOtp({
+          token_hash: params.get('token_hash'),
+          type: 'recovery',
+        });
+        if (data?.session) {
+          App.state.user = data.session.user;
+          // Pré-remplit l'email sur la page reset
+          const emailEl = document.getElementById('reset-email');
+          if (emailEl) emailEl.value = data.session.user.email;
+        }
+      } catch(e) {
+        console.warn('Recovery token exchange failed:', e.message);
+      }
+      return 'reset';
+    }
+
     // Vérifie session Supabase
     if (App.supabase) {
       try {
