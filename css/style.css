@@ -670,7 +670,16 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   border-radius: var(--radius-pill);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
 }
+.session-type-badge:active { opacity: 0.75; }
+.session-change-hint { font-size: 12px; opacity: 0.7; font-weight: 600; }
+.session-estimated-time { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.picker-ex-cat { font-size: 10px; color: var(--text-2); font-weight: 400; }
 .session-progress { font-size: 13px; color: var(--text-2); }
 
 /* Exercise cards */
@@ -1761,6 +1770,33 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 }
 
 /* ─── Picker exercices ───────────────────────────────────── */
+.picker-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 0;
+}
+.picker-search-row .picker-search-input { margin-bottom: 0; flex: 1; }
+.btn-create-exercise {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.btn-create-exercise:active { opacity: 0.75; }
+
+.create-exercise-form { padding: 0 20px 30px; display: flex; flex-direction: column; gap: 14px; }
+.toggle-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); cursor: pointer; }
+.toggle-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+
 .picker-search-input {
   width: 100%;
   background: var(--bg-card-2);
@@ -2108,6 +2144,7 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 /* ─── Bouton supprimer exercice ─────────────────────────── */
 .exercise-delete-btn { color: var(--danger) !important; }
 .exercise-delete-btn:active { background: var(--danger) !important; border-color: var(--danger) !important; color: #fff !important; }
+.exercise-move-btn { color: var(--text-2) !important; font-size: 14px !important; }
 
 /* ─── History card — layout colonne ─────────────────────── */
 .history-card {

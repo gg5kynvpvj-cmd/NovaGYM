@@ -172,6 +172,32 @@ window.Today = (() => {
     }
   }
 
+  /* ─── Réordonnancement exercices ────────────────────── */
+  function moveExercise(exerciseId, direction) {
+    const idx = currentExercises.findIndex(e => e.id === exerciseId);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= currentExercises.length) return;
+    [currentExercises[idx], currentExercises[newIdx]] = [currentExercises[newIdx], currentExercises[idx]];
+    reRenderExerciseList();
+  }
+
+  function reRenderExerciseList() {
+    const list   = document.getElementById('exercise-list');
+    const addBtn = document.getElementById('btn-add-exercise-today');
+    const libBtn = list?.querySelector('.add-exercise-btn:last-child');
+    if (!list) return;
+    // Retire toutes les cartes sans toucher aux boutons d'ajout
+    list.querySelectorAll('.exercise-card').forEach(c => c.remove());
+    // Réinsère dans le bon ordre avant le premier bouton d'ajout
+    const firstBtn = list.querySelector('.add-exercise-btn');
+    currentExercises.forEach((ex, i) => {
+      const card = renderExerciseCard(ex, i);
+      list.insertBefore(card, firstBtn || null);
+    });
+    updateProgress();
+  }
+
   /* ─── Render exercices ───────────────────────────────── */
   function renderExerciseCard(exercise, index) {
     const profile     = App.state.profile;
@@ -196,6 +222,19 @@ window.Today = (() => {
 
     const headerRight = document.createElement('div');
     headerRight.className = 'exercise-header-right';
+
+    // Boutons réordonnancement ↑ ↓
+    const upBtn = document.createElement('button');
+    upBtn.className = 'exercise-info-btn exercise-move-btn';
+    upBtn.title = 'Monter'; upBtn.textContent = '↑';
+    upBtn.addEventListener('click', (e) => { e.stopPropagation(); moveExercise(exercise.id, -1); });
+    headerRight.appendChild(upBtn);
+
+    const downBtn = document.createElement('button');
+    downBtn.className = 'exercise-info-btn exercise-move-btn';
+    downBtn.title = 'Descendre'; downBtn.textContent = '↓';
+    downBtn.addEventListener('click', (e) => { e.stopPropagation(); moveExercise(exercise.id, 1); });
+    headerRight.appendChild(downBtn);
 
     // Info (tous les utilisateurs)
     const infoBtn = document.createElement('button');
@@ -708,10 +747,12 @@ window.Today = (() => {
 
     // Badge du type de séance
     const typeName = Programs.SESSION_NAMES[sessionType] || sessionType;
-    document.getElementById('session-type-badge').textContent = typeName;
+    const nameEl = document.getElementById('session-type-name');
+    if (nameEl) nameEl.textContent = typeName;
 
     // Charge les exercices
     currentExercises = Programs.getExercisesForType(sessionType, profile.program_type, profile.level, profile.location);
+    updateEstimatedTime(currentExercises);
     completedSets    = {};
     sessionStartTime = Date.now();
 
@@ -780,7 +821,16 @@ window.Today = (() => {
       renderPickerExercises(exercises);
     }
 
-    function renderPickerExercises(list) {
+    function getAllExercises() {
+      const all = [];
+      ALL_CATEGORIES.forEach(c => {
+        const exs = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(c.key) : (window.EXERCISES?.[c.key] || []);
+        exs.forEach(e => all.push({ ...e, _cat: c.key }));
+      });
+      return all;
+    }
+
+    function renderPickerExercises(list, showCat = false) {
       const q = search?.value?.toLowerCase() || '';
       const filtered = q ? list.filter(e => e.name?.toLowerCase().includes(q)
         || (e.muscles || []).some(m => m.toLowerCase().includes(q))) : list;
@@ -789,16 +839,20 @@ window.Today = (() => {
         exList.innerHTML = `<p class="picker-empty">Aucun exercice trouvé</p>`;
         return;
       }
-      exList.innerHTML = filtered.map(ex => `
-        <button class="picker-ex-btn" data-id="${ex.id}" data-cat="${activeCat || ''}">
-          <span class="picker-ex-name">${ex.name}</span>
-          <span class="picker-ex-muscles">${(ex.muscles || []).slice(0,2).join(', ')}</span>
-        </button>
-      `).join('');
+      exList.innerHTML = filtered.map(ex => {
+        const cat = ex._cat || activeCat || '';
+        const catLabel = showCat ? (ALL_CATEGORIES.find(c => c.key === cat)?.label || '') : '';
+        return `
+          <button class="picker-ex-btn" data-id="${ex.id}" data-cat="${cat}">
+            <span class="picker-ex-name">${ex.name}${catLabel ? `<span class="picker-ex-cat"> · ${catLabel}</span>` : ''}</span>
+            <span class="picker-ex-muscles">${(ex.muscles || []).slice(0,2).join(', ')}</span>
+          </button>`;
+      }).join('');
 
       exList.querySelectorAll('.picker-ex-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          const resolved = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(activeCat) : (window.EXERCISES?.[activeCat] || []);
+          const cat = btn.dataset.cat;
+          const resolved = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(cat) : (window.EXERCISES?.[cat] || []);
           const exercise = resolved.find(e => e.id === btn.dataset.id);
           if (!exercise) return;
           addPickedExercise(exercise);
@@ -807,13 +861,17 @@ window.Today = (() => {
       });
     }
 
-    // Search live
+    // Search live — global si query présente
     if (search) {
       search.value = '';
       search.oninput = () => {
-        if (!activeCat) return;
-        const exercises = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(activeCat) : (window.EXERCISES?.[activeCat] || []);
-        renderPickerExercises(exercises);
+        const q = search.value.trim();
+        if (q) {
+          catList.querySelectorAll('.picker-cat-btn').forEach(b => b.classList.remove('active'));
+          renderPickerExercises(getAllExercises(), true);
+        } else {
+          showCategory(activeCat || ALL_CATEGORIES[0].key);
+        }
       };
     }
 
@@ -846,9 +904,18 @@ window.Today = (() => {
 
   function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
 
+  /* ─── Temps estimé de séance ─────────────────────────── */
+  function updateEstimatedTime(exercises) {
+    const el = document.getElementById('session-estimated-time');
+    if (!el || !exercises) return;
+    const totalSets = exercises.reduce((sum, ex) => sum + (ex.defaultSets || 3), 0);
+    const minutes   = Math.round(totalSets * 2.5); // ~2.5 min par série (effort + repos)
+    el.textContent  = `~${minutes} min`;
+  }
+
   /* ─── Changement de type de séance ───────────────────── */
   function initSessionTypeChange() {
-    document.getElementById('btn-change-session-type')?.addEventListener('click', () => {
+    function openSessionTypeModal() {
       const modal    = document.getElementById('modal-session-type');
       const typeList = document.getElementById('session-type-list');
       if (!modal || !typeList) return;
@@ -864,8 +931,8 @@ window.Today = (() => {
       typeList.querySelectorAll('[data-type]').forEach(btn => {
         btn.addEventListener('click', () => {
           sessionType = btn.dataset.type;
-          document.getElementById('session-type-badge').textContent =
-            Programs.SESSION_NAMES[sessionType] || sessionType;
+          const nameEl = document.getElementById('session-type-name');
+          if (nameEl) nameEl.textContent = Programs.SESSION_NAMES[sessionType] || sessionType;
 
           const profile = App.state.profile;
           currentExercises = Programs.getExercisesForType(
@@ -894,12 +961,15 @@ window.Today = (() => {
           list.appendChild(libBtn2);
 
           updateProgress();
+          updateEstimatedTime(currentExercises);
           closeModal('modal-session-type');
         });
       });
 
       modal.classList.remove('hidden');
-    });
+    }
+
+    document.getElementById('session-type-badge')?.addEventListener('click', openSessionTypeModal);
 
     document.getElementById('modal-session-type')?.addEventListener('click', function(e) {
       if (e.target === this) this.classList.add('hidden');
@@ -997,6 +1067,46 @@ window.Today = (() => {
     });
     document.getElementById('modal-exercise-picker')?.addEventListener('click', function(e) {
       if (e.target === this) closeModal('modal-exercise-picker');
+    });
+
+    // Créer exercice personnalisé
+    document.getElementById('btn-create-exercise')?.addEventListener('click', () => {
+      closeModal('modal-exercise-picker');
+      document.getElementById('ce-name').value = '';
+      document.getElementById('ce-sets').value = '3';
+      document.getElementById('ce-reps').value = '10';
+      document.getElementById('ce-rest').value = '90';
+      document.getElementById('ce-unilateral').checked = false;
+      document.getElementById('ce-error').textContent = '';
+      document.getElementById('modal-create-exercise')?.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-create-exercise')?.addEventListener('click', () => {
+      closeModal('modal-create-exercise');
+    });
+    document.getElementById('modal-create-exercise')?.addEventListener('click', function(e) {
+      if (e.target === this) closeModal('modal-create-exercise');
+    });
+    document.getElementById('btn-save-custom-exercise')?.addEventListener('click', () => {
+      const name = document.getElementById('ce-name').value.trim();
+      if (!name) { document.getElementById('ce-error').textContent = 'Saisis un nom.'; return; }
+      const muscle = document.getElementById('ce-muscle').value;
+      const sets   = parseInt(document.getElementById('ce-sets').value) || 3;
+      const reps   = parseInt(document.getElementById('ce-reps').value) || 10;
+      const rest   = parseInt(document.getElementById('ce-rest').value) || 90;
+      const uni    = document.getElementById('ce-unilateral').checked;
+
+      const customEx = {
+        id:          'custom_' + Date.now(),
+        name,
+        muscles:     [muscle],
+        defaultSets: sets,
+        defaultReps: reps,
+        restSeconds: rest,
+        isUnilateral: uni,
+        isCustom:    true,
+      };
+      addPickedExercise(customEx);
+      closeModal('modal-create-exercise');
     });
 
     document.getElementById('btn-finish-session')?.addEventListener('click', () => {

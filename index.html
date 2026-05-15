@@ -383,13 +383,11 @@
       <div id="session-container">
         <div class="session-header">
           <div class="session-type-row">
-            <button id="session-type-badge" class="session-type-badge" data-i18n="today.session_badge">Séance</button>
-            <button id="btn-change-session-type" class="session-type-edit-btn" title="Changer de séance" data-i18n="today.change_session">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-              </svg>
+            <button id="session-type-badge" class="session-type-badge" title="Changer de séance">
+              <span id="session-type-name">Séance</span>
+              <span class="session-change-hint">✎</span>
             </button>
+            <span id="session-estimated-time" class="session-estimated-time"></span>
           </div>
           <span id="session-progress-text" class="session-progress">0 / 0 exercices</span>
         </div>
@@ -727,9 +725,68 @@
         <h2 class="modal-title" data-i18n="modal.add_exercise">Ajouter un exercice</h2>
         <button id="btn-close-exercise-picker" class="modal-close">✕</button>
       </div>
-      <input id="picker-search" type="text" class="picker-search-input" placeholder="Rechercher un exercice..." data-i18n-ph="modal.search_exercise">
+      <div class="picker-search-row">
+        <input id="picker-search" type="text" class="picker-search-input" placeholder="Rechercher un exercice..." data-i18n-ph="modal.search_exercise">
+        <button id="btn-create-exercise" class="btn-create-exercise" title="Créer un exercice personnalisé">＋</button>
+      </div>
       <div id="picker-categories" class="picker-categories"></div>
       <div id="picker-exercise-list" class="picker-exercise-list"></div>
+    </div>
+  </div>
+
+  <!-- Créer exercice personnalisé -->
+  <div id="modal-create-exercise" class="modal-overlay hidden">
+    <div class="modal-sheet modal-sheet-full">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">Créer un exercice</h2>
+        <button id="btn-close-create-exercise" class="modal-close">✕</button>
+      </div>
+      <div class="create-exercise-form">
+        <div class="input-group">
+          <label class="input-label">Nom de l'exercice</label>
+          <input id="ce-name" type="text" placeholder="Ex: Curl marteau" class="input-field">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Groupe musculaire</label>
+          <select id="ce-muscle" class="input-field">
+            <option value="pectoraux">Pectoraux</option>
+            <option value="dos">Dos</option>
+            <option value="epaules">Épaules</option>
+            <option value="biceps">Biceps</option>
+            <option value="triceps">Triceps</option>
+            <option value="abdominaux">Abdominaux</option>
+            <option value="quadriceps">Quadriceps</option>
+            <option value="ischio">Ischio-jambiers</option>
+            <option value="fessiers">Fessiers</option>
+            <option value="mollets">Mollets</option>
+            <option value="polyarticular">Polyarticulaire</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <div class="input-group half">
+            <label class="input-label">Séries</label>
+            <input id="ce-sets" type="number" value="3" min="1" max="10" class="input-field" inputmode="numeric">
+          </div>
+          <div class="input-group half">
+            <label class="input-label">Répétitions</label>
+            <input id="ce-reps" type="number" value="10" min="1" max="100" class="input-field" inputmode="numeric">
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Repos entre les séries (secondes)</label>
+          <input id="ce-rest" type="number" value="90" min="0" max="600" step="15" class="input-field" inputmode="numeric">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Options</label>
+          <label class="toggle-row">
+            <input id="ce-unilateral" type="checkbox">
+            <span>Exercice unilatéral (côté gauche / droit)</span>
+          </label>
+        </div>
+        <p id="ce-error" class="auth-error"></p>
+        <button id="btn-save-custom-exercise" class="btn-primary btn-full">Ajouter à ma séance</button>
+      </div>
     </div>
   </div>
 
