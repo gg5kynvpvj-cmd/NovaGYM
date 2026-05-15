@@ -50,6 +50,10 @@ window.Auth = (() => {
       }
       showError('login-error', '📧 Email de réinitialisation envoyé !');
     });
+
+    document.getElementById('btn-forgot-email')?.addEventListener('click', () => {
+      showError('login-error', '📧 Contacte-nous à novagympro@proton.me pour retrouver ton compte.');
+    });
   }
 
   /* ─── LOGIN ──────────────────────────────────────────── */
@@ -95,9 +99,11 @@ window.Auth = (() => {
       const username = document.getElementById('register-username').value.trim();
       const email    = document.getElementById('register-email').value.trim();
       const password = document.getElementById('register-password').value;
+      const confirm  = document.getElementById('register-password-confirm').value;
 
-      if (!username || !email || !password) { showError('register-error', 'Remplis tous les champs.'); return; }
+      if (!username || !email || !password || !confirm) { showError('register-error', 'Remplis tous les champs.'); return; }
       if (password.length < 6) { showError('register-error', 'Mot de passe trop court (6 caractères min).'); return; }
+      if (password !== confirm) { showError('register-error', 'Les mots de passe ne correspondent pas.'); return; }
 
       setLoading('btn-register', true);
 
