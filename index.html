@@ -93,6 +93,31 @@
     </div>
   </div>
 
+  <!-- ═══ RESET PASSWORD ═══ -->
+  <div id="page-reset" class="page">
+    <div class="auth-container">
+      <div class="auth-logo">
+        <span class="logo-nova">Nova</span><span class="logo-gym">GYM</span>
+      </div>
+      <p class="auth-subtitle">Nouveau mot de passe</p>
+      <form id="form-reset" class="auth-form active">
+        <div class="input-group">
+          <label class="input-label">Nouveau mot de passe</label>
+          <input id="reset-password" type="password" placeholder="6 caractères min." minlength="6" autocomplete="new-password" required>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Confirmer le mot de passe</label>
+          <input id="reset-password-confirm" type="password" placeholder="••••••" autocomplete="new-password" required>
+        </div>
+        <p id="reset-error" class="auth-error"></p>
+        <button id="btn-reset" type="submit" class="btn-primary btn-full">
+          <span class="btn-text">Enregistrer</span>
+          <span class="btn-loader hidden">···</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- ═══ ONBOARDING ═══ -->
   <div id="page-onboarding" class="page">
     <div class="onboarding-header">

@@ -241,12 +241,49 @@ window.Auth = (() => {
     return msg;
   }
 
+  /* ─── Reset password (depuis email) ─────────────────── */
+  function initPasswordRecovery() {
+    // Écoute l'événement Supabase PASSWORD_RECOVERY
+    if (App.supabase) {
+      App.supabase.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          window.App.navigate('reset');
+        }
+      });
+    }
+
+    // Formulaire nouveau mot de passe
+    document.getElementById('form-reset')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('reset-password').value;
+      const confirm  = document.getElementById('reset-password-confirm').value;
+
+      if (password.length < 6) { showError('reset-error', 'Mot de passe trop court (6 caractères min).'); return; }
+      if (password !== confirm) { showError('reset-error', 'Les mots de passe ne correspondent pas.'); return; }
+
+      setLoading('btn-reset', true);
+      try {
+        const { error } = await App.supabase.auth.updateUser({ password });
+        if (error) throw error;
+        showError('reset-error', '');
+        // Retour à la connexion
+        window.App.navigate('auth');
+        showError('login-error', '✅ Mot de passe mis à jour ! Connecte-toi.');
+      } catch (err) {
+        showError('reset-error', translateError(err.message));
+      } finally {
+        setLoading('btn-reset', false);
+      }
+    });
+  }
+
   /* ─── Init ───────────────────────────────────────────── */
   function init() {
     initAuthTabs();
     initLogin();
     initRegister();
     initForgotPassword();
+    initPasswordRecovery();
 
     document.getElementById('btn-logout')?.addEventListener('click', () => {
       logout();
