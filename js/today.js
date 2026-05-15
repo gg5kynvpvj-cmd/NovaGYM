@@ -711,6 +711,18 @@ window.Today = (() => {
     App.local.set('sessions', sessions);
     App.state.sessions = sessions;
 
+    // Compte les exercices dont toutes les séries sont validées
+    const completedCount = currentExercises.filter(ex => {
+      const sets  = ex.sets_config || [];
+      const done  = completedSets[ex.id] || {};
+      if (sets.length === 0) return false;
+      return sets.every((sc, i) => {
+        const s = done[i];
+        if (ex.isUnilateral || (ex.isTimer && ex.isUnilateral)) return s?.left && s?.right;
+        return s === true;
+      });
+    }).length;
+
     // Réinitialise l'état de séance (permet un re-render propre si on revient sur Today)
     currentExercises = [];
     completedSets    = {};
@@ -760,7 +772,7 @@ window.Today = (() => {
       showCelebration(
         '🎉',
         'Séance terminée !',
-        `Bravo ${profile.username} ! ${currentExercises.length} exercices complétés. Récupère bien.`
+        `Bravo ${profile.username} ! ${completedCount} exercice${completedCount !== 1 ? 's' : ''} complété${completedCount !== 1 ? 's' : ''}. Récupère bien.`
       );
     }
 
