@@ -175,6 +175,7 @@ window.Nutrition = (() => {
 
     // Liste repas
     renderMealsList(meals);
+    renderQuickFavorites();
 
     // Affiche section repas
     showSection('nutr-meals-section', true);
@@ -299,7 +300,18 @@ window.Nutrition = (() => {
       const json = await res.json();
 
       if (json.status !== 1 || !json.product) {
-        alert('Produit introuvable dans Open Food Facts.');
+        const doManual = confirm('Produit introuvable dans Open Food Facts.\n\nVoulez-vous l\'ajouter manuellement ?');
+        if (doManual) {
+          baseNutrition = null;
+          setMealField('meal-name', '');
+          setMealField('meal-quantity', '');
+          setMealField('meal-calories', '');
+          setMealField('meal-protein', '');
+          setMealField('meal-carbs', '');
+          setMealField('meal-fat', '');
+          renderMealFavorites();
+          document.getElementById('modal-add-meal')?.classList.remove('hidden');
+        }
         return;
       }
 
@@ -455,6 +467,32 @@ window.Nutrition = (() => {
     });
   }
 
+  /* ─── Favoris rapides sur l'onglet principal ─────────── */
+  function renderQuickFavorites() {
+    const lib     = getMealLib();
+    const section = document.getElementById('nutr-quick-favs');
+    const list    = document.getElementById('nutr-quick-favs-list');
+    if (!section || !list) return;
+    if (lib.length === 0) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    list.innerHTML = lib.map(m => `
+      <button class="nutr-quick-fav-chip" data-fav-id="${m.id}" title="${m.name}">
+        <span>${m.name}</span>
+        <span class="nutr-quick-fav-cal">${m.calories} kcal</span>
+      </button>
+    `).join('');
+    list.querySelectorAll('.nutr-quick-fav-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const meal = getMealLib().find(m => m.id == btn.dataset.favId);
+        if (!meal) return;
+        const d = getData();
+        d.meals.push({ id: Date.now(), name: meal.name, calories: meal.calories, protein: meal.protein, carbs: meal.carbs, fat: meal.fat });
+        saveData(d);
+        render();
+      });
+    });
+  }
+
   /* ─── Init ───────────────────────────────────────────── */
   function init() {
     // Ouvrir modal ajout (ouverture manuelle — reset base)
@@ -500,7 +538,10 @@ window.Nutrition = (() => {
       data.meals.push(meal);
       saveData(data);
 
-      if (document.getElementById('meal-save-fav')?.checked) saveMealToLib(meal);
+      if (document.getElementById('meal-save-fav')?.checked) {
+        saveMealToLib(meal);
+        renderQuickFavorites();
+      }
 
       baseNutrition = null;
       document.getElementById('form-add-meal').reset();

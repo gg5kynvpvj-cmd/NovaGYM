@@ -288,12 +288,20 @@ window.Stats = (() => {
     if (App.supabase && userId && !userId.startsWith('local_')) {
       const { data } = await App.supabase
         .from('sessions')
-        .select('*')
+        .select('*, session_exercises(*)')
         .eq('user_id', userId)
         .order('date', { ascending: false });
       if (data) {
-        App.state.sessions = data;
-        App.local.set('sessions', data);
+        App.state.sessions = data.map(s => ({
+          ...s,
+          exercises: (s.session_exercises || []).map(ex => ({
+            name:    ex.exercise_name,
+            id:      ex.exercise_id,
+            weights: (ex.sets || []).map(set => set.weight),
+            reps:    (ex.sets || []).map(set => set.reps),
+          })),
+        }));
+        App.local.set('sessions', App.state.sessions);
         return;
       }
     }

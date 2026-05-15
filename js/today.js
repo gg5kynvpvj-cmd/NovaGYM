@@ -117,6 +117,7 @@ window.Today = (() => {
         d.steps = Math.max(0, parseInt(stepsInput.value) || 0);
         saveDailyData(d);
         renderDailyCard();
+        if (window.Nutrition) Nutrition.render();
       });
     }
     document.querySelectorAll('.steps-adj-btn').forEach(btn => {
@@ -125,6 +126,7 @@ window.Today = (() => {
         d.steps = Math.max(0, d.steps + parseInt(btn.dataset.adj));
         saveDailyData(d);
         renderDailyCard();
+        if (window.Nutrition) Nutrition.render();
       });
     });
 
@@ -321,8 +323,12 @@ window.Today = (() => {
     const repsMetaItem = makeCtrl('Reps', currentReps, 1, 50, (v) => {
       currentReps = v;
       setsRow.querySelectorAll('.set-reps-label').forEach((el, i) => {
+        const setItem = el.closest('.set-item, .set-item-unilateral');
+        const inp = setItem?.querySelector('.set-reps-input, .uni-reps-left');
+        if (inp?.value) return; // input already filled — keep label hidden
         const isFailure = profile?.series_type === 'fixed_failure' && i === setsRow.children.length - 1;
         el.textContent = `${v} reps${isFailure ? " (à l'échec)" : ''}`;
+        el.style.display = '';
       });
     });
 
@@ -619,14 +625,25 @@ window.Today = (() => {
 
     // Sauvegarde Supabase
     if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
-      await App.supabase.from('sessions').insert({
+      const { data: savedSession, error: sessionErr } = await App.supabase.from('sessions').insert({
         user_id:   session.user_id,
         date:      session.date,
         type:      session.type,
         duration:  session.duration,
         completed: true,
         volume:    totalVolume,
-      }).then(({ error }) => { if (error) console.warn(error.message); });
+      }).select('id').single();
+      if (sessionErr) { console.warn(sessionErr.message); }
+      else if (savedSession && exercisesData.length > 0) {
+        const exRows = exercisesData.map(ex => ({
+          session_id:    savedSession.id,
+          exercise_name: ex.name,
+          exercise_id:   String(ex.id || ''),
+          sets: ex.weights.map((w, i) => ({ weight: w, reps: ex.reps?.[i] ?? 0 })),
+        }));
+        await App.supabase.from('session_exercises').insert(exRows)
+          .then(({ error }) => { if (error) console.warn(error.message); });
+      }
     }
 
     Timer.hideWidget();
@@ -868,6 +885,14 @@ window.Today = (() => {
           addBtn.textContent = '+ Ajouter un exercice';
           addBtn.addEventListener('click', openExercisePicker);
           list.appendChild(addBtn);
+
+          const libBtn2 = document.createElement('button');
+          libBtn2.className = 'add-exercise-btn';
+          libBtn2.style.background = 'var(--bg-card-2)';
+          libBtn2.style.color = 'var(--text-2)';
+          libBtn2.textContent = '📚 Mes séances';
+          libBtn2.addEventListener('click', openWorkoutLib);
+          list.appendChild(libBtn2);
 
           updateProgress();
           closeModal('modal-session-type');

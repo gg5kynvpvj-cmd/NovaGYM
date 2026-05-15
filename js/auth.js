@@ -149,7 +149,22 @@ window.Auth = (() => {
         .select('*')
         .eq('id', userId)
         .single();
-      return data || null;
+      if (data) {
+        if (!data.username) {
+          // Trigger created an empty row — check if onboarding data is in localStorage
+          const localProfile = App.local.get('profile');
+          if (localProfile?.username) {
+            const merged = { ...localProfile, id: userId };
+            await App.supabase.from('profiles').upsert(merged);
+            App.local.set('profile', merged);
+            return merged;
+          }
+          return null; // no username anywhere → send to onboarding
+        }
+        App.local.set('profile', data); // keep local in sync
+        return data;
+      }
+      return null;
     }
     return App.local.get('profile');
   }
