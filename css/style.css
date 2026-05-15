@@ -823,6 +823,23 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   color: #000;
 }
 
+/* Timer sets */
+.set-item-timer { gap: 10px; }
+.set-timer-block { display: flex; align-items: center; gap: 8px; }
+.set-timer-toggle {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); color: #000;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+  transition: all 0.15s var(--ease);
+}
+.set-timer-toggle:disabled { background: var(--accent-30); color: var(--text-2); }
+.set-timer-disp {
+  font-size: 19px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 46px; color: var(--text); letter-spacing: -0.5px;
+}
+.set-item-timer .set-check-btn { margin-left: auto; }
+
 /* Unilateral sets */
 .set-item-unilateral {
   display: flex;

@@ -198,11 +198,23 @@ window.Today = (() => {
     updateProgress();
   }
 
+  /* ─── Formatage durée (mm:ss ou Xs) ─────────────────── */
+  function fmtDur(s) {
+    if (s >= 60) return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    return `${s}s`;
+  }
+
   /* ─── Config de séries par défaut ───────────────────── */
   function defaultSetsConfig(exercise) {
     const total = exercise.defaultSets || 3;
-    const reps  = exercise.defaultReps || 10;
-    const cfg   = [{ type: 'W', reps: Math.round(reps * 1.5) }];
+    if (exercise.isTimer) {
+      const dur = exercise.defaultReps || 30;
+      const cfg = [{ type: 'W', duration: Math.round(dur * 0.7) }];
+      for (let i = 1; i < total; i++) cfg.push({ type: 'S', duration: dur });
+      return cfg;
+    }
+    const reps = exercise.defaultReps || 10;
+    const cfg  = [{ type: 'W', reps: Math.round(reps * 1.5) }];
     for (let i = 1; i < total; i++) cfg.push({ type: 'S', reps });
     return cfg;
   }
@@ -310,9 +322,15 @@ window.Today = (() => {
     const getRestFn  = () => parseInt(App.local.get('rest_' + exercise.id)) || exercise.restSeconds || 90;
 
     exercise.sets_config.forEach((sc, i) => {
-      setsRow.appendChild(exercise.isUnilateral
-        ? buildUnilateralSet(exercise, i, sc.reps, getRestFn)
-        : buildRegularSet(exercise, i, sc, getRestFn));
+      let setEl;
+      if (exercise.isTimer) {
+        setEl = buildTimerSet(exercise, i, sc, getRestFn);
+      } else if (exercise.isUnilateral) {
+        setEl = buildUnilateralSet(exercise, i, sc.reps, getRestFn);
+      } else {
+        setEl = buildRegularSet(exercise, i, sc, getRestFn);
+      }
+      setsRow.appendChild(setEl);
     });
 
     collapseBody.appendChild(setsRow);
@@ -422,6 +440,158 @@ window.Today = (() => {
         updateProgress();
       });
     });
+
+    return item;
+  }
+
+  /* ─── Série avec chronomètre intégré ────────────────── */
+  function buildTimerSet(exercise, index, setConfig, getRestFn) {
+    const duration  = setConfig.duration ?? exercise.defaultReps ?? 30;
+    const label     = setLabel(exercise.sets_config || [], index);
+    const isUni     = exercise.isUnilateral;
+
+    const item = document.createElement('div');
+    item.className = 'set-item set-item-timer';
+
+    if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
+
+    if (isUni) {
+      // Gainage latéral : G et D avec comptes à rebours séparés
+      item.innerHTML = `
+        <div class="uni-header">
+          <span class="set-number">${label}</span>
+          <span class="set-reps-label">${fmtDur(duration)}</span>
+        </div>
+        <div class="uni-side-row" data-side="left">
+          <span class="uni-side-label">G</span>
+          <div class="set-timer-block">
+            <button class="set-timer-toggle" data-side="left" type="button">▶</button>
+            <span class="set-timer-disp" data-side="left">${fmtDur(duration)}</span>
+          </div>
+          <button class="unilateral-btn" data-side="left" type="button">✓</button>
+        </div>
+        <div class="uni-side-row" data-side="right">
+          <span class="uni-side-label">D</span>
+          <div class="set-timer-block">
+            <button class="set-timer-toggle" data-side="right" type="button">▶</button>
+            <span class="set-timer-disp" data-side="right">${fmtDur(duration)}</span>
+          </div>
+          <button class="unilateral-btn" data-side="right" type="button">✓</button>
+        </div>
+      `;
+
+      if (!completedSets[exercise.id][index]) completedSets[exercise.id][index] = { left: false, right: false };
+
+      ['left', 'right'].forEach(side => {
+        let rem = duration, running = false, iv = null;
+        const toggleBtn = item.querySelector(`.set-timer-toggle[data-side="${side}"]`);
+        const dispEl    = item.querySelector(`.set-timer-disp[data-side="${side}"]`);
+        const checkBtn  = item.querySelector(`.unilateral-btn[data-side="${side}"]`);
+        const sideRow   = item.querySelector(`.uni-side-row[data-side="${side}"]`);
+
+        function validateSide() {
+          clearInterval(iv); running = false;
+          toggleBtn.textContent = '✓'; toggleBtn.disabled = true;
+          completedSets[exercise.id][index][side] = true;
+          checkBtn.classList.add('done'); sideRow.classList.add('done');
+          const both = completedSets[exercise.id][index].left && completedSets[exercise.id][index].right;
+          item.classList.toggle('done', both);
+          if (both) Timer.start(getRestFn ? getRestFn() : undefined);
+          checkCardCompletion(exercise.id); updateProgress();
+        }
+
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (running) {
+            running = false; clearInterval(iv); toggleBtn.textContent = '▶';
+          } else {
+            if (rem <= 0) rem = duration;
+            running = true; toggleBtn.textContent = '⏸';
+            iv = setInterval(() => {
+              rem--;
+              dispEl.textContent = fmtDur(rem);
+              if (rem <= 0) { clearInterval(iv); running = false; validateSide(); }
+            }, 1000);
+          }
+        });
+
+        checkBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const done = !checkBtn.classList.contains('done');
+          if (done) {
+            validateSide();
+          } else {
+            clearInterval(iv); running = false; rem = duration;
+            toggleBtn.textContent = '▶'; toggleBtn.disabled = false;
+            dispEl.textContent = fmtDur(duration);
+            checkBtn.classList.remove('done'); sideRow.classList.remove('done');
+            item.classList.remove('done');
+            completedSets[exercise.id][index][side] = false;
+            checkCardCompletion(exercise.id); updateProgress();
+          }
+        });
+      });
+
+    } else {
+      // Exercice bilatéral (planche, etc.)
+      item.innerHTML = `
+        <span class="set-number">${label}</span>
+        <div class="set-timer-block">
+          <button class="set-timer-toggle" type="button">▶</button>
+          <span class="set-timer-disp">${fmtDur(duration)}</span>
+        </div>
+        <button class="set-check-btn" type="button">✓</button>
+      `;
+
+      let rem = duration, running = false, iv = null;
+      const toggleBtn = item.querySelector('.set-timer-toggle');
+      const dispEl    = item.querySelector('.set-timer-disp');
+      const checkBtn  = item.querySelector('.set-check-btn');
+
+      function validate() {
+        clearInterval(iv); running = false;
+        toggleBtn.textContent = '✓'; toggleBtn.disabled = true;
+        if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
+        completedSets[exercise.id][index] = true;
+        checkBtn.classList.add('done'); item.classList.add('done');
+        Timer.start(getRestFn ? getRestFn() : undefined);
+        checkCardCompletion(exercise.id); updateProgress();
+      }
+
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (running) {
+          running = false; clearInterval(iv); toggleBtn.textContent = '▶';
+        } else {
+          if (rem <= 0) rem = duration;
+          running = true; toggleBtn.textContent = '⏸';
+          iv = setInterval(() => {
+            rem--;
+            dispEl.textContent = fmtDur(rem);
+            if (rem <= 0) { clearInterval(iv); running = false; validate(); }
+          }, 1000);
+        }
+      });
+
+      checkBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const done = !checkBtn.classList.contains('done');
+        checkBtn.classList.toggle('done', done);
+        item.classList.toggle('done', done);
+        if (done) {
+          clearInterval(iv); running = false;
+          toggleBtn.textContent = '✓'; toggleBtn.disabled = true;
+          if (!completedSets[exercise.id]) completedSets[exercise.id] = {};
+          completedSets[exercise.id][index] = true;
+          Timer.start(getRestFn ? getRestFn() : undefined);
+        } else {
+          rem = duration; dispEl.textContent = fmtDur(duration);
+          toggleBtn.textContent = '▶'; toggleBtn.disabled = false;
+          delete completedSets[exercise.id]?.[index];
+        }
+        checkCardCompletion(exercise.id); updateProgress();
+      });
+    }
 
     return item;
   }
@@ -1045,7 +1215,7 @@ window.Today = (() => {
     document.getElementById('ee-rest').value = restVal;
 
     // Rend la liste des séries
-    renderEditorSets(exercise.sets_config);
+    renderEditorSets(exercise.sets_config, exercise.isTimer);
 
     modal.classList.remove('hidden');
 
@@ -1067,8 +1237,8 @@ window.Today = (() => {
 
     // Bouton + ajouter série
     document.getElementById('btn-ee-add-set').onclick = () => {
-      exercise.sets_config.push({ type: 'S', reps: 10 });
-      renderEditorSets(exercise.sets_config);
+      exercise.sets_config.push(exercise.isTimer ? { type: 'S', duration: exercise.defaultReps || 30 } : { type: 'S', reps: 10 });
+      renderEditorSets(exercise.sets_config, exercise.isTimer);
     };
 
     // Sauvegarde
@@ -1079,11 +1249,16 @@ window.Today = (() => {
 
       // Récupère les sets depuis le formulaire
       const rows = document.querySelectorAll('.ee-set-row');
-      exercise.sets_config = Array.from(rows).map(row => ({
-        type:      row.querySelector('.ee-set-type').value,
-        reps:      parseInt(row.querySelector('.ee-set-reps').value) || 10,
-        isFailure: row.querySelector('.ee-set-failure')?.checked || false,
-      }));
+      exercise.sets_config = Array.from(rows).map(row => {
+        const base = { type: row.querySelector('.ee-set-type').value };
+        if (exercise.isTimer) {
+          base.duration = parseInt(row.querySelector('.ee-set-reps').value) || 30;
+        } else {
+          base.reps      = parseInt(row.querySelector('.ee-set-reps').value) || 10;
+          base.isFailure = row.querySelector('.ee-set-failure')?.checked || false;
+        }
+        return base;
+      });
 
       exercise.name        = newName;
       exercise.restSeconds = newRest;
@@ -1095,22 +1270,27 @@ window.Today = (() => {
     };
   }
 
-  function renderEditorSets(setsConfig) {
+  function renderEditorSets(setsConfig, isTimer = false) {
     const container = document.getElementById('ee-sets-list');
     if (!container) return;
-    container.innerHTML = setsConfig.map((sc, i) => `
-      <div class="ee-set-row" data-idx="${i}">
-        <select class="ee-set-type input-field" style="width:70px">
-          <option value="W"${sc.type === 'W' ? ' selected' : ''}>W</option>
-          <option value="S"${sc.type !== 'W' ? ' selected' : ''}>S</option>
-        </select>
-        <input class="ee-set-reps input-field" type="number" value="${sc.reps || 10}" min="1" max="100" style="width:65px" inputmode="numeric">
-        <label class="toggle-row" style="gap:5px;font-size:12px">
-          <input class="ee-set-failure" type="checkbox"${sc.isFailure ? ' checked' : ''}> Échec
-        </label>
-        <button class="exercise-info-btn exercise-delete-btn ee-del-btn" data-idx="${i}" type="button">✕</button>
-      </div>
-    `).join('');
+    container.innerHTML = setsConfig.map((sc, i) => {
+      const val = isTimer ? (sc.duration || 30) : (sc.reps || 10);
+      const max = isTimer ? 3600 : 100;
+      const timerOrFailure = isTimer
+        ? ''
+        : `<label class="toggle-row" style="gap:5px;font-size:12px"><input class="ee-set-failure" type="checkbox"${sc.isFailure ? ' checked' : ''}> Échec</label>`;
+      return `
+        <div class="ee-set-row" data-idx="${i}">
+          <select class="ee-set-type input-field" style="width:70px">
+            <option value="W"${sc.type === 'W' ? ' selected' : ''}>W</option>
+            <option value="S"${sc.type !== 'W' ? ' selected' : ''}>S</option>
+          </select>
+          <input class="ee-set-reps input-field" type="number" value="${val}" min="1" max="${max}" style="width:65px" inputmode="numeric" placeholder="${isTimer ? 'sec' : 'reps'}">
+          ${timerOrFailure}
+          <button class="exercise-info-btn exercise-delete-btn ee-del-btn" data-idx="${i}" type="button">✕</button>
+        </div>
+      `;
+    }).join('');
 
     container.querySelectorAll('.ee-del-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1175,8 +1355,19 @@ window.Today = (() => {
       document.getElementById('ce-reps').value = '10';
       document.getElementById('ce-rest').value = '90';
       document.getElementById('ce-unilateral').checked = false;
+      document.getElementById('ce-timer').checked = false;
+      document.getElementById('ce-reps-label').textContent = 'Répétitions';
       document.getElementById('ce-error').textContent = '';
       document.getElementById('modal-create-exercise')?.classList.remove('hidden');
+    });
+
+    // Toggle "durée" dans le form de création
+    document.getElementById('ce-timer')?.addEventListener('change', (e) => {
+      const isTimer = e.target.checked;
+      const label   = document.getElementById('ce-reps-label');
+      const input   = document.getElementById('ce-reps');
+      if (label) label.textContent = isTimer ? 'Durée (secondes)' : 'Répétitions';
+      if (input) { input.value = isTimer ? '30' : '10'; input.max = isTimer ? '3600' : '100'; }
     });
     document.getElementById('btn-close-create-exercise')?.addEventListener('click', () => {
       closeModal('modal-create-exercise');
@@ -1193,6 +1384,7 @@ window.Today = (() => {
       const rest   = parseInt(document.getElementById('ce-rest').value) || 90;
       const uni    = document.getElementById('ce-unilateral').checked;
 
+      const isTimer = document.getElementById('ce-timer')?.checked || false;
       const customEx = {
         id:          'custom_' + Date.now(),
         name,
@@ -1201,6 +1393,7 @@ window.Today = (() => {
         defaultReps: reps,
         restSeconds: rest,
         isUnilateral: uni,
+        isTimer,
         isCustom:    true,
       };
       saveCustomExercise(customEx);

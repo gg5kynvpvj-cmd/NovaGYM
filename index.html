@@ -791,8 +791,8 @@
             <input id="ce-sets" type="number" value="3" min="1" max="10" class="input-field" inputmode="numeric">
           </div>
           <div class="input-group half">
-            <label class="input-label">Répétitions</label>
-            <input id="ce-reps" type="number" value="10" min="1" max="100" class="input-field" inputmode="numeric">
+            <label class="input-label" id="ce-reps-label">Répétitions</label>
+            <input id="ce-reps" type="number" value="10" min="1" max="3600" class="input-field" inputmode="numeric">
           </div>
         </div>
         <div class="input-group">
@@ -804,6 +804,10 @@
           <label class="toggle-row">
             <input id="ce-unilateral" type="checkbox">
             <span>Exercice unilatéral (côté gauche / droit)</span>
+          </label>
+          <label class="toggle-row" style="margin-top:8px">
+            <input id="ce-timer" type="checkbox">
+            <span>Exercice de durée (gainage, etc.)</span>
           </label>
         </div>
         <p id="ce-error" class="auth-error"></p>
