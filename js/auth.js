@@ -147,6 +147,7 @@ window.Auth = (() => {
       App.state.profile = profile;
       // Retour à l'app principale
       window.App.navigate('app');
+      window.App.switchTab('today');
       window.App.refreshApp();
     } else {
       // Première connexion → onboarding

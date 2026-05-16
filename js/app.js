@@ -52,6 +52,8 @@
     });
   }
 
+  App.switchTab = switchTab;
+
   /* ─── Refresh général de l'app ───────────────────────── */
   App.refreshApp = async function() {
     const profile = App.state.profile;

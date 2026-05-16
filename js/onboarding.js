@@ -207,6 +207,7 @@ window.Onboarding = (() => {
       try {
         await saveProfile();
         window.App.navigate('app');
+        window.App.switchTab('today');
         window.App.refreshApp();
       } catch (e) {
         console.error(e);
