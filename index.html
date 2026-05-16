@@ -533,17 +533,94 @@
         </div>
       </div>
 
-      <div class="nutrition-meals-header">
-        <h3 class="card-title" data-i18n="nutr.meals_title">Repas du jour</h3>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button id="btn-open-meal-favs" class="btn-meal-favs" title="Mes aliments favoris">⭐</button>
-          <button id="btn-add-meal" class="btn-add-meal" data-i18n="nutr.add">+ Ajouter</button>
+      <!-- Suivi eau -->
+      <div class="nutr-water-card">
+        <div class="nutr-water-header">
+          <div class="nutr-water-left">
+            <span class="nutr-water-icon">💧</span>
+            <span class="nutr-water-label">Eau</span>
+          </div>
+          <span id="nutr-water-val" class="nutr-water-val">0 ml</span>
+        </div>
+        <div class="nutr-water-btns">
+          <button class="nutr-water-btn" data-add="100">+100 ml</button>
+          <button class="nutr-water-btn" data-add="250">+250 ml</button>
+          <button class="nutr-water-btn" data-add="500">+500 ml</button>
+          <button class="nutr-water-btn nutr-water-reset" id="btn-water-reset">↺</button>
         </div>
       </div>
 
+      <!-- Cartes repas par type (aujourd'hui) -->
       <div id="nutr-meals-section">
-        <div id="nutrition-meals-list"></div>
+        <div class="nutr-meal-card" id="nutr-card-breakfast">
+          <div class="nutr-meal-card-header">
+            <div class="nutr-meal-card-title">
+              <span class="nutr-meal-card-icon">🌅</span>
+              <span class="nutr-meal-card-name">Petit déjeuner</span>
+            </div>
+            <span class="nutr-meal-card-kcal" id="nutr-kcal-breakfast">0 kcal</span>
+          </div>
+          <div class="nutr-meal-card-macros" id="nutr-macros-breakfast">
+            <span class="nutr-macro-chip nutr-macro-c">G 0g</span>
+            <span class="nutr-macro-chip nutr-macro-p">P 0g</span>
+            <span class="nutr-macro-chip nutr-macro-f">L 0g</span>
+          </div>
+          <div class="nutr-meal-items" id="nutr-items-breakfast"></div>
+          <button class="btn-add-meal-type" data-meal-type="breakfast">+ Ajouter des aliments</button>
+        </div>
+
+        <div class="nutr-meal-card" id="nutr-card-lunch">
+          <div class="nutr-meal-card-header">
+            <div class="nutr-meal-card-title">
+              <span class="nutr-meal-card-icon">☀️</span>
+              <span class="nutr-meal-card-name">Déjeuner</span>
+            </div>
+            <span class="nutr-meal-card-kcal" id="nutr-kcal-lunch">0 kcal</span>
+          </div>
+          <div class="nutr-meal-card-macros" id="nutr-macros-lunch">
+            <span class="nutr-macro-chip nutr-macro-c">G 0g</span>
+            <span class="nutr-macro-chip nutr-macro-p">P 0g</span>
+            <span class="nutr-macro-chip nutr-macro-f">L 0g</span>
+          </div>
+          <div class="nutr-meal-items" id="nutr-items-lunch"></div>
+          <button class="btn-add-meal-type" data-meal-type="lunch">+ Ajouter des aliments</button>
+        </div>
+
+        <div class="nutr-meal-card" id="nutr-card-dinner">
+          <div class="nutr-meal-card-header">
+            <div class="nutr-meal-card-title">
+              <span class="nutr-meal-card-icon">🌙</span>
+              <span class="nutr-meal-card-name">Dîner</span>
+            </div>
+            <span class="nutr-meal-card-kcal" id="nutr-kcal-dinner">0 kcal</span>
+          </div>
+          <div class="nutr-meal-card-macros" id="nutr-macros-dinner">
+            <span class="nutr-macro-chip nutr-macro-c">G 0g</span>
+            <span class="nutr-macro-chip nutr-macro-p">P 0g</span>
+            <span class="nutr-macro-chip nutr-macro-f">L 0g</span>
+          </div>
+          <div class="nutr-meal-items" id="nutr-items-dinner"></div>
+          <button class="btn-add-meal-type" data-meal-type="dinner">+ Ajouter des aliments</button>
+        </div>
+
+        <div class="nutr-meal-card" id="nutr-card-snacks">
+          <div class="nutr-meal-card-header">
+            <div class="nutr-meal-card-title">
+              <span class="nutr-meal-card-icon">🍎</span>
+              <span class="nutr-meal-card-name">Collations</span>
+            </div>
+            <span class="nutr-meal-card-kcal" id="nutr-kcal-snacks">0 kcal</span>
+          </div>
+          <div class="nutr-meal-card-macros" id="nutr-macros-snacks">
+            <span class="nutr-macro-chip nutr-macro-c">G 0g</span>
+            <span class="nutr-macro-chip nutr-macro-p">P 0g</span>
+            <span class="nutr-macro-chip nutr-macro-f">L 0g</span>
+          </div>
+          <div class="nutr-meal-items" id="nutr-items-snacks"></div>
+          <button class="btn-add-meal-type" data-meal-type="snacks">+ Ajouter des aliments</button>
+        </div>
       </div>
+
       <div id="nutr-period-section" class="hidden"></div>
     </div>
 
@@ -742,16 +819,131 @@
     </div>
   </div>
 
-  <!-- Favoris repas -->
-  <div id="modal-meal-favs" class="modal-overlay hidden">
-    <div class="modal-sheet">
+  <!-- Recherche aliment / ajout repas -->
+  <div id="modal-food-search" class="modal-overlay hidden">
+    <div class="modal-sheet modal-sheet-full">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title" data-i18n="modal.favs">Mes aliments favoris</h2>
-        <button id="btn-close-meal-favs" class="modal-close">✕</button>
+        <h2 class="modal-title" id="food-search-title">Ajouter des aliments</h2>
+        <button id="btn-close-food-search" class="modal-close">✕</button>
       </div>
-      <div id="meal-favs-modal-list" class="meal-favs-modal-list"></div>
-      <p id="meal-favs-empty" class="meal-favs-empty hidden" data-i18n="modal.favs_empty">Aucun favori enregistré.<br>Ajoute un repas et coche "Sauvegarder dans mes favoris".</p>
+
+      <!-- Étape 1 : Recherche -->
+      <div id="food-search-step1">
+        <div class="food-search-bar-wrap">
+          <input id="food-search-input" type="text" class="food-search-input" placeholder="Tape le nom d'un aliment..." autocomplete="off">
+        </div>
+
+        <button id="btn-toggle-barcode" class="btn-toggle-barcode" type="button">📷 Taper un code-barres</button>
+        <div id="food-barcode-section" class="food-barcode-section hidden">
+          <div class="food-barcode-row">
+            <input id="food-barcode-input" type="text" class="food-barcode-input" placeholder="Code-barres (EAN-13…)" inputmode="numeric">
+            <button id="btn-barcode-camera" class="btn-barcode-mini" type="button">📷</button>
+            <button id="btn-barcode-validate" class="btn-primary btn-sm" type="button">Valider</button>
+          </div>
+          <p id="food-barcode-not-found" class="food-barcode-not-found hidden">
+            Produit introuvable. <button id="btn-food-create-manual" class="btn-link" type="button">Créer manuellement →</button>
+          </p>
+        </div>
+
+        <div id="food-favs-section" class="food-favs-section">
+          <p class="food-favs-label">Mes favoris</p>
+          <div id="food-favs-list" class="food-favs-list"></div>
+          <p id="food-favs-empty" class="food-favs-empty hidden">Aucun favori enregistré.</p>
+        </div>
+
+        <div id="food-search-results" class="food-search-results">
+          <p id="food-search-hint" class="food-search-hint">Tape le nom d'un aliment pour commencer la recherche.</p>
+          <div id="food-results-list"></div>
+        </div>
+      </div>
+
+      <!-- Étape 2 : Détail produit + quantité -->
+      <div id="food-search-step2" class="hidden">
+        <button id="btn-food-back" class="btn-food-back" type="button">← Retour</button>
+        <div class="food-product-detail">
+          <p class="food-product-name" id="food-product-name"></p>
+          <p class="food-product-meta" id="food-product-meta"></p>
+        </div>
+        <div class="food-qty-row">
+          <div class="input-group" style="flex:1">
+            <label class="input-label">Quantité (g)</label>
+            <div class="meal-qty-ctrl">
+              <input type="number" id="food-product-qty" placeholder="100" min="1" step="1" inputmode="decimal">
+              <span class="meal-qty-unit">g</span>
+            </div>
+          </div>
+        </div>
+        <div class="food-calc-grid">
+          <div class="food-calc-cell">
+            <span class="food-calc-val" id="food-calc-cal">0</span>
+            <span class="food-calc-label">kcal</span>
+          </div>
+          <div class="food-calc-cell">
+            <span class="food-calc-val" id="food-calc-protein">0</span>
+            <span class="food-calc-label">Protéines</span>
+          </div>
+          <div class="food-calc-cell">
+            <span class="food-calc-val" id="food-calc-carbs">0</span>
+            <span class="food-calc-label">Glucides</span>
+          </div>
+          <div class="food-calc-cell">
+            <span class="food-calc-val" id="food-calc-fat">0</span>
+            <span class="food-calc-label">Lipides</span>
+          </div>
+        </div>
+        <div class="meal-save-fav-row" style="margin-top:14px">
+          <label class="meal-save-fav-label">
+            <input type="checkbox" id="food-save-fav">
+            <span>Sauvegarder dans mes favoris</span>
+          </label>
+        </div>
+        <button id="btn-food-add" class="btn-primary btn-full" style="margin-top:16px" type="button">Ajouter</button>
+      </div>
+
+      <!-- Formulaire manuel -->
+      <div id="food-search-manual" class="hidden">
+        <button id="btn-food-back-manual" class="btn-food-back" type="button">← Retour</button>
+        <form id="form-food-manual" class="add-meal-form">
+          <div class="input-group">
+            <label class="input-label">Nom</label>
+            <input id="food-manual-name" type="text" placeholder="Ex: Poulet grillé">
+          </div>
+          <div class="input-row">
+            <div class="input-group half">
+              <label class="input-label">Quantité (g)</label>
+              <input id="food-manual-qty" type="number" placeholder="100" min="1" inputmode="decimal">
+            </div>
+            <div class="input-group half">
+              <label class="input-label">Calories</label>
+              <input id="food-manual-cal" type="number" placeholder="0" min="0" inputmode="decimal">
+            </div>
+          </div>
+          <div class="input-row">
+            <div class="input-group half">
+              <label class="input-label">Protéines (g)</label>
+              <input id="food-manual-protein" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
+            </div>
+            <div class="input-group half">
+              <label class="input-label">Glucides (g)</label>
+              <input id="food-manual-carbs" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
+            </div>
+          </div>
+          <div class="input-row">
+            <div class="input-group half">
+              <label class="input-label">Lipides (g)</label>
+              <input id="food-manual-fat" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
+            </div>
+          </div>
+          <div class="meal-save-fav-row">
+            <label class="meal-save-fav-label">
+              <input type="checkbox" id="food-manual-save-fav">
+              <span>Sauvegarder dans mes favoris</span>
+            </label>
+          </div>
+          <button type="submit" class="btn-primary btn-full" style="margin-top:4px">Ajouter ce repas</button>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -879,68 +1071,6 @@
       <h2 id="celebration-title" class="celebration-title">Bravo !</h2>
       <p id="celebration-body" class="celebration-body"></p>
       <button id="btn-close-celebration" class="btn-primary btn-full" data-i18n="modal.celebration_btn">Super !</button>
-    </div>
-  </div>
-
-  <!-- Ajouter repas -->
-  <div id="modal-add-meal" class="modal-overlay hidden">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <h2 class="modal-title" data-i18n="modal.add_meal">Ajouter un repas</h2>
-        <button id="btn-close-add-meal" class="modal-close">✕</button>
-      </div>
-      <div id="meal-favorites-section" class="meal-favorites-section hidden">
-        <div class="meal-fav-label">Favoris</div>
-        <div id="meal-favorites-list" class="meal-favorites-list"></div>
-      </div>
-      <div class="barcode-row">
-        <input id="meal-barcode" type="text" class="barcode-input" placeholder="Code-barres..." inputmode="numeric" data-i18n-ph="meal.barcode_ph">
-        <button id="btn-scan-barcode" class="btn-scan-barcode" type="button">📷</button>
-      </div>
-      <p id="meal-scan-note" class="meal-scan-note hidden"></p>
-      <form id="form-add-meal" class="add-meal-form">
-        <div class="meal-qty-row">
-          <div class="input-group" style="flex:1">
-            <label class="input-label" data-i18n="meal.qty">Quantité (g)</label>
-            <div class="meal-qty-ctrl">
-              <input type="number" id="meal-quantity" placeholder="100" min="1" step="1" inputmode="decimal">
-              <span class="meal-qty-unit">g</span>
-            </div>
-          </div>
-        </div>
-        <div class="input-group">
-          <label class="input-label" data-i18n="meal.name_lbl">Nom</label>
-          <input id="meal-name" type="text" placeholder="Ex: Poulet grillé" data-i18n-ph="meal.name_ph">
-        </div>
-        <div class="input-row">
-          <div class="input-group half">
-            <label class="input-label" data-i18n="meal.calories">Calories</label>
-            <input id="meal-calories" type="number" placeholder="0" min="0" inputmode="decimal">
-          </div>
-          <div class="input-group half">
-            <label class="input-label" data-i18n="meal.protein">Protéines (g)</label>
-            <input id="meal-protein" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
-          </div>
-        </div>
-        <div class="input-row">
-          <div class="input-group half">
-            <label class="input-label" data-i18n="meal.carbs">Glucides (g)</label>
-            <input id="meal-carbs" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
-          </div>
-          <div class="input-group half">
-            <label class="input-label" data-i18n="meal.fat">Lipides (g)</label>
-            <input id="meal-fat" type="number" placeholder="0" min="0" step="0.1" inputmode="decimal">
-          </div>
-        </div>
-        <div class="meal-save-fav-row">
-          <label class="meal-save-fav-label">
-            <input type="checkbox" id="meal-save-fav">
-            <span data-i18n="meal.save_fav">Sauvegarder dans mes favoris</span>
-          </label>
-        </div>
-        <button type="submit" class="btn-primary btn-full" style="margin-top:4px" data-i18n="meal.add_btn">Ajouter ce repas</button>
-      </form>
     </div>
   </div>
 
