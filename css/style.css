@@ -1819,6 +1819,7 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   gap: 8px;
   align-items: center;
   margin-bottom: 0;
+  margin-top: 8px;
 }
 .picker-search-row .picker-search-input { margin-bottom: 0; flex: 1; }
 .btn-create-exercise {
