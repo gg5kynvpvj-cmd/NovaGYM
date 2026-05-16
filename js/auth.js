@@ -119,9 +119,17 @@ window.Auth = (() => {
         if (App.supabase) {
           const { data, error } = await App.supabase.auth.signUp({ email, password });
           if (error) throw error;
-          App.state.user = data.user;
-          // Pré-enregistrement du pseudo
+
+          // Sauvegarde le pseudo en attendant la confirmation
           App.local.set('pending_username', username);
+
+          if (!data.session) {
+            // Confirmation email requise → ne pas aller à l'onboarding
+            showError('register-error', `📧 Un email de confirmation a été envoyé à ${email}. Vérifie ta boîte mail puis connecte-toi.`);
+            return;
+          }
+
+          App.state.user = data.user;
           await afterAuth(data.user, username);
         } else {
           // Mode local
