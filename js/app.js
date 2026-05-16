@@ -65,7 +65,7 @@
       const el = document.getElementById(`profile-icon-letter-${tab}`);
       if (el) el.textContent = letter;
     });
-    const savedAvatar = App.local.get('avatar');
+    const savedAvatar = App.local.get('avatar_url') || App.local.get('avatar');
     if (savedAvatar && window.Settings) Settings.applyAvatar(savedAvatar);
 
     // Today

@@ -93,17 +93,43 @@ window.Settings = (() => {
 
   function initAvatarUpload() {
     // Applique l'avatar sauvegardé au chargement
-    const saved = App.local.get('avatar');
-    if (saved) applyAvatarEverywhere(saved);
+    const savedUrl = App.local.get('avatar_url') || App.local.get('avatar');
+    if (savedUrl) applyAvatarEverywhere(savedUrl);
 
-    document.getElementById('avatar-upload')?.addEventListener('change', (e) => {
+    document.getElementById('avatar-upload')?.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
+
+      // Upload vers Supabase Storage si disponible
+      if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
+        try {
+          const ext      = file.name.split('.').pop() || 'jpg';
+          const filePath = `${App.state.user.id}/avatar.${ext}`;
+          await App.supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
+          const { data: urlData } = App.supabase.storage.from('avatars').getPublicUrl(filePath);
+          const avatarUrl = urlData.publicUrl;
+          App.local.set('avatar_url', avatarUrl);
+          App.local.del('avatar'); // supprime l'ancienne base64
+          // Sauvegarde l'URL dans le profil
+          const profile = App.state.profile;
+          if (profile) {
+            const updated = { ...profile, avatar_url: avatarUrl };
+            App.state.profile = updated;
+            App.local.set('profile', updated);
+            await App.supabase.from('profiles').upsert(updated, { onConflict: 'id' });
+          }
+          applyAvatarEverywhere(avatarUrl);
+          return;
+        } catch (err) {
+          console.warn('Avatar upload error:', err.message);
+        }
+      }
+
+      // Fallback : base64 en local
       const reader = new FileReader();
       reader.onload = (ev) => {
-        const dataUrl = ev.target.result;
-        App.local.set('avatar', dataUrl);
-        applyAvatarEverywhere(dataUrl);
+        App.local.set('avatar', ev.target.result);
+        applyAvatarEverywhere(ev.target.result);
       };
       reader.readAsDataURL(file);
     });

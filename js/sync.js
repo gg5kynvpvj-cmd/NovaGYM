@@ -5,7 +5,7 @@
 
 window.Sync = (() => {
 
-  const PREF_KEYS = ['theme', 'lang', 'timer_sound', 'steps_goal', 'water_goal'];
+  const PREF_KEYS = ['theme', 'lang', 'timer_sound', 'steps_goal', 'water_goal', 'avatar_url'];
   const DATA_KEYS = ['sessions', 'meal_library', 'custom_exercises',
                      'workout_library', 'custom_challenges', 'custom_schedule'];
   const DAILY_PREFIXES = ['nutrition_', 'daily_'];
