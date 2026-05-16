@@ -169,7 +169,12 @@ window.Sync = (() => {
       if (App.supabase && App.state.user && now - _lastLoad > 30_000) {
         _lastLoad = now;
         await loadFromSupabase();
-        if (window.App?.refreshApp) App.refreshApp();
+        if (window.App?.refreshApp) await App.refreshApp();
+        // Rafraîchit l'onglet actif
+        const activeTab = document.querySelector('.tab-content.active')?.id?.replace('tab-', '');
+        if (activeTab === 'nutrition' && window.Nutrition) Nutrition.render();
+        else if (activeTab === 'history' && window.History) History.load();
+        else if (activeTab === 'stats' && window.Stats) Stats.refresh();
       }
     }
   });

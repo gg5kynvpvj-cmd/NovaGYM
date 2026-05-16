@@ -515,6 +515,11 @@ window.Settings = (() => {
         await window.Sync.saveToSupabase();
         await window.Sync.loadFromSupabase();
         await App.refreshApp();
+        // Rafraîchit aussi l'onglet actif
+        const activeTab = document.querySelector('.tab-content.active')?.id?.replace('tab-', '');
+        if (activeTab === 'nutrition') Nutrition.render();
+        else if (activeTab === 'history') History.load();
+        else if (activeTab === 'stats') Stats.refresh();
         if (status) { status.textContent = '✅ OK'; setTimeout(() => { status.textContent = ''; }, 3000); }
       } catch(e) {
         if (status) { status.textContent = '❌ Erreur'; setTimeout(() => { status.textContent = ''; }, 3000); }
