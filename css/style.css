@@ -2218,7 +2218,97 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   transition: all 0.15s;
 }
 .btn-water-reset:active { border-color: var(--danger); color: var(--danger); }
+/* Côté droit header eau (nutrition) */
+.nutr-water-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.nutr-water-goal-lbl {
+  font-size: 12px;
+  color: rgba(79,195,247,0.6);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.nutr-water-goal-lbl:active { color: #4FC3F7; }
+
+/* Barre de progression eau (nutrition) */
+.nutr-water-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+.nutr-water-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(79,195,247,0.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.nutr-water-fill {
+  height: 100%;
+  background: #4FC3F7;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.nutr-water-pct-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #4FC3F7;
+  min-width: 34px;
+  text-align: right;
+}
+
+/* Défi eau dans l'onglet Today */
+.daily-water-section {
+  padding: 14px 0 10px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  cursor: pointer;
+}
+.daily-water-section:active { opacity: 0.8; }
+.daily-water-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.today-water-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(79,195,247,0.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.today-water-fill {
+  height: 100%;
+  background: #4FC3F7;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.today-water-pct {
+  font-size: 12px;
+  font-weight: 800;
+  color: #4FC3F7;
+  min-width: 34px;
+  text-align: right;
+}
+.today-water-summary {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4FC3F7;
+}
+.daily-water-section.water-done .today-water-fill { background: var(--accent); }
+.daily-water-section.water-done .today-water-pct  { color: var(--accent); }
+.daily-water-section.water-done .today-water-summary { color: var(--accent); }
+
 :root.light .nutr-water-val { color: #0277BD; }
+:root.light .nutr-water-goal-lbl { color: rgba(2,119,189,0.55); }
+:root.light .nutr-water-fill { background: #0277BD; }
+:root.light .nutr-water-pct-label { color: #0277BD; }
+:root.light .nutr-water-track { background: rgba(2,119,189,0.08); }
+:root.light .today-water-track { background: rgba(2,119,189,0.08); }
+:root.light .today-water-fill { background: #0277BD; }
+:root.light .today-water-pct { color: #0277BD; }
+:root.light .today-water-summary { color: #0277BD; }
 :root.light .nutr-water-input { color: #0277BD; background: rgba(2,119,189,0.06); border-color: rgba(2,119,189,0.3); }
 :root.light .nutr-water-input::placeholder { color: rgba(2,119,189,0.35); }
 :root.light .nutr-water-unit-label { color: rgba(2,119,189,0.6); }

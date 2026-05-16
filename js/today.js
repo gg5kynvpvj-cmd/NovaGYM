@@ -26,6 +26,33 @@ window.Today = (() => {
   function getStepsGoal() {
     return parseInt(App.local.get('steps_goal')) || 10000;
   }
+  function getWaterGoal() {
+    return parseInt(App.local.get('water_goal')) || 2000;
+  }
+  function getWaterConsumed() {
+    const today = new Date().toISOString().split('T')[0];
+    const raw   = App.local.get('nutrition_' + today);
+    if (!raw || Array.isArray(raw)) return 0;
+    return raw.water || 0;
+  }
+  function renderWaterChallenge() {
+    const goal     = getWaterGoal();
+    const consumed = getWaterConsumed();
+    const pct      = Math.min(100, goal > 0 ? Math.round((consumed / goal) * 100) : 0);
+    const done     = consumed >= goal;
+
+    const summary = document.getElementById('today-water-summary');
+    if (summary) summary.textContent = `${consumed.toLocaleString('fr-FR')} / ${goal.toLocaleString('fr-FR')} ml`;
+
+    const fill = document.getElementById('today-water-fill');
+    if (fill) fill.style.width = pct + '%';
+
+    const pctLbl = document.getElementById('today-water-pct');
+    if (pctLbl) pctLbl.textContent = pct + '%';
+
+    const section = document.querySelector('.daily-water-section');
+    if (section) section.classList.toggle('water-done', done);
+  }
   function getCustomChallenges() {
     return App.local.get('custom_challenges') || [];
   }
@@ -72,6 +99,8 @@ window.Today = (() => {
         <button class="challenge-del-btn" data-del="${c.id}" title="Supprimer">✕</button>
       </div>
     `).join('');
+
+    renderWaterChallenge();
 
     // Modifier l'objectif de pas en cliquant sur la ligne
     list.querySelector('.steps-goal-row')?.addEventListener('click', () => {
@@ -130,6 +159,17 @@ window.Today = (() => {
       });
     });
 
+
+    // Modifier objectif eau en cliquant sur la section
+    document.querySelector('.daily-water-section')?.addEventListener('click', () => {
+      const inp = prompt('Objectif d\'eau par jour (ml) :', getWaterGoal());
+      const val = parseInt(inp);
+      if (val > 0) {
+        App.local.set('water_goal', val);
+        renderWaterChallenge();
+        if (window.Nutrition) Nutrition.render();
+      }
+    });
 
     // Ajouter un défi personnalisé
     const addInput = document.getElementById('challenge-add-input');
@@ -1448,6 +1488,6 @@ window.Today = (() => {
     initDailyCard();
   }
 
-  return { init, render, openExercisePicker, openWorkoutLib };
+  return { init, render, openExercisePicker, openWorkoutLib, renderWaterChallenge };
 
 })();

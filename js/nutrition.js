@@ -295,19 +295,33 @@ window.Nutrition = (() => {
   }
 
   /* ─── Suivi eau ──────────────────────────────────────────── */
+  function getWaterGoal() {
+    return parseInt(App.local.get('water_goal')) || 2000;
+  }
+
   function renderWater(data) {
-    const d = data || getData();
-    setText('nutr-water-val', `${d.water || 0} ml`);
+    const d        = data || getData();
+    const consumed = d.water || 0;
+    const goal     = getWaterGoal();
+    const pct      = Math.min(100, goal > 0 ? Math.round((consumed / goal) * 100) : 0);
+
+    setText('nutr-water-val', `${consumed.toLocaleString('fr-FR')} ml`);
+    setText('nutr-water-goal-lbl', `/ ${goal.toLocaleString('fr-FR')} ml ✎`);
+    setText('nutr-water-pct', `${pct}%`);
+
+    const fill = document.getElementById('nutr-water-fill');
+    if (fill) fill.style.width = pct + '%';
   }
 
   function addWater() {
-    const input = document.getElementById('water-amount-input');
+    const input  = document.getElementById('water-amount-input');
     const amount = parseInt(input?.value);
     if (!amount || amount <= 0) return;
     const d = getData();
     d.water = (d.water || 0) + amount;
     saveData(d);
     renderWater(d);
+    if (window.Today) Today.renderWaterChallenge();
     if (input) input.value = '';
   }
 
@@ -323,6 +337,18 @@ window.Nutrition = (() => {
       d.water = 0;
       saveData(d);
       renderWater(d);
+      if (window.Today) Today.renderWaterChallenge();
+    });
+
+    // Modifier l'objectif en cliquant sur le label
+    document.getElementById('nutr-water-goal-lbl')?.addEventListener('click', () => {
+      const inp = prompt('Objectif d\'eau par jour (ml) :', getWaterGoal());
+      const val = parseInt(inp);
+      if (val > 0) {
+        App.local.set('water_goal', val);
+        renderWater();
+        if (window.Today) Today.renderWaterChallenge();
+      }
     });
   }
 

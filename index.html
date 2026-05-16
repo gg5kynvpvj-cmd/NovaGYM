@@ -362,6 +362,20 @@
           </div>
         </div>
 
+        <!-- Défi eau -->
+        <div class="daily-water-section">
+          <div class="daily-section-header">
+            <span class="daily-section-label">💧 EAU QUOTIDIENNE</span>
+            <span id="today-water-summary" class="today-water-summary">0 / 2 000 ml</span>
+          </div>
+          <div class="daily-water-progress-row">
+            <div class="today-water-track">
+              <div id="today-water-fill" class="today-water-fill" style="width:0%"></div>
+            </div>
+            <span id="today-water-pct" class="today-water-pct">0%</span>
+          </div>
+        </div>
+
         <div class="daily-challenges-section">
           <span class="daily-section-label" data-i18n="today.challenges">🏆 DÉFIS DU JOUR</span>
           <div id="challenges-list" class="challenges-list"></div>
@@ -540,7 +554,16 @@
             <span class="nutr-water-icon">💧</span>
             <span class="nutr-water-label">Eau</span>
           </div>
-          <span id="nutr-water-val" class="nutr-water-val">0 ml</span>
+          <div class="nutr-water-right">
+            <span id="nutr-water-val" class="nutr-water-val">0 ml</span>
+            <span id="nutr-water-goal-lbl" class="nutr-water-goal-lbl">/ 2 000 ml ✎</span>
+          </div>
+        </div>
+        <div class="nutr-water-progress-wrap">
+          <div class="nutr-water-track">
+            <div id="nutr-water-fill" class="nutr-water-fill" style="width:0%"></div>
+          </div>
+          <span id="nutr-water-pct" class="nutr-water-pct-label">0%</span>
         </div>
         <div class="nutr-water-add-row">
           <input type="number" id="water-amount-input" class="nutr-water-input" placeholder="Quantité" min="1" step="1" inputmode="decimal">
