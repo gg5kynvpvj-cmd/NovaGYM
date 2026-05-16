@@ -59,6 +59,14 @@
     const profile = App.state.profile;
     if (!profile) return;
 
+    // Thème (applique visuellement, pas juste le label)
+    const theme = App.local.get('theme') || 'dark';
+    document.documentElement.classList.toggle('light', theme === 'light');
+
+    // Langue (applique les traductions)
+    const lang = App.local.get('lang');
+    if (lang && window.I18n) I18n.setLang(lang);
+
     // Met à jour les icônes profil (lettre ou avatar)
     const letter = (profile.username || 'N').charAt(0).toUpperCase();
     ['today', 'stats', 'history', 'nutrition'].forEach(tab => {
