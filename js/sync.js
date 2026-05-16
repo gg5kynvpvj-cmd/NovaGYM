@@ -95,6 +95,24 @@ window.Sync = (() => {
     }
   }
 
+  /* ─── Login sync : pousse les données locales si elles
+       existent, puis charge le cloud (merge simple) ────── */
+  async function loginSync() {
+    if (!App.supabase || !App.state.user) return;
+
+    // Si l'appareil a des données locales, on les pousse d'abord
+    const localSessions = App.local.get('sessions') || [];
+    const today = new Date().toISOString().slice(0, 10);
+    const localNutr = App.local.get('nutrition_' + today);
+
+    if (localSessions.length > 0 || localNutr) {
+      await saveToSupabase();
+    }
+
+    // Puis on charge le cloud (pour récupérer les données d'un autre appareil)
+    await loadFromSupabase();
+  }
+
   /* ─── Planifie une sauvegarde différée (2 s) ──────────── */
   function scheduleSave() {
     if (_isLoading) return; // pas de save pendant le restore
@@ -102,6 +120,6 @@ window.Sync = (() => {
     _saveTimer = setTimeout(saveToSupabase, 2000);
   }
 
-  return { saveToSupabase, loadFromSupabase, scheduleSave };
+  return { saveToSupabase, loadFromSupabase, scheduleSave, loginSync };
 
 })();

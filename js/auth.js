@@ -153,8 +153,7 @@ window.Auth = (() => {
 
     if (profile) {
       App.state.profile = profile;
-      // Restaure les données depuis Supabase avant d'afficher l'app
-      if (window.Sync) await window.Sync.loadFromSupabase();
+      if (window.Sync) await window.Sync.loginSync();
       window.App.navigate('app');
       window.App.switchTab('today');
       window.App.refreshApp();
@@ -236,7 +235,7 @@ window.Auth = (() => {
           const profile = await loadProfile(data.session.user.id);
           if (profile) {
             App.state.profile = profile;
-            if (window.Sync) await window.Sync.loadFromSupabase();
+            if (window.Sync) await window.Sync.loginSync();
             return 'app';
           }
           return 'onboarding';
