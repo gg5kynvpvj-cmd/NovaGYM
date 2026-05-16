@@ -505,6 +505,23 @@ window.Settings = (() => {
     });
   }
 
+  /* ─── Sync manuel ───────────────────────────────────────── */
+  function initSyncButton() {
+    document.getElementById('btn-sync-now')?.addEventListener('click', async () => {
+      if (!App.supabase || !App.state.user) return;
+      const status = document.getElementById('sync-status');
+      if (status) status.textContent = '⏳';
+      try {
+        await window.Sync.saveToSupabase();
+        await window.Sync.loadFromSupabase();
+        await App.refreshApp();
+        if (status) { status.textContent = '✅ OK'; setTimeout(() => { status.textContent = ''; }, 3000); }
+      } catch(e) {
+        if (status) { status.textContent = '❌ Erreur'; setTimeout(() => { status.textContent = ''; }, 3000); }
+      }
+    });
+  }
+
   /* ─── Export JSON ─────────────────────────────────────── */
   function initExport() {
     document.getElementById('btn-export')?.addEventListener('click', () => {
@@ -583,6 +600,7 @@ window.Settings = (() => {
   /* ─── Init ───────────────────────────────────────────── */
   function init() {
     initAvatarUpload();
+    initSyncButton();
     initProgramModal();
     initLocation();
     initSeriesModal();
