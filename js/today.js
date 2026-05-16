@@ -126,6 +126,7 @@ window.Today = (() => {
     list.querySelectorAll('.challenge-del-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (!confirm('Supprimer ce défi ?')) return;
         const id  = btn.dataset.del;
         const upd = getCustomChallenges().filter(c => c.id !== id);
         saveCustomChallenges(upd);
@@ -327,6 +328,7 @@ window.Today = (() => {
     deleteBtn.textContent = '✕';
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (!confirm(`Retirer "${exercise.name}" de la séance ?`)) return;
       currentExercises = currentExercises.filter(ex => ex.id !== exercise.id);
       delete completedSets[exercise.id];
       card.remove();
@@ -1220,7 +1222,10 @@ window.Today = (() => {
       });
     });
     list.querySelectorAll('.workout-lib-del').forEach(btn => {
-      btn.addEventListener('click', () => deleteWorkoutFromLib(parseInt(btn.dataset.delId)));
+      btn.addEventListener('click', () => {
+        const t = getWorkoutLib().find(t => t.id == btn.dataset.delId);
+        if (confirm(`Supprimer la séance "${t?.name || ''}" ?`)) deleteWorkoutFromLib(parseInt(btn.dataset.delId));
+      });
     });
   }
 

@@ -285,6 +285,7 @@ window.Nutrition = (() => {
 
       itemsEl.querySelectorAll('.nutr-meal-item-del').forEach(btn => {
         btn.addEventListener('click', () => {
+          if (!confirm('Supprimer cet aliment ?')) return;
           const d = getData();
           d.meals = d.meals.filter(m => String(m.id) !== btn.dataset.id);
           saveData(d);
@@ -396,6 +397,7 @@ window.Nutrition = (() => {
     list.querySelectorAll('.food-fav-del').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
+        if (!confirm('Supprimer cet aliment des favoris ?')) return;
         App.local.set('meal_library', getMealLib().filter(m => m.id != btn.dataset.delId));
         renderFoodFavs();
       });
