@@ -93,18 +93,25 @@ window.Sync = (() => {
     if (!App.supabase || !App.state.user) return;
     _isLoading = true;
     try {
+      // Charge TOUT : profil complet + préférences + données utilisateur
       const { data } = await App.supabase
         .from('profiles')
-        .select('preferences, user_data')
+        .select('*')
         .eq('id', App.state.user.id)
         .single();
 
       if (!data) return;
 
+      // Profil complet (programme, jours, lieu, poids, objectif, pseudo...)
+      App.state.profile = data;
+      App.local.set('profile', data);
+
+      // Préférences (thème, langue, objectifs eau/pas, avatar...)
       if (data.preferences && typeof data.preferences === 'object') {
         Object.entries(data.preferences).forEach(([k, v]) => App.local.set(k, v));
       }
 
+      // Données utilisateur (séances, nutrition, exercices perso...)
       if (data.user_data && typeof data.user_data === 'object') {
         const { daily, ...mainData } = data.user_data;
         Object.entries(mainData).forEach(([k, v]) => App.local.set(k, v));
