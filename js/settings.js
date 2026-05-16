@@ -103,13 +103,25 @@ window.Settings = (() => {
       // Upload vers Supabase Storage si disponible
       if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
         try {
-          const ext      = file.name.split('.').pop() || 'jpg';
-          const filePath = `${App.state.user.id}/avatar.${ext}`;
-          await App.supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
+          // Toujours le même nom → écrase l'ancienne photo automatiquement
+          const filePath = `${App.state.user.id}/avatar.jpg`;
+
+          // Supprime l'ancienne version si elle existe (autre extension)
+          const { data: existing } = await App.supabase.storage
+            .from('avatars').list(App.state.user.id);
+          if (existing?.length > 0) {
+            const oldPaths = existing.map(f => `${App.state.user.id}/${f.name}`);
+            await App.supabase.storage.from('avatars').remove(oldPaths);
+          }
+
+          await App.supabase.storage.from('avatars').upload(filePath, file, {
+            upsert: true, contentType: file.type
+          });
           const { data: urlData } = App.supabase.storage.from('avatars').getPublicUrl(filePath);
-          const avatarUrl = urlData.publicUrl;
+          // Cache-buster pour forcer le rechargement de l'image
+          const avatarUrl = urlData.publicUrl + '?t=' + Date.now();
           App.local.set('avatar_url', avatarUrl);
-          App.local.del('avatar'); // supprime l'ancienne base64
+          App.local.del('avatar');
           // Sauvegarde l'URL dans le profil
           const profile = App.state.profile;
           if (profile) {
