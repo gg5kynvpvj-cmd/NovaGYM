@@ -1518,6 +1518,25 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .settings-avatar:hover .avatar-edit-overlay,
 .settings-avatar:active .avatar-edit-overlay { opacity: 1; }
 
+.avatar-delete-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e53e3e;
+  color: #fff;
+  border: none;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
 /* Sélecteur lieu (Maison / Salle) */
 .location-selector {
   display: grid;

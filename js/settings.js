@@ -91,10 +91,49 @@ window.Settings = (() => {
     });
   }
 
+  function showDeleteAvatarBtn(show) {
+    document.getElementById('btn-delete-avatar')?.classList.toggle('hidden', !show);
+  }
+
+  async function deleteAvatar() {
+    if (!confirm('Supprimer la photo de profil ?')) return;
+    // Supprime depuis Supabase Storage
+    if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
+      const { data: existing } = await App.supabase.storage
+        .from('avatars').list(App.state.user.id);
+      if (existing?.length > 0) {
+        const paths = existing.map(f => `${App.state.user.id}/${f.name}`);
+        await App.supabase.storage.from('avatars').remove(paths);
+      }
+      // Supprime l'URL du profil
+      const profile = App.state.profile;
+      if (profile) {
+        const updated = { ...profile, avatar_url: null };
+        App.state.profile = updated;
+        App.local.set('profile', updated);
+        await App.supabase.from('profiles').upsert(updated, { onConflict: 'id' });
+      }
+    }
+    App.local.del('avatar_url');
+    App.local.del('avatar');
+    // Réinitialise l'affichage
+    const img  = document.getElementById('settings-avatar-img');
+    const span = document.getElementById('settings-avatar-letter');
+    if (img)  { img.src = ''; img.classList.add('hidden'); }
+    if (span) span.classList.remove('hidden');
+    document.querySelectorAll('.profile-icon-btn').forEach(btn => {
+      btn.innerHTML = `<span class="profile-icon-letter" id="profile-icon-letter-${btn.closest('.tab-content')?.id?.replace('tab-','')}"></span>`;
+    });
+    showDeleteAvatarBtn(false);
+    if (window.Sync) Sync.scheduleSave();
+  }
+
   function initAvatarUpload() {
     // Applique l'avatar sauvegardé au chargement
     const savedUrl = App.local.get('avatar_url') || App.local.get('avatar');
-    if (savedUrl) applyAvatarEverywhere(savedUrl);
+    if (savedUrl) { applyAvatarEverywhere(savedUrl); showDeleteAvatarBtn(true); }
+
+    document.getElementById('btn-delete-avatar')?.addEventListener('click', deleteAvatar);
 
     document.getElementById('avatar-upload')?.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
@@ -131,6 +170,7 @@ window.Settings = (() => {
             await App.supabase.from('profiles').upsert(updated, { onConflict: 'id' });
           }
           applyAvatarEverywhere(avatarUrl);
+          showDeleteAvatarBtn(true);
           return;
         } catch (err) {
           console.warn('Avatar upload error:', err.message);
