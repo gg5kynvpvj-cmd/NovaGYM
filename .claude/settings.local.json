@@ -10,7 +10,10 @@
       "Bash(Format-Table -AutoSize)",
       "Bash(node_modules\\\\.bin\\\\vite --version)",
       "PowerShell(\\(Get-Content \"c:\\\\Users\\\\jules\\\\Desktop\\\\NovaGYM\\\\index.html\" | Measure-Object -Line\\).Lines)",
-      "Bash(git --version)"
+      "Bash(git --version)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }

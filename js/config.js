@@ -36,7 +36,7 @@ window.App = {
 
   local: {
     get:   (key)      => { try { return JSON.parse(localStorage.getItem('ng_' + key)); } catch { return null; } },
-    set:   (key, val) => { localStorage.setItem('ng_' + key, JSON.stringify(val)); },
+    set:   (key, val) => { localStorage.setItem('ng_' + key, JSON.stringify(val)); window.Sync?.scheduleSave(); },
     del:   (key)      => { localStorage.removeItem('ng_' + key); },
     clear: ()         => {
       Object.keys(localStorage)
