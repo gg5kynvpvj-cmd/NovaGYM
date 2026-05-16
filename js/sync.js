@@ -126,17 +126,54 @@ window.Sync = (() => {
     }
   }
 
-  /* ─── Login sync : pousse si données locales, puis charge ─ */
+  /* ─── Login sync : charge d'abord, puis fusionne les données locales ─ */
   async function loginSync() {
     if (!App.supabase || !App.state.user) return;
 
-    // Si l'appareil a des données locales, on les pousse d'abord
+    // Snapshot des données locales AVANT que le cloud ne les écrase
+    const localDaily = {};
+    const localArrays = {};
     if (hasLocalData()) {
-      await saveToSupabase();
+      getDailyKeys().forEach(k => {
+        const v = App.local.get(k);
+        if (v !== null) localDaily[k] = v;
+      });
+      DATA_KEYS.forEach(k => {
+        const v = App.local.get(k);
+        if (Array.isArray(v) && v.length > 0) localArrays[k] = v;
+      });
     }
 
-    // Puis on charge le cloud
+    // Charge le cloud en premier (ne pas écraser le cloud avec des données locales potentiellement anciennes)
     await loadFromSupabase();
+    _lastLoad = Date.now();
+
+    // Fusion : restaure les données locales que le cloud n'a pas
+    let needsSave = false;
+
+    // Données journalières (nutrition_YYYY-MM-DD, daily_YYYY-MM-DD)
+    Object.entries(localDaily).forEach(([k, v]) => {
+      if (App.local.get(k) === null) {
+        try { localStorage.setItem('ng_' + k, JSON.stringify(v)); } catch {}
+        needsSave = true;
+      }
+    });
+
+    // Tableaux (séances, exercices, bibliothèque...) : garde le plus complet
+    DATA_KEYS.forEach(k => {
+      const localArr = localArrays[k];
+      if (!localArr) return;
+      const cloudArr = App.local.get(k);
+      if (!Array.isArray(cloudArr) || localArr.length > cloudArr.length) {
+        try { localStorage.setItem('ng_' + k, JSON.stringify(localArr)); } catch {}
+        needsSave = true;
+      }
+    });
+
+    if (needsSave) {
+      _dirty = true;
+      await saveToSupabase();
+    }
   }
 
   /* ─── Planifie une sauvegarde différée (2 s) ──────────── */
