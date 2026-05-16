@@ -149,9 +149,22 @@ window.Sync = (() => {
     }
   }
 
-  /* ─── Sauvegarde quand l'app passe en arrière-plan ───── */
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) flushIfDirty();
+  let _lastLoad = 0;
+
+  /* ─── Sauvegarde / recharge selon visibilité ──────────── */
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden) {
+      // App mise en arrière-plan → sauvegarde immédiate
+      flushIfDirty();
+    } else {
+      // App revenue au premier plan → recharge si > 30s depuis le dernier load
+      const now = Date.now();
+      if (App.supabase && App.state.user && now - _lastLoad > 30_000) {
+        _lastLoad = now;
+        await loadFromSupabase();
+        if (window.App?.refreshApp) App.refreshApp();
+      }
+    }
   });
 
   /* ─── Sauvegarde périodique toutes les 60 secondes ────── */
