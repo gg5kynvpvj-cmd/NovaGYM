@@ -300,14 +300,22 @@ window.Nutrition = (() => {
     setText('nutr-water-val', `${d.water || 0} ml`);
   }
 
+  function addWater() {
+    const input = document.getElementById('water-amount-input');
+    const amount = parseInt(input?.value);
+    if (!amount || amount <= 0) return;
+    const d = getData();
+    d.water = (d.water || 0) + amount;
+    saveData(d);
+    renderWater(d);
+    if (input) input.value = '';
+  }
+
   function initWaterTracker() {
-    document.querySelectorAll('.nutr-water-btn[data-add]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const d = getData();
-        d.water = (d.water || 0) + parseInt(btn.dataset.add);
-        saveData(d);
-        renderWater(d);
-      });
+    document.getElementById('btn-water-add')?.addEventListener('click', addWater);
+
+    document.getElementById('water-amount-input')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addWater(); }
     });
 
     document.getElementById('btn-water-reset')?.addEventListener('click', () => {

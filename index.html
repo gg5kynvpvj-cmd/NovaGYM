@@ -542,11 +542,11 @@
           </div>
           <span id="nutr-water-val" class="nutr-water-val">0 ml</span>
         </div>
-        <div class="nutr-water-btns">
-          <button class="nutr-water-btn" data-add="100">+100 ml</button>
-          <button class="nutr-water-btn" data-add="250">+250 ml</button>
-          <button class="nutr-water-btn" data-add="500">+500 ml</button>
-          <button class="nutr-water-btn nutr-water-reset" id="btn-water-reset">↺</button>
+        <div class="nutr-water-add-row">
+          <input type="number" id="water-amount-input" class="nutr-water-input" placeholder="Quantité" min="1" step="1" inputmode="decimal">
+          <span class="nutr-water-unit-label">ml</span>
+          <button id="btn-water-add" class="btn-water-validate" type="button">Ajouter</button>
+          <button id="btn-water-reset" class="btn-water-reset" type="button" title="Réinitialiser">↺</button>
         </div>
       </div>
 
