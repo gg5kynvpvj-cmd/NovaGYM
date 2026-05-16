@@ -201,6 +201,13 @@ window.Timer = (() => {
       });
     });
 
+    /* Bouton fermer ✕ */
+    $('btn-timer-close')?.addEventListener('click', e => {
+      e.stopPropagation();
+      reset();
+      hideWidget();
+    });
+
     /* Toggle son */
     const soundToggle = $('toggle-timer-sound');
     if (soundToggle) {

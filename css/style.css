@@ -585,6 +585,22 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 .di-toggle-big:active { transform: scale(0.88); }
 
+.di-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.di-close-btn:active { background: rgba(255,69,58,0.3); color: #FF453A; }
+
 .di-presets {
   display: flex;
   gap: 6px;
