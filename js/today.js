@@ -909,6 +909,7 @@ window.Today = (() => {
   /* ─── Picker d'exercices ─────────────────────────────── */
   const ALL_CATEGORIES = [
     { key: 'polyarticular', label: '⭐ Polyarticulaires' },
+    { key: 'home',          label: '🏠 Maison' },
     { key: 'pectoraux',     label: 'Pectoraux' },
     { key: 'dos',           label: 'Dos' },
     { key: 'epaules',       label: 'Épaules' },
@@ -921,6 +922,7 @@ window.Today = (() => {
     { key: 'mollets',       label: 'Mollets' },
     { key: 'custom',        label: '✎ Mes exercices' },
   ];
+  const MUSCLE_CATS = ALL_CATEGORIES.filter(c => c.key !== 'home' && c.key !== 'custom');
 
   function openExercisePicker() {
     const modal   = document.getElementById('modal-exercise-picker');
@@ -944,6 +946,12 @@ window.Today = (() => {
       let exercises;
       if (cat === 'custom') {
         exercises = getCustomExercises().map(e => ({ ...e, _cat: 'custom' }));
+      } else if (cat === 'home') {
+        exercises = [];
+        MUSCLE_CATS.forEach(c => {
+          const exs = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(c.key) : (window.EXERCISES?.[c.key] || []);
+          exs.forEach(e => { if (e.equipment === 'home') exercises.push({ ...e, _cat: c.key }); });
+        });
       } else {
         exercises = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(cat) : (window.EXERCISES?.[cat] || []);
       }
@@ -964,9 +972,13 @@ window.Today = (() => {
     }
 
     function renderPickerExercises(list, showCat = false) {
-      const q = search?.value?.toLowerCase() || '';
-      const filtered = q ? list.filter(e => e.name?.toLowerCase().includes(q)
-        || (e.muscles || []).some(m => m.toLowerCase().includes(q))) : list;
+      const q           = search?.value?.toLowerCase() || '';
+      const homeSearch  = q === 'maison' || q === 'home' || q === 'maison ';
+      const filtered    = q ? list.filter(e =>
+        (homeSearch && e.equipment === 'home') ||
+        e.name?.toLowerCase().includes(q) ||
+        (e.muscles || []).some(m => m.toLowerCase().includes(q))
+      ) : list;
 
       if (filtered.length === 0) {
         exList.innerHTML = `<p class="picker-empty">Aucun exercice trouvé</p>`;
@@ -975,15 +987,19 @@ window.Today = (() => {
       exList.innerHTML = filtered.map(ex => {
         const cat      = ex._cat || activeCat || '';
         const isCustom = ex.isCustom || cat === 'custom';
-        const catLabel = showCat ? (ALL_CATEGORIES.find(c => c.key === cat)?.label || '') : '';
+        const isHome   = ex.equipment === 'home';
+        const catLabel = showCat ? (ALL_CATEGORIES.find(c => c.key === cat)?.label?.replace('🏠 ', '') || '') : '';
         const delIcon  = isCustom
           ? `<span class="picker-ex-del-icon" data-del-id="${ex.id}" title="Supprimer">🗑</span>`
+          : '';
+        const homeBadge = isHome && !isCustom
+          ? `<span class="picker-ex-home-badge">🏠</span>`
           : '';
         return `
           <button class="picker-ex-btn${isCustom ? ' picker-ex-custom' : ''}" data-id="${ex.id}" data-cat="${cat}">
             <span class="picker-ex-name">${ex.name}${catLabel ? `<span class="picker-ex-cat"> · ${catLabel}</span>` : ''}</span>
             <span class="picker-ex-muscles">${(ex.muscles || []).slice(0,2).join(', ')}</span>
-            ${delIcon}
+            ${homeBadge}${delIcon}
           </button>`;
       }).join('');
 
