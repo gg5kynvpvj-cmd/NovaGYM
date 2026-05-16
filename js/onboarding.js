@@ -133,6 +133,7 @@ window.Onboarding = (() => {
     const profile = {
       id:            user.id,
       username,
+      email:         user.email || null,
       age:           data.age,
       weight:        data.weight,
       height:        data.height,
