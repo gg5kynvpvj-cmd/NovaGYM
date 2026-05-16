@@ -80,9 +80,9 @@ window.Sync = (() => {
       const payload = collectData();
       const { error } = await App.supabase
         .from('profiles')
-        .update(payload)
-        .eq('id', App.state.user.id);
-      if (!error) _dirty = false;
+        .upsert({ id: App.state.user.id, ...payload }, { onConflict: 'id' });
+      if (error) console.warn('Sync.save error:', error.message);
+      else _dirty = false;
     } catch (e) {
       console.warn('Sync.save error:', e.message);
     }
