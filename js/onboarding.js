@@ -128,7 +128,10 @@ window.Onboarding = (() => {
     const user = App.state.user;
     if (!user) return;
 
-    const username = App.local.get('pending_username') || user.email?.split('@')[0] || 'Champion';
+    const username = App.local.get('pending_username')
+      || user.user_metadata?.username
+      || user.email?.split('@')[0]
+      || 'Champion';
 
     const profile = {
       id:            user.id,

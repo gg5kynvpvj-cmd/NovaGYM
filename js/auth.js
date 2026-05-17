@@ -249,6 +249,13 @@ window.Auth = (() => {
             if (window.Sync) await window.Sync.loginSync();
             return 'app';
           }
+          // Pas de profil → onboarding. Si pending_username absent (autre navigateur/contexte),
+          // on récupère le pseudo depuis les métadonnées Supabase enregistrées au signUp.
+          if (!App.local.get('pending_username')) {
+            const u = data.session.user;
+            const fallback = u.user_metadata?.username || u.email?.split('@')[0] || 'Champion';
+            App.local.set('pending_username', fallback);
+          }
           return 'onboarding';
         }
       } catch(e) {
