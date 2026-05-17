@@ -829,7 +829,6 @@ window.I18n = (() => {
       'faq.8.a': 'For any question or suggestion, write to us at <strong>novagympro@proton.me</strong>. We reply within 24-48h.',
     }
   };
-  };
 
   let currentLang = 'fr';
 
