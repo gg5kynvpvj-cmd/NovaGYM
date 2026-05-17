@@ -117,7 +117,14 @@ window.Auth = (() => {
 
       try {
         if (App.supabase) {
-          const { data, error } = await App.supabase.auth.signUp({ email, password });
+          const { data, error } = await App.supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { username },
+              emailRedirectTo: window.location.origin,
+            },
+          });
           if (error) throw error;
 
           // Sauvegarde le pseudo en attendant la confirmation
@@ -159,9 +166,13 @@ window.Auth = (() => {
       window.App.refreshApp();
     } else {
       // Première connexion → onboarding
-      if (username) {
-        App.local.set('pending_username', username);
-      }
+      // Priorité : argument > localStorage > user_metadata Supabase > email prefix
+      const name = username
+        || App.local.get('pending_username')
+        || user.user_metadata?.username
+        || user.email?.split('@')[0]
+        || 'Champion';
+      App.local.set('pending_username', name);
       window.App.navigate('onboarding');
     }
   }
