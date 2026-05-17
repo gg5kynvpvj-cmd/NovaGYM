@@ -129,6 +129,7 @@
     Today.init();
     Stats.init();
     Nutrition.init();
+    History.init();
     Settings.init();
   }
 

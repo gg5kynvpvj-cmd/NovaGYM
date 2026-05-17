@@ -42,17 +42,17 @@ window.Auth = (() => {
   function initForgotPassword() {
     document.getElementById('btn-forgot')?.addEventListener('click', async () => {
       const email = document.getElementById('login-email')?.value?.trim();
-      if (!email) { showError('login-error', "Saisis ton email d'abord."); return; }
+      if (!email) { showError('login-error', I18n.t('auth.email_first')); return; }
       if (App.supabase) {
         await App.supabase.auth.resetPasswordForEmail(email, {
           redirectTo: 'https://www.novagympro.com'
         });
       }
-      showError('login-error', '📧 Email de réinitialisation envoyé !');
+      showError('login-error', I18n.t('auth.reset_sent'));
     });
 
     document.getElementById('btn-forgot-email')?.addEventListener('click', () => {
-      showError('login-error', '📧 Contacte-nous à novagympro@proton.me pour retrouver ton compte.');
+      showError('login-error', I18n.t('auth.contact_support'));
     });
   }
 
@@ -64,7 +64,7 @@ window.Auth = (() => {
       const email    = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
 
-      if (!email || !password) { showError('login-error', 'Remplis tous les champs.'); return; }
+      if (!email || !password) { showError('login-error', I18n.t('auth.fill_fields')); return; }
       setLoading('btn-login', true);
 
       try {
@@ -80,7 +80,7 @@ window.Auth = (() => {
             App.state.user = stored;
             await afterAuth(stored);
           } else {
-            throw new Error("Compte introuvable. Crée un compte d'abord.");
+            throw new Error(I18n.t('auth.account_not_found'));
           }
         }
       } catch (err) {
@@ -109,9 +109,9 @@ window.Auth = (() => {
       const password = document.getElementById('register-password').value;
       const confirm  = document.getElementById('register-password-confirm').value;
 
-      if (!username || !email || !password || !confirm) { showError('register-error', 'Remplis tous les champs.'); return; }
-      if (password.length < 6) { showError('register-error', 'Mot de passe trop court (6 caractères min).'); return; }
-      if (password !== confirm) { showError('register-error', 'Les mots de passe ne correspondent pas.'); return; }
+      if (!username || !email || !password || !confirm) { showError('register-error', I18n.t('auth.fill_fields')); return; }
+      if (password.length < 6) { showError('register-error', I18n.t('auth.pwd_short')); return; }
+      if (password !== confirm) { showError('register-error', I18n.t('auth.pwd_mismatch')); return; }
 
       setLoading('btn-register', true);
 
@@ -125,7 +125,7 @@ window.Auth = (() => {
 
           if (!data.session) {
             // Confirmation email requise → ne pas aller à l'onboarding
-            showError('register-error', `📧 Un email de confirmation a été envoyé à ${email}. Vérifie ta boîte mail puis connecte-toi.`);
+            showError('register-error', I18n.t('auth.confirm_email_sent').replace('%s', email));
             return;
           }
 
@@ -262,12 +262,12 @@ window.Auth = (() => {
 
   /* ─── Traduction des erreurs Supabase ────────────────── */
   function translateError(msg) {
-    if (!msg) return 'Une erreur est survenue.';
-    if (msg.includes('Invalid login credentials'))  return 'Email ou mot de passe incorrect.';
-    if (msg.includes('Email not confirmed'))         return 'Confirme ton email avant de te connecter.';
-    if (msg.includes('User already registered'))     return 'Cet email est déjà utilisé.';
-    if (msg.includes('Password should be'))          return 'Mot de passe trop court (6 caractères min).';
-    if (msg.includes('Unable to validate'))          return 'Session expirée, reconnecte-toi.';
+    if (!msg) return I18n.t('auth.error_generic');
+    if (msg.includes('Invalid login credentials'))  return I18n.t('auth.invalid_creds');
+    if (msg.includes('Email not confirmed'))         return I18n.t('auth.not_confirmed');
+    if (msg.includes('User already registered'))     return I18n.t('auth.already_registered');
+    if (msg.includes('Password should be'))          return I18n.t('auth.pwd_short');
+    if (msg.includes('Unable to validate'))          return I18n.t('auth.session_expired');
     return msg;
   }
 
@@ -288,8 +288,8 @@ window.Auth = (() => {
       const password = document.getElementById('reset-password').value;
       const confirm  = document.getElementById('reset-password-confirm').value;
 
-      if (password.length < 6) { showError('reset-error', 'Mot de passe trop court (6 caractères min).'); return; }
-      if (password !== confirm) { showError('reset-error', 'Les mots de passe ne correspondent pas.'); return; }
+      if (password.length < 6) { showError('reset-error', I18n.t('auth.pwd_short')); return; }
+      if (password !== confirm) { showError('reset-error', I18n.t('auth.pwd_mismatch')); return; }
 
       setLoading('btn-reset', true);
       try {
@@ -298,7 +298,7 @@ window.Auth = (() => {
         showError('reset-error', '');
         // Retour à la connexion
         window.App.navigate('auth');
-        showError('login-error', '✅ Mot de passe mis à jour ! Connecte-toi.');
+        showError('login-error', I18n.t('auth.pwd_updated'));
       } catch (err) {
         showError('reset-error', translateError(err.message));
       } finally {

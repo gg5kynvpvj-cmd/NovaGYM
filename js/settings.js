@@ -33,7 +33,7 @@ window.Settings = (() => {
     // Programme actuel
     const programLabelEl = document.getElementById('current-program-label');
     if (programLabelEl && profile?.program_type) {
-      programLabelEl.textContent = PROGRAM_LABELS[profile.program_type] || profile.program_type;
+      programLabelEl.textContent = getProgramLabel(profile.program_type);
     }
 
     // Lieu d'entraînement
@@ -55,7 +55,7 @@ window.Settings = (() => {
     });
 
     // Langue
-    const langLabels = { fr: 'Français', en: 'English', es: 'Español' };
+    const langLabels = { fr: 'Français', en: 'English' };
     const lang = App.local.get('lang') || 'fr';
     const langEl = document.getElementById('current-lang-label');
     if (langEl) langEl.textContent = langLabels[lang] || 'Français';
@@ -96,7 +96,7 @@ window.Settings = (() => {
   }
 
   async function deleteAvatar() {
-    if (!confirm('Supprimer la photo de profil ?')) return;
+    if (!confirm(I18n.t('settings.delete_avatar'))) return;
     // Supprime depuis Supabase Storage
     if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
       const { data: existing } = await App.supabase.storage
@@ -211,8 +211,14 @@ window.Settings = (() => {
   /* ─── Type de programme ─────────────────────────────── */
   const PROGRAM_LABELS = {
     ppl: 'PPL', upper_lower: 'Upper/Lower', full_body: 'Full Body',
-    bro_split: 'Bro Split', home: 'Maison', custom: 'Personnalisé', gym: 'PPL',
+    bro_split: 'Bro Split', gym: 'PPL',
   };
+
+  function getProgramLabel(type) {
+    if (type === 'home')   return I18n.t('settings.program_label.home');
+    if (type === 'custom') return I18n.t('settings.program_label.custom');
+    return PROGRAM_LABELS[type] || type;
+  }
 
   function initProgramModal() {
     document.getElementById('btn-change-program')?.addEventListener('click', () => {
@@ -257,7 +263,7 @@ window.Settings = (() => {
 
       // Met à jour le label dans les réglages
       const labelEl = document.getElementById('current-program-label');
-      if (labelEl) labelEl.textContent = PROGRAM_LABELS[newProgram] || newProgram;
+      if (labelEl) labelEl.textContent = getProgramLabel(newProgram);
 
       closeModal('modal-program');
       Today.render();
@@ -384,7 +390,7 @@ window.Settings = (() => {
     document.querySelectorAll('.lang-option').forEach(btn => {
       btn.addEventListener('click', () => {
         const lang = btn.dataset.lang;
-        const langLabels = { fr: 'Français', en: 'English', es: 'Español' };
+        const langLabels = { fr: 'Français', en: 'English' };
 
         document.querySelectorAll('.lang-check').forEach(el => { el.textContent = ''; });
         const checkEl = document.getElementById('lang-check-' + lang);

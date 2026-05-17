@@ -200,12 +200,30 @@ window.Programs = (() => {
     };
   }
 
+  /* Traduit un nom de séance selon la langue courante */
+  function getSessionName(type) {
+    return (window.I18n ? I18n.t('session.' + type) : null) || SESSION_NAMES[type] || type;
+  }
+
+  /* Traduit le nom court d'un jour (Lun / Mon) */
+  function getDayShort(dayKey) {
+    return (window.I18n ? I18n.t('day.' + dayKey) : null) || DAYS_SHORT[dayKey] || dayKey;
+  }
+
+  /* Traduit le nom complet d'un jour (Lundi / Monday) */
+  function getDayFull(dayKey) {
+    return (window.I18n ? I18n.t('dayFull.' + dayKey) : null) || DAYS_FR[dayKey] || dayKey;
+  }
+
   /* API publique */
   return {
     buildSchedule,
     getTodayType,
     getExercisesForType,
     calculateCalories,
+    getSessionName,
+    getDayShort,
+    getDayFull,
     SESSION_NAMES,
     SESSION_COLORS,
     DAYS_FR,

@@ -70,10 +70,10 @@ window.Onboarding = (() => {
     if (!info) return;
     const count = data.training_days.length;
     if (count === 0) {
-      info.textContent = 'Sélectionne tes jours d\'entraînement';
+      info.textContent = I18n.t('ob.days_hint');
     } else {
-      const short = data.training_days.map(d => Programs.DAYS_SHORT[d]).join(', ');
-      info.textContent = `${count} jour${count > 1 ? 's' : ''} sélectionné${count > 1 ? 's' : ''} : ${short}`;
+      const short = data.training_days.map(d => Programs.getDayShort(d)).join(', ');
+      info.textContent = I18n.t('ob.days_selected').replace('%s', count).replace('%t', short);
     }
   }
 
@@ -85,15 +85,15 @@ window.Onboarding = (() => {
     const bf     = parseFloat(document.getElementById('ob-bodyfat').value);
 
     if (!weight || weight < 30 || weight > 300) {
-      alert('Saisis un poids valide (entre 30 et 300 kg).');
+      alert(I18n.t('ob.valid_weight'));
       return false;
     }
     if (!height || height < 100 || height > 250) {
-      alert('Saisis une taille valide (entre 100 et 250 cm).');
+      alert(I18n.t('ob.valid_height'));
       return false;
     }
     if (!age || age < 13 || age > 100) {
-      alert('Saisis un âge valide (entre 13 et 100 ans).');
+      alert(I18n.t('ob.valid_age'));
       return false;
     }
 
@@ -108,7 +108,7 @@ window.Onboarding = (() => {
   /* ─── Validation étape 2 ─────────────────────────────── */
   function validateStep2() {
     if (!data.goal) {
-      alert('Choisis ton objectif.');
+      alert(I18n.t('ob.choose_goal'));
       return false;
     }
     return true;
@@ -117,7 +117,7 @@ window.Onboarding = (() => {
   /* ─── Validation étape 4 ─────────────────────────────── */
   function validateStep4() {
     if (data.training_days.length === 0) {
-      alert('Sélectionne au moins un jour d\'entraînement.');
+      alert(I18n.t('ob.select_day'));
       return false;
     }
     return true;
@@ -212,9 +212,9 @@ window.Onboarding = (() => {
         window.App.refreshApp();
       } catch (e) {
         console.error(e);
-        btn.textContent = 'Voir mon programme →';
+        btn.textContent = I18n.t('ob.finish');
         btn.disabled = false;
-        alert('Erreur lors de la sauvegarde. Réessaie.');
+        alert(I18n.t('ob.save_error'));
       }
     });
   }

@@ -228,19 +228,26 @@ window.Badges = (() => {
       return (earnedIds.includes(b.id) ? 1 : 0) - (earnedIds.includes(a.id) ? 1 : 0);
     });
 
+    const locale = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+
     container.innerHTML = sorted.map(badge => {
       const isEarned    = earnedIds.includes(badge.id);
       const earnedEntry = earned.find(b => (b.type || b.id) === badge.id);
       const dateStr     = earnedEntry?.earned_at
-        ? new Date(earnedEntry.earned_at).toLocaleDateString('fr-FR')
+        ? new Date(earnedEntry.earned_at).toLocaleDateString(locale)
         : '';
+      const name = window.I18n ? I18n.t('badge.' + badge.id + '.name') : badge.name;
+      const desc = window.I18n ? I18n.t('badge.' + badge.id + '.desc') : badge.desc;
+      const earnedLabel = window.I18n
+        ? I18n.t('badge.earned_on').replace('%s', dateStr)
+        : `Obtenu le ${dateStr}`;
 
       return `
         <div class="badge-item ${isEarned ? 'earned' : 'locked'}">
           <span class="badge-emoji">${badge.emoji}</span>
           <div class="badge-info">
-            <div class="badge-name">${badge.name}</div>
-            <div class="badge-date">${isEarned ? `Obtenu le ${dateStr}` : badge.desc}</div>
+            <div class="badge-name">${name}</div>
+            <div class="badge-date">${isEarned ? earnedLabel : desc}</div>
           </div>
           ${isEarned ? '' : '<span class="badge-lock">🔒</span>'}
         </div>

@@ -33,7 +33,7 @@ window.Stats = (() => {
     ctx.fillStyle = color;
     ctx.font = '14px -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Complète ta première séance', W / 2, H / 2);
+    ctx.fillText(I18n.t('stats.first_session'), W / 2, H / 2);
   }
 
   function drawGrid(ctx, pad, cW, cH, W, H, gridColor) {
@@ -56,9 +56,10 @@ window.Stats = (() => {
     ticks.forEach(off => {
       const d = new Date(from);
       d.setDate(d.getDate() + off);
-      const lbl = days <= 30
-        ? d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-        : d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+      const locale = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+    const lbl = days <= 30
+        ? d.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+        : d.toLocaleDateString(locale, { month: 'short', year: '2-digit' });
       ctx.fillText(lbl, pad.left + (off / (days - 1)) * cW, H - 6);
     });
   }
@@ -200,12 +201,9 @@ window.Stats = (() => {
   }
 
   /* ─── Nom court d'un type de séance ─────────────────── */
-  const SESSION_SHORT = {
-    push: 'Push', pull: 'Pull', legs: 'Legs',
-    upper: 'Upper', lower: 'Lower', full_body: 'Full',
-    chest: 'Chest', back: 'Back', shoulders: 'Épaules', arms: 'Bras',
-    rest: 'Repos', home_push: 'Push', home_pull: 'Pull', home_legs: 'Legs', custom: 'Libre',
-  };
+  function getSessionShort(type) {
+    return (window.I18n ? I18n.t('session_short.' + type) : null) || type;
+  }
 
   /* ─── Calendrier + planning hebdomadaire ─────────────── */
   function renderWeeklyCalendar() {
@@ -247,10 +245,11 @@ window.Stats = (() => {
       cell.className = 'week-day' + (isToday ? ' today' : '');
       cell.dataset.day = dayKey;
       cell.style.cursor = 'pointer';
+      const dayKeys = ['day.monday','day.tuesday','day.wednesday','day.thursday','day.friday','day.saturday','day.sunday'];
       cell.innerHTML = `
-        <span class="week-day-name">${['L','M','M','J','V','S','D'][i]}</span>
+        <span class="week-day-name">${I18n.t(dayKeys[i])}</span>
         <span class="week-day-num">${day.getDate()}</span>
-        <span class="week-day-session${isRest ? ' rest' : ''}" style="${isRest ? '' : `color:${color}`}">${SESSION_SHORT[sessType] || sessType}</span>
+        <span class="week-day-session${isRest ? ' rest' : ''}" style="${isRest ? '' : `color:${color}`}">${getSessionShort(sessType)}</span>
         <span class="week-day-dot${hasDone ? ' has-session' : ''}"></span>
       `;
       cell.addEventListener('click', () => openDayEditor(dayKey, sessType));
@@ -260,17 +259,16 @@ window.Stats = (() => {
 
   /* ─── Éditeur de journée du planning ────────────────── */
   function openDayEditor(dayKey, currentType) {
-    const DAYS_FR_FULL = {
-      monday: 'Lundi', tuesday: 'Mardi', wednesday: 'Mercredi',
-      thursday: 'Jeudi', friday: 'Vendredi', saturday: 'Samedi', sunday: 'Dimanche',
-    };
     const titleEl = document.getElementById('modal-day-session-title');
-    if (titleEl) titleEl.textContent = DAYS_FR_FULL[dayKey] || dayKey;
+    if (titleEl) titleEl.textContent = I18n.t('dayFull.' + dayKey) || dayKey;
 
     const optList = document.getElementById('day-session-options');
     if (!optList) return;
 
-    const allTypes = { ...Programs.SESSION_NAMES, rest: 'Repos' };
+    const allTypes = {};
+    Object.keys(Programs.SESSION_NAMES).forEach(k => {
+      allTypes[k] = I18n.t('session.' + k) || Programs.SESSION_NAMES[k];
+    });
     optList.innerHTML = Object.entries(allTypes).map(([k, v]) => {
       const color  = Programs.SESSION_COLORS[k] || '#555555';
       const active = k === currentType ? 'border-color:' + color + ';background:' + color + '20' : '';
@@ -400,7 +398,7 @@ window.Stats = (() => {
 
     // Planning — réinitialiser planning personnalisé
     document.getElementById('btn-reset-schedule')?.addEventListener('click', () => {
-      if (confirm('Réinitialiser le planning selon ton programme ?')) {
+      if (confirm(I18n.t('stats.reset_schedule'))) {
         App.local.set('custom_schedule', {});
         renderWeeklyCalendar();
       }
