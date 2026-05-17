@@ -224,17 +224,13 @@ window.Today = (() => {
   }
 
   function reRenderExerciseList() {
-    const list   = document.getElementById('exercise-list');
-    const addBtn = document.getElementById('btn-add-exercise-today');
-    const libBtn = list?.querySelector('.add-exercise-btn:last-child');
+    const list = document.getElementById('exercise-list');
     if (!list) return;
-    // Retire toutes les cartes sans toucher aux boutons d'ajout
-    list.querySelectorAll('.exercise-card').forEach(c => c.remove());
-    // Réinsère dans le bon ordre avant le premier bouton d'ajout
+    // Réordonne les cartes existantes sans les recréer (préserve les valeurs saisies)
     const firstBtn = list.querySelector('.add-exercise-btn');
-    currentExercises.forEach((ex, i) => {
-      const card = renderExerciseCard(ex, i);
-      list.insertBefore(card, firstBtn || null);
+    currentExercises.forEach(ex => {
+      const card = list.querySelector(`.exercise-card[data-exercise-id="${ex.id}"]`);
+      if (card) list.insertBefore(card, firstBtn || null);
     });
     updateProgress();
   }
@@ -328,7 +324,8 @@ window.Today = (() => {
     deleteBtn.textContent = '✕';
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!confirm(`Retirer "${exercise.name}" de la séance ?`)) return;
+      const removeMsg = window.I18n ? I18n.t('today.remove_confirm').replace('%s', exercise.name) : `Retirer "${exercise.name}" de la séance ?`;
+      if (!confirm(removeMsg)) return;
       currentExercises = currentExercises.filter(ex => ex.id !== exercise.id);
       delete completedSets[exercise.id];
       card.remove();
@@ -715,7 +712,7 @@ window.Today = (() => {
       Object.values(setMap).some(v => v === true || (v && v.left && v.right))
     );
     if (!hasAnyValidated) {
-      alert('Valide au moins une série avant de terminer la séance.');
+      alert(window.I18n ? I18n.t('today.min_series') : 'Valide au moins une série avant de terminer la séance.');
       return;
     }
 
@@ -726,7 +723,10 @@ window.Today = (() => {
     // Bloque si la séance a duré moins de 3 minutes
     if (duration < 180) {
       const remaining = Math.ceil((180 - duration) / 60);
-      alert(`La séance doit durer au moins 3 minutes. Encore ${remaining} minute${remaining > 1 ? 's' : ''}.`);
+      const msg = window.I18n
+        ? I18n.t('today.too_short').replace('%s', remaining)
+        : `La séance doit durer au moins 3 minutes. Encore ${remaining} minute${remaining > 1 ? 's' : ''}.`;
+      alert(msg);
       return;
     }
 
@@ -817,19 +817,16 @@ window.Today = (() => {
     // Check semaine complète
     const weekComplete = await Badges.checkWeekComplete(sessions);
 
+    const tt = window.I18n ? I18n.t.bind(I18n) : k => k;
     if (weekComplete) {
-      showCelebration(
-        '🏆',
-        'Semaine complète !',
+      showCelebration('🏆', tt('today.week_done'),
         `Bravo ${profile.username} ! Tu as complété toute ta semaine d'entraînement. Continue comme ça, tu es sur la bonne voie !`
       );
     } else if (newBadges.length > 0) {
       const b = newBadges[0];
-      showCelebration(b.emoji, 'Nouveau badge !', `Tu as débloqué : ${b.name}`);
+      showCelebration(b.emoji, tt('today.new_badge'), `Tu as débloqué : ${b.name}`);
     } else {
-      showCelebration(
-        '🎉',
-        'Séance terminée !',
+      showCelebration('🎉', tt('today.session_done'),
         `Bravo ${profile.username} ! ${completedCount} exercice${completedCount !== 1 ? 's' : ''} complété${completedCount !== 1 ? 's' : ''}. Récupère bien.`
       );
     }
@@ -892,7 +889,7 @@ window.Today = (() => {
     const addBtn = document.createElement('button');
     addBtn.className = 'add-exercise-btn';
     addBtn.id = 'btn-add-exercise-today';
-    addBtn.textContent = '+ Ajouter un exercice';
+    addBtn.textContent = window.I18n ? I18n.t('today.add_exercise') : '+ Ajouter un exercice';
     addBtn.addEventListener('click', openExercisePicker);
     list.appendChild(addBtn);
 
@@ -901,7 +898,7 @@ window.Today = (() => {
     libBtn.className = 'add-exercise-btn';
     libBtn.style.background = 'var(--bg-card-2)';
     libBtn.style.color = 'var(--text-2)';
-    libBtn.textContent = '📚 Mes séances';
+    libBtn.textContent = `📚 ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
     libBtn.addEventListener('click', openWorkoutLib);
     list.appendChild(libBtn);
 
@@ -909,22 +906,25 @@ window.Today = (() => {
   }
 
   /* ─── Picker d'exercices ─────────────────────────────── */
-  const ALL_CATEGORIES = [
-    { key: 'polyarticular', label: '⭐ Polyarticulaires' },
-    { key: 'home',          label: '🏠 Maison' },
-    { key: 'pectoraux',     label: 'Pectoraux' },
-    { key: 'dos',           label: 'Dos' },
-    { key: 'epaules',       label: 'Épaules' },
-    { key: 'biceps',        label: 'Biceps' },
-    { key: 'triceps',       label: 'Triceps' },
-    { key: 'abdominaux',    label: 'Abdominaux' },
-    { key: 'quadriceps',    label: 'Quadriceps' },
-    { key: 'ischio',        label: 'Ischio-jambiers' },
-    { key: 'fessiers',      label: 'Fessiers' },
-    { key: 'mollets',       label: 'Mollets' },
-    { key: 'custom',        label: '✎ Mes exercices' },
-  ];
-  const MUSCLE_CATS = ALL_CATEGORIES.filter(c => c.key !== 'home' && c.key !== 'custom');
+  function ALL_CATEGORIES() {
+    const t = window.I18n ? I18n.t.bind(I18n) : k => k;
+    return [
+      { key: 'polyarticular', label: t('cat.polyarticular') },
+      { key: 'home',          label: t('cat.home') },
+      { key: 'pectoraux',     label: t('cat.pectoraux') },
+      { key: 'dos',           label: t('cat.dos') },
+      { key: 'epaules',       label: t('cat.epaules') },
+      { key: 'biceps',        label: t('cat.biceps') },
+      { key: 'triceps',       label: t('cat.triceps') },
+      { key: 'abdominaux',    label: t('cat.abdominaux') },
+      { key: 'quadriceps',    label: t('cat.quadriceps') },
+      { key: 'ischio',        label: t('cat.ischio') },
+      { key: 'fessiers',      label: t('cat.fessiers') },
+      { key: 'mollets',       label: t('cat.mollets') },
+      { key: 'custom',        label: t('cat.custom') },
+    ];
+  }
+  function MUSCLE_CATS() { return ALL_CATEGORIES().filter(c => c.key !== 'home' && c.key !== 'custom'); }
 
   function openExercisePicker() {
     const modal   = document.getElementById('modal-exercise-picker');
@@ -933,8 +933,10 @@ window.Today = (() => {
     const search  = document.getElementById('picker-search');
     if (!modal) return;
 
+    const cats = ALL_CATEGORIES();
+
     // Rend les catégories
-    catList.innerHTML = ALL_CATEGORIES.map(c =>
+    catList.innerHTML = cats.map(c =>
       `<button class="picker-cat-btn" data-cat="${c.key}">${c.label}</button>`
     ).join('');
 
@@ -950,7 +952,7 @@ window.Today = (() => {
         exercises = getCustomExercises().map(e => ({ ...e, _cat: 'custom' }));
       } else if (cat === 'home') {
         exercises = [];
-        MUSCLE_CATS.forEach(c => {
+        MUSCLE_CATS().forEach(c => {
           const exs = window.EXERCISES_RESOLVE ? EXERCISES_RESOLVE(c.key) : (window.EXERCISES?.[c.key] || []);
           exs.forEach(e => { if (e.equipment === 'home') exercises.push({ ...e, _cat: c.key }); });
         });
@@ -962,7 +964,7 @@ window.Today = (() => {
 
     function getAllExercises() {
       const all = [];
-      ALL_CATEGORIES.forEach(c => {
+      cats.forEach(c => {
         if (c.key === 'custom') {
           getCustomExercises().forEach(e => all.push({ ...e, _cat: 'custom' }));
         } else {
@@ -973,9 +975,11 @@ window.Today = (() => {
       return all;
     }
 
+    const t = window.I18n ? I18n.t.bind(I18n) : k => k;
+
     function renderPickerExercises(list, showCat = false) {
       const q           = search?.value?.toLowerCase() || '';
-      const homeSearch  = q === 'maison' || q === 'home' || q === 'maison ';
+      const homeSearch  = q === 'maison' || q === 'home';
       const filtered    = q ? list.filter(e =>
         (homeSearch && e.equipment === 'home') ||
         e.name?.toLowerCase().includes(q) ||
@@ -983,16 +987,16 @@ window.Today = (() => {
       ) : list;
 
       if (filtered.length === 0) {
-        exList.innerHTML = `<p class="picker-empty">Aucun exercice trouvé</p>`;
+        exList.innerHTML = `<p class="picker-empty">${t('today.no_exercise')}</p>`;
         return;
       }
       exList.innerHTML = filtered.map(ex => {
         const cat      = ex._cat || activeCat || '';
         const isCustom = ex.isCustom || cat === 'custom';
         const isHome   = ex.equipment === 'home';
-        const catLabel = showCat ? (ALL_CATEGORIES.find(c => c.key === cat)?.label?.replace('🏠 ', '') || '') : '';
+        const catLabel = showCat ? (cats.find(c => c.key === cat)?.label?.replace('🏠 ', '') || '') : '';
         const delIcon  = isCustom
-          ? `<span class="picker-ex-del-icon" data-del-id="${ex.id}" title="Supprimer">🗑</span>`
+          ? `<span class="picker-ex-del-icon" data-del-id="${ex.id}" title="${t('nutr.delete_item')}">🗑</span>`
           : '';
         const homeBadge = isHome && !isCustom
           ? `<span class="picker-ex-home-badge">🏠</span>`
@@ -1007,10 +1011,9 @@ window.Today = (() => {
 
       exList.querySelectorAll('.picker-ex-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          // Delete icon on custom exercise
           const delIcon = e.target.closest('.picker-ex-del-icon');
           if (delIcon) {
-            if (confirm('Supprimer définitivement cet exercice personnalisé ?')) {
+            if (confirm(t('today.del_custom_confirm'))) {
               deleteCustomExercise(delIcon.dataset.delId);
               if (activeCat === 'custom') {
                 showCategory('custom');
@@ -1020,7 +1023,6 @@ window.Today = (() => {
             }
             return;
           }
-          // Add exercise to session
           const exId = btn.dataset.id;
           const cat  = btn.dataset.cat;
           let exercise = getCustomExercises().find(ex => ex.id === exId);
@@ -1044,7 +1046,7 @@ window.Today = (() => {
           catList.querySelectorAll('.picker-cat-btn').forEach(b => b.classList.remove('active'));
           renderPickerExercises(getAllExercises(), true);
         } else {
-          showCategory(activeCat || ALL_CATEGORIES[0].key);
+          showCategory(activeCat || cats[0].key);
         }
       };
     }
@@ -1056,7 +1058,7 @@ window.Today = (() => {
     };
 
     // Affiche la première catégorie par défaut
-    showCategory(ALL_CATEGORIES[0].key);
+    showCategory(cats[0].key);
     modal.classList.remove('hidden');
   }
 
@@ -1122,7 +1124,7 @@ window.Today = (() => {
           const addBtn = document.createElement('button');
           addBtn.className = 'add-exercise-btn';
           addBtn.id = 'btn-add-exercise-today';
-          addBtn.textContent = '+ Ajouter un exercice';
+          addBtn.textContent = window.I18n ? I18n.t('today.add_exercise') : '+ Ajouter un exercice';
           addBtn.addEventListener('click', openExercisePicker);
           list.appendChild(addBtn);
 
@@ -1130,7 +1132,7 @@ window.Today = (() => {
           libBtn2.className = 'add-exercise-btn';
           libBtn2.style.background = 'var(--bg-card-2)';
           libBtn2.style.color = 'var(--text-2)';
-          libBtn2.textContent = '📚 Mes séances';
+          libBtn2.textContent = `📚 ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
           libBtn2.addEventListener('click', openWorkoutLib);
           list.appendChild(libBtn2);
 
@@ -1186,8 +1188,9 @@ window.Today = (() => {
     const list = document.getElementById('workout-lib-list');
     if (!list) return;
     const lib = getWorkoutLib();
+    const tl = window.I18n ? I18n.t.bind(I18n) : k => k;
     if (lib.length === 0) {
-      list.innerHTML = `<div class="workout-lib-empty">Aucune séance sauvegardée.<br>Lance une séance puis sauvegarde-la ici !</div>`;
+      list.innerHTML = `<div class="workout-lib-empty">${tl('today.lib_empty').replace(/\n/g, '<br>')}</div>`;
       return;
     }
     list.innerHTML = lib.map(t => `
@@ -1197,7 +1200,7 @@ window.Today = (() => {
           <div class="workout-lib-meta">${t.exercises.length} exercice${t.exercises.length > 1 ? 's' : ''}</div>
         </div>
         <button class="workout-lib-edit" data-edit-id="${t.id}" title="Modifier">✎</button>
-        <button class="workout-lib-load" data-lib-id="${t.id}">Charger</button>
+        <button class="workout-lib-load" data-lib-id="${t.id}">${tl('today.load_btn')}</button>
         <button class="workout-lib-del" data-del-id="${t.id}">✕</button>
       </div>
     `).join('');
@@ -1208,7 +1211,8 @@ window.Today = (() => {
       btn.addEventListener('click', () => {
         const t = getWorkoutLib().find(t => t.id == btn.dataset.libId);
         if (!t) return;
-        if (confirm(`Charger "${t.name}" ? Les exercices actuels seront remplacés.`)) {
+        const loadMsg = window.I18n ? I18n.t('today.load_confirm').replace('%s', t.name) : `Charger "${t.name}" ? Les exercices actuels seront remplacés.`;
+        if (confirm(loadMsg)) {
           const list2 = document.getElementById('exercise-list');
           const addBtn2 = document.getElementById('btn-add-exercise-today');
           currentExercises = [];
@@ -1313,12 +1317,14 @@ window.Today = (() => {
     if (delBtn) {
       delBtn.classList.toggle('hidden', !exercise.isCustom);
       delBtn.onclick = () => {
-        if (confirm(`Supprimer définitivement l'exercice "${exercise.name}" ?`)) {
-          deleteCustomExercise(exercise.id);
-          currentExercises = currentExercises.filter(e => e.id !== exercise.id);
-          delete completedSets[exercise.id];
+        const delMsg = window.I18n ? I18n.t('today.del_exercise_confirm').replace('%s', exercise.name) : `Supprimer définitivement l'exercice "${exercise.name}" ?`;
+        if (confirm(delMsg)) {
+          const exId = exercise.id;
+          deleteCustomExercise(exId);
+          currentExercises = currentExercises.filter(e => e.id !== exId);
+          delete completedSets[exId];
           closeModal('modal-edit-exercise');
-          reRenderExerciseList();
+          document.querySelector(`.exercise-card[data-exercise-id="${exId}"]`)?.remove();
           updateProgress();
         }
       };
@@ -1355,7 +1361,23 @@ window.Today = (() => {
       if (nameEl) nameEl.textContent = newName;
 
       closeModal('modal-edit-exercise');
-      reRenderExerciseList();
+      // Met à jour seulement le setsRow de la carte concernée (préserve les autres)
+      const card = document.querySelector(`.exercise-card[data-exercise-id="${exercise.id}"]`);
+      if (card?._setsRow) {
+        card._setsRow.innerHTML = '';
+        completedSets[exercise.id] = {};
+        const getRestFn = () => newRest;
+        exercise.sets_config.forEach((sc, i) => {
+          let setEl;
+          if (exercise.isTimer)      setEl = buildTimerSet(exercise, i, sc, getRestFn);
+          else if (exercise.isUnilateral) setEl = buildUnilateralSet(exercise, i, sc.reps, getRestFn);
+          else                        setEl = buildRegularSet(exercise, i, sc, getRestFn);
+          card._setsRow.appendChild(setEl);
+        });
+      } else {
+        reRenderExerciseList();
+      }
+      updateProgress();
     };
   }
 
@@ -1416,8 +1438,12 @@ window.Today = (() => {
       if (e.target === this) closeModal('modal-edit-workout');
     });
     document.getElementById('btn-save-workout-lib')?.addEventListener('click', () => {
-      if (currentExercises.length === 0) { alert('Ajoute des exercices avant de sauvegarder.'); return; }
-      const name = prompt('Nom de la séance :', `Séance ${new Date().toLocaleDateString('fr-FR', { weekday: 'long' })}`);
+      if (currentExercises.length === 0) {
+        alert(window.I18n ? I18n.t('today.save_first') : 'Ajoute des exercices avant de sauvegarder.');
+        return;
+      }
+      const defaultName = `${window.I18n ? I18n.t('today.session_badge') : 'Séance'} ${new Date().toLocaleDateString('fr-FR', { weekday: 'long' })}`;
+      const name = prompt(window.I18n ? I18n.t('today.session_name_prompt') : 'Nom de la séance :', defaultName);
       if (!name?.trim()) return;
       saveWorkoutToLib(name.trim(), currentExercises);
       renderWorkoutLib();
@@ -1491,7 +1517,7 @@ window.Today = (() => {
     });
 
     document.getElementById('btn-finish-session')?.addEventListener('click', () => {
-      if (confirm('Terminer la séance ?')) finishSession();
+      if (confirm(window.I18n ? I18n.t('today.finish_confirm') : 'Terminer la séance ?')) finishSession();
     });
 
     document.getElementById('btn-close-celebration')?.addEventListener('click', () => {

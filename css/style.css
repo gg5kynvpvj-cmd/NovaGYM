@@ -2427,7 +2427,14 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   align-items: center;
   justify-content: center;
 }
-.nutr-meal-item-del:active { background: var(--danger); border-color: var(--danger); color: #fff; }
+.nutr-meal-item-del:active  { background: var(--danger); border-color: var(--danger); color: #fff; }
+.nutr-meal-item-edit {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: none; border: 1px solid var(--border);
+  color: var(--text-2); font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.nutr-meal-item-edit:active { background: var(--accent); border-color: var(--accent); color: #fff; }
 :root.light .nutr-meal-item-kcal { color: #3A6B00; }
 
 .btn-add-meal-type {

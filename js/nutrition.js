@@ -12,6 +12,15 @@ window.Nutrition = (() => {
   let searchTimeout   = null;
   let html5Scanner    = null;
 
+  function getMealTypes() {
+    const t = window.I18n ? I18n.t.bind(I18n) : k => k;
+    return [
+      { key: 'breakfast', label: t('meal.type.breakfast'), icon: '🌅' },
+      { key: 'lunch',     label: t('meal.type.lunch'),     icon: '☀️' },
+      { key: 'dinner',    label: t('meal.type.dinner'),    icon: '🌙' },
+      { key: 'snacks',    label: t('meal.type.snacks'),    icon: '🍎' },
+    ];
+  }
   const MEAL_TYPES = [
     { key: 'breakfast', label: 'Petit déjeuner', icon: '🌅' },
     { key: 'lunch',     label: 'Déjeuner',       icon: '☀️' },
@@ -156,9 +165,11 @@ window.Nutrition = (() => {
     drawRing(totals.calories, effectiveGoal);
     setText('nutr-consumed', totals.calories);
     setText('nutr-goal',     effectiveGoal ? `${effectiveGoal} kcal` : '—');
-    const rem = effectiveGoal - totals.calories;
+    const rem       = effectiveGoal - totals.calories;
+    const remLbl    = window.I18n ? I18n.t('nutr.remaining_lbl') : 'restantes';
+    const excLbl    = window.I18n ? I18n.t('nutr.exceeded_lbl')  : 'dépassées';
     setText('nutr-remaining', effectiveGoal
-      ? (rem >= 0 ? `${rem} restantes` : `${Math.abs(rem)} dépassées`)
+      ? (rem >= 0 ? `${rem} ${remLbl}` : `${Math.abs(rem)} ${excLbl}`)
       : '—');
 
     const stepsEl = document.getElementById('nutr-steps-burned');
@@ -191,14 +202,14 @@ window.Nutrition = (() => {
   function renderPeriod(numDays) {
     const totals = aggregateDays(numDays);
     const { goalCal, goalP, goalC, goalF } = getGoals();
-    const label = numDays === 7 ? 'Cette semaine' : 'Ce mois';
+    const label = window.I18n ? I18n.t(numDays === 7 ? 'nutr.week_lbl' : 'nutr.month_lbl') : (numDays === 7 ? 'Cette semaine' : 'Ce mois');
     const days  = totals.days || 1;
 
     const avgCal = Math.round(totals.calories / days);
     drawRing(avgCal, goalCal);
     setText('nutr-consumed', avgCal);
     setText('nutr-goal',     goalCal ? `${goalCal} kcal` : '—');
-    setText('nutr-remaining', `moy. / jour`);
+    setText('nutr-remaining', window.I18n ? I18n.t('nutr.avg_day') : 'moy. / jour');
 
     const avgP = Math.round(totals.protein / days);
     const avgC = Math.round(totals.carbs   / days);
@@ -214,7 +225,7 @@ window.Nutrition = (() => {
     if (periodEl) {
       periodEl.innerHTML = `
         <div class="nutr-period-summary">
-          <h3 class="card-title">${label} — Totaux</h3>
+          <h3 class="card-title">${label} — ${window.I18n ? I18n.t('nutr.totals') : 'Totaux'}</h3>
           <div class="nutr-period-stats">
             <div class="nutr-period-stat">
               <span class="nutr-period-stat-val">${totals.calories}</span>
@@ -247,7 +258,7 @@ window.Nutrition = (() => {
 
   /* ─── Cartes repas par type ──────────────────────────────── */
   function renderMealCards(meals) {
-    MEAL_TYPES.forEach(({ key }) => {
+    getMealTypes().forEach(({ key }) => {
       const typeMeals = meals.filter(m => (m.mealType || 'breakfast') === key);
       const totals = typeMeals.reduce(
         (acc, m) => ({ calories: acc.calories + (m.calories || 0), protein: acc.protein + (m.protein || 0), carbs: acc.carbs + (m.carbs || 0), fat: acc.fat + (m.fat || 0) }),
@@ -278,14 +289,43 @@ window.Nutrition = (() => {
           </div>
           <div class="nutr-meal-item-right">
             <span class="nutr-meal-item-kcal">${meal.calories || 0} kcal</span>
-            <button class="nutr-meal-item-del" data-id="${meal.id}" title="Supprimer">✕</button>
+            ${meal.quantity ? `<button class="nutr-meal-item-edit" data-id="${meal.id}" title="${window.I18n ? I18n.t('nutr.edit_qty') : 'Modifier la quantité'}">✎</button>` : ''}
+            <button class="nutr-meal-item-del" data-id="${meal.id}" title="${window.I18n ? I18n.t('nutr.delete_item') : 'Supprimer'}">✕</button>
           </div>
         </div>
       `).join('');
 
+      itemsEl.querySelectorAll('.nutr-meal-item-edit').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const d    = getData();
+          const meal = d.meals.find(m => String(m.id) === btn.dataset.id);
+          if (!meal) return;
+          const label = window.I18n ? I18n.t('nutr.qty_prompt').replace('%s', meal.name) : `Quantité pour "${meal.name}" (g) :`;
+          const inp   = prompt(label, meal.quantity || 100);
+          const newQty = parseFloat(inp);
+          if (!newQty || newQty <= 0) return;
+          if (meal.cal100 != null) {
+            const f      = newQty / 100;
+            meal.calories = Math.round(meal.cal100     * f);
+            meal.protein  = Math.round(meal.protein100 * f * 10) / 10;
+            meal.carbs    = Math.round(meal.carbs100   * f * 10) / 10;
+            meal.fat      = Math.round(meal.fat100     * f * 10) / 10;
+          } else {
+            const ratio  = newQty / (meal.quantity || 100);
+            meal.calories = Math.round(meal.calories * ratio);
+            meal.protein  = Math.round(meal.protein  * ratio * 10) / 10;
+            meal.carbs    = Math.round(meal.carbs    * ratio * 10) / 10;
+            meal.fat      = Math.round(meal.fat      * ratio * 10) / 10;
+          }
+          meal.quantity = newQty;
+          saveData(d);
+          render();
+        });
+      });
+
       itemsEl.querySelectorAll('.nutr-meal-item-del').forEach(btn => {
         btn.addEventListener('click', () => {
-          if (!confirm('Supprimer cet aliment ?')) return;
+          if (!confirm(window.I18n ? I18n.t('nutr.delete_confirm') : 'Supprimer cet aliment ?')) return;
           const d = getData();
           d.meals = d.meals.filter(m => String(m.id) !== btn.dataset.id);
           saveData(d);
@@ -407,8 +447,9 @@ window.Nutrition = (() => {
   /* ─── Modal recherche aliment ────────────────────────────── */
   function openFoodSearch(mealType) {
     currentMealType = mealType;
-    const typeInfo = MEAL_TYPES.find(t => t.key === mealType);
-    setText('food-search-title', (typeInfo ? `${typeInfo.icon} ${typeInfo.label}` : 'Ajouter des aliments'));
+    const typeInfo = getMealTypes().find(t => t.key === mealType);
+    const addFoodsLabel = window.I18n ? I18n.t('nutr.add_foods') : 'Ajouter des aliments';
+    setText('food-search-title', (typeInfo ? `${typeInfo.icon} ${typeInfo.label}` : addFoodsLabel));
 
     // Réinitialise l'état
     const input = document.getElementById('food-search-input');
@@ -455,7 +496,7 @@ window.Nutrition = (() => {
     }
     showEl('food-search-hint', false);
     const list = document.getElementById('food-results-list');
-    if (list) list.innerHTML = '<p class="food-search-loading">Recherche en cours…</p>';
+    if (list) list.innerHTML = `<p class="food-search-loading">${window.I18n ? I18n.t('nutr.searching') : 'Recherche en cours…'}</p>`;
 
     try {
       const url = `https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(query)}&search_simple=1&json=1&page_size=15&fields=product_name,brands,nutriments,code`;
@@ -463,7 +504,7 @@ window.Nutrition = (() => {
       const json = await res.json();
       renderSearchResults(json.products || []);
     } catch {
-      if (list) list.innerHTML = '<p class="food-search-error">Erreur de connexion.</p>';
+      if (list) list.innerHTML = `<p class="food-search-error">${window.I18n ? I18n.t('nutr.conn_error') : 'Erreur de connexion.'}</p>`;
     }
   }
 
@@ -474,7 +515,9 @@ window.Nutrition = (() => {
     const valid = products.filter(p => p.product_name);
 
     if (!valid.length) {
-      list.innerHTML = `<p class="food-search-hint">Aucun résultat. <button class="btn-link" id="btn-no-result-manual" type="button">Créer manuellement →</button></p>`;
+      const noResult   = window.I18n ? I18n.t('nutr.no_result')     : 'Aucun résultat.';
+      const createLbl  = window.I18n ? I18n.t('nutr.create_manual') : 'Créer manuellement →';
+      list.innerHTML = `<p class="food-search-hint">${noResult} <button class="btn-link" id="btn-no-result-manual" type="button">${createLbl}</button></p>`;
       document.getElementById('btn-no-result-manual')?.addEventListener('click', () => showStep(3));
       return;
     }
@@ -545,14 +588,18 @@ window.Nutrition = (() => {
     const f   = qty / 100;
 
     const meal = {
-      id:       Date.now(),
-      name:     selectedProduct.name,
-      quantity: qty,
-      calories: Math.round(baseNutrition.calories * f),
-      protein:  Math.round(baseNutrition.protein  * f * 10) / 10,
-      carbs:    Math.round(baseNutrition.carbs     * f * 10) / 10,
-      fat:      Math.round(baseNutrition.fat        * f * 10) / 10,
-      mealType: currentMealType,
+      id:         Date.now(),
+      name:       selectedProduct.name,
+      quantity:   qty,
+      calories:   Math.round(baseNutrition.calories * f),
+      protein:    Math.round(baseNutrition.protein  * f * 10) / 10,
+      carbs:      Math.round(baseNutrition.carbs     * f * 10) / 10,
+      fat:        Math.round(baseNutrition.fat        * f * 10) / 10,
+      mealType:   currentMealType,
+      cal100:     baseNutrition.calories,
+      protein100: baseNutrition.protein,
+      carbs100:   baseNutrition.carbs,
+      fat100:     baseNutrition.fat,
     };
 
     if (document.getElementById('food-save-fav')?.checked) saveMealToLib(meal);
@@ -579,14 +626,14 @@ window.Nutrition = (() => {
       const p = json.product;
       const n = p.nutriments || {};
       selectProduct({
-        name:       p.product_name || p.brands || 'Produit scanné',
+        name:       p.product_name || p.brands || (window.I18n ? I18n.t('nutr.scanned') : 'Produit scanné'),
         cal100:     Math.round(n['energy-kcal_100g'] || n['energy-kcal_serving'] || 0),
         protein100: Math.round((n['proteins_100g']       || 0) * 10) / 10,
         carbs100:   Math.round((n['carbohydrates_100g']  || 0) * 10) / 10,
         fat100:     Math.round((n['fat_100g']            || 0) * 10) / 10,
       });
     } catch {
-      alert('Erreur de connexion à Open Food Facts.');
+      alert(window.I18n ? I18n.t('nutr.off_error') : 'Erreur de connexion à Open Food Facts.');
     }
   }
 

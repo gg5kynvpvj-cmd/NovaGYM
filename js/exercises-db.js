@@ -70,6 +70,21 @@ window.EXERCISES = {
       ]
     },
     {
+      id: 'front_raise',
+      name: 'Élévation frontale',
+      muscles: ['Deltoïdes antérieurs'],
+      isUnilateral: false,
+      defaultSets: 3, defaultReps: 12, restSeconds: 60,
+      equipment: 'gym',
+      description: "Exercice d'isolation ciblant le deltoïde antérieur. Tu lèves les haltères devant toi jusqu'à la hauteur des épaules pour sculpter l'avant de l'épaule.",
+      tips: [
+        "Légère flexion des coudes, paumes vers le bas",
+        "Monte jusqu'à la hauteur des épaules — pas plus haut",
+        "Contrôle la descente lentement pour maximiser le travail",
+        "Garde le buste droit, évite de te balancer"
+      ]
+    },
+    {
       id: 'tricep_pushdown',
       name: 'Extensions triceps poulie',
       muscles: ['Triceps'],
@@ -788,6 +803,7 @@ window.EXERCISES = {
     { id: 'ohp',                    ref: 'push' },
     { id: 'dumbbell_shoulder_press', ref: 'push' },
     { id: 'lateral_raise',          ref: 'push' },
+    { id: 'front_raise',            ref: 'push' },
     { id: 'rear_delt_fly',          ref: 'pull' },
     { id: 'face_pull',              ref: 'pull' }
   ],
