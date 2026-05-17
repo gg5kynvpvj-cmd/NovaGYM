@@ -1342,7 +1342,7 @@ window.Today = (() => {
       const newRest = parseInt(document.getElementById('ee-rest').value) || 90;
       if (!newName) return;
 
-      // Récupère les sets depuis le formulaire
+      // Récupère les sets depuis le formulaire de l'éditeur
       const rows = document.querySelectorAll('.ee-set-row');
       exercise.sets_config = Array.from(rows).map(row => {
         const base = { type: row.querySelector('.ee-set-type').value };
@@ -1361,22 +1361,85 @@ window.Today = (() => {
       if (nameEl) nameEl.textContent = newName;
 
       closeModal('modal-edit-exercise');
-      // Met à jour seulement le setsRow de la carte concernée (préserve les autres)
+
       const card = document.querySelector(`.exercise-card[data-exercise-id="${exercise.id}"]`);
       if (card?._setsRow) {
+        // ── Snapshot de l'état courant AVANT de vider ──────────────
+        const snapshot = [];
+        card._setsRow.querySelectorAll('.set-item, .set-item-unilateral').forEach((item) => {
+          if (exercise.isUnilateral) {
+            snapshot.push({
+              repsL:     item.querySelector('.uni-reps-left')?.value    || '',
+              weightL:   item.querySelector('.uni-weight-left')?.value  || '',
+              repsR:     item.querySelector('.uni-reps-right')?.value   || '',
+              weightR:   item.querySelector('.uni-weight-right')?.value || '',
+              doneLeft:  item.querySelector('.unilateral-btn[data-side="left"]')?.classList.contains('done')  || false,
+              doneRight: item.querySelector('.unilateral-btn[data-side="right"]')?.classList.contains('done') || false,
+            });
+          } else {
+            snapshot.push({
+              reps:   item.querySelector('.set-reps-input')?.value   || '',
+              weight: item.querySelector('.set-weight-input')?.value || '',
+              done:   item.querySelector('.set-check-btn')?.classList.contains('done') || false,
+            });
+          }
+        });
+
+        // ── Reconstruction ──────────────────────────────────────────
         card._setsRow.innerHTML = '';
         completedSets[exercise.id] = {};
         const getRestFn = () => newRest;
+
         exercise.sets_config.forEach((sc, i) => {
           let setEl;
-          if (exercise.isTimer)      setEl = buildTimerSet(exercise, i, sc, getRestFn);
+          if (exercise.isTimer)           setEl = buildTimerSet(exercise, i, sc, getRestFn);
           else if (exercise.isUnilateral) setEl = buildUnilateralSet(exercise, i, sc.reps, getRestFn);
-          else                        setEl = buildRegularSet(exercise, i, sc, getRestFn);
+          else                            setEl = buildRegularSet(exercise, i, sc, getRestFn);
           card._setsRow.appendChild(setEl);
+
+          // ── Restauration si cet index existait avant ────────────
+          if (i >= snapshot.length) return;
+          const snap = snapshot[i];
+
+          if (exercise.isUnilateral) {
+            const repsL   = setEl.querySelector('.uni-reps-left');
+            const weightL = setEl.querySelector('.uni-weight-left');
+            const repsR   = setEl.querySelector('.uni-reps-right');
+            const weightR = setEl.querySelector('.uni-weight-right');
+            const btnL    = setEl.querySelector('.unilateral-btn[data-side="left"]');
+            const btnR    = setEl.querySelector('.unilateral-btn[data-side="right"]');
+            const rowL    = setEl.querySelector('.uni-side-row[data-side="left"]');
+            const rowR    = setEl.querySelector('.uni-side-row[data-side="right"]');
+            if (repsL && snap.repsL)     repsL.value   = snap.repsL;
+            if (weightL && snap.weightL) weightL.value = snap.weightL;
+            if (repsR && snap.repsR)     repsR.value   = snap.repsR;
+            if (weightR && snap.weightR) weightR.value = snap.weightR;
+            if (!completedSets[exercise.id][i]) completedSets[exercise.id][i] = { left: false, right: false };
+            if (snap.doneLeft  && btnL) { btnL.classList.add('done'); rowL?.classList.add('done'); completedSets[exercise.id][i].left  = true; }
+            if (snap.doneRight && btnR) { btnR.classList.add('done'); rowR?.classList.add('done'); completedSets[exercise.id][i].right = true; }
+            const both = completedSets[exercise.id][i].left && completedSets[exercise.id][i].right;
+            setEl.classList.toggle('done', both);
+          } else {
+            const repsInput   = setEl.querySelector('.set-reps-input');
+            const repsLabel   = setEl.querySelector('.set-reps-label');
+            const weightInput = setEl.querySelector('.set-weight-input');
+            const checkBtn    = setEl.querySelector('.set-check-btn');
+            if (repsInput && snap.reps) {
+              repsInput.value = snap.reps;
+              if (repsLabel) repsLabel.style.display = 'none';
+            }
+            if (weightInput && snap.weight) weightInput.value = snap.weight;
+            if (snap.done && checkBtn) {
+              checkBtn.classList.add('done');
+              setEl.classList.add('done');
+              completedSets[exercise.id][i] = true;
+            }
+          }
         });
       } else {
         reRenderExerciseList();
       }
+      checkCardCompletion(exercise.id);
       updateProgress();
     };
   }
