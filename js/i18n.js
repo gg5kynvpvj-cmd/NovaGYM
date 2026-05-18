@@ -16,7 +16,7 @@ window.I18n = (() => {
       'auth.create': 'Créer mon compte',
       // Nav
       'nav.today': "Aujourd'hui", 'nav.stats': 'Stats',
-      'nav.history': 'Historique', 'nav.nutrition': 'Nutrition', 'nav.settings': 'Réglages',
+      'nav.history': 'Historique', 'nav.nutrition': 'Nutrition', 'nav.social': 'Communauté', 'nav.settings': 'Réglages',
       // Onboarding
       'ob.step': 'Étape', 'ob.of': 'sur',
       'ob.step1.title': 'Dis-nous\nqui tu es',
@@ -434,7 +434,7 @@ window.I18n = (() => {
       'auth.username': 'Username', 'auth.forgot': 'Forgot password?',
       'auth.create': 'Create account',
       'nav.today': 'Today', 'nav.stats': 'Stats',
-      'nav.history': 'History', 'nav.nutrition': 'Nutrition', 'nav.settings': 'Settings',
+      'nav.history': 'History', 'nav.nutrition': 'Nutrition', 'nav.social': 'Social', 'nav.settings': 'Settings',
       'ob.step': 'Step', 'ob.of': 'of',
       'ob.step1.title': 'Tell us\nabout you',
       'ob.step1.sub': '100% personalized program',
