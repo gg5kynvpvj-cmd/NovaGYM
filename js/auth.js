@@ -103,12 +103,20 @@ window.Auth = (() => {
   async function checkUsername(username, currentUserId) {
     const fmtErr = validateUsernameFormat(username);
     if (fmtErr) return fmtErr;
-    if (App.supabase) {
-      let req = App.supabase.from('profiles').select('id').ilike('username', username.trim());
-      if (currentUserId) req = req.neq('id', currentUserId);
-      const { data } = await req.limit(1);
-      if (data && data.length > 0) return 'username.taken';
-    }
+    if (!App.supabase) return null;
+    try {
+      // Fetch direct avec la clé anonyme → ignore la session utilisateur et son RLS
+      const name = encodeURIComponent(username.trim());
+      let url = `${SUPABASE_URL}/rest/v1/profiles?select=id&username=ilike.${name}&limit=1`;
+      if (currentUserId) url += `&id=neq.${encodeURIComponent(currentUserId)}`;
+      const resp = await fetch(url, {
+        headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` },
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data) && data.length > 0) return 'username.taken';
+      }
+    } catch { /* ne pas bloquer si réseau indisponible */ }
     return null;
   }
 
@@ -134,22 +142,16 @@ window.Auth = (() => {
       if (password.length < 6) { showError('register-error', I18n.t('auth.pwd_short')); return; }
       if (password !== confirm) { showError('register-error', I18n.t('auth.pwd_mismatch')); return; }
 
-      // Validation du format du pseudonyme (synchrone)
+      // Validation format (synchrone, avant spinner)
       const fmtErr = validateUsernameFormat(username);
       if (fmtErr) { showError('register-error', I18n.t(fmtErr)); return; }
 
       setLoading('btn-register', true);
 
       try {
-        // Vérification de l'unicité (asynchrone)
-        if (App.supabase) {
-          const { data: existing } = await App.supabase
-            .from('profiles').select('id').ilike('username', username).limit(1);
-          if (existing && existing.length > 0) {
-            showError('register-error', I18n.t('username.taken'));
-            return;
-          }
-        }
+        // Unicité (asynchrone, fetch anonyme → indépendant du RLS de session)
+        const takenErr = await checkUsername(username, null);
+        if (takenErr) { showError('register-error', I18n.t(takenErr)); return; }
 
         if (App.supabase) {
           const { data, error } = await App.supabase.auth.signUp({
