@@ -132,6 +132,7 @@
     Nutrition.init();
     History.init();
     Social.init();
+    ProfileEditor.init();
     Settings.init();
   }
 

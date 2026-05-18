@@ -59,7 +59,7 @@ window.Social = (() => {
         if (anon) {
           const { data: profiles } = await anon
             .from('profiles')
-            .select('id, username, avatar_url, goal, program_type, level, visibility, displayed_badges, shared_sessions')
+            .select('id, username, avatar_url, goal, program_type, level, visibility, displayed_badges, best_performance')
             .in('id', otherIds);
           if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
         }
@@ -275,8 +275,8 @@ window.Social = (() => {
     if (vis === 'private') {
       html += `<p class="friend-profile-private">${I18n.t('profile.private_msg')}</p>`;
     } else {
-      const displayedIds   = Array.isArray(p.displayed_badges) ? p.displayed_badges : [];
-      const sharedSessions = Array.isArray(p.shared_sessions)  ? p.shared_sessions  : [];
+      const displayedIds  = Array.isArray(p.displayed_badges) ? p.displayed_badges : [];
+      const bestPerf      = p.best_performance || null;
 
       if (displayedIds.length > 0) {
         const badgeDefs = (Badges.ALL_BADGES || []).filter(b => displayedIds.includes(b.id));
@@ -290,28 +290,26 @@ window.Social = (() => {
         `;
       }
 
-      if (sharedSessions.length > 0) {
-        const locale = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+      if (bestPerf && bestPerf.value) {
+        const locale   = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+        const lang     = window.I18n ? I18n.lang : 'fr';
+        const label    = lang === 'fr' ? (bestPerf.label_fr || bestPerf.type) : (bestPerf.label_en || bestPerf.type);
+        const dateStr  = bestPerf.date ? new Date(bestPerf.date).toLocaleDateString(locale) : '';
         html += `
           <div class="friend-profile-section">
-            <p class="friend-profile-section-title">${I18n.t('profile.sessions_section')}</p>
-            <div class="friend-profile-sessions">
-              ${sharedSessions.map(s => {
-                const title = (window.I18n ? I18n.t('session.' + s.type) : '') || s.type || I18n.t('profile.session_default');
-                const date  = s.date ? new Date(s.date).toLocaleDateString(locale) : '';
-                return `
-                  <div class="friend-session-item">
-                    <span class="friend-session-title">${title}</span>
-                    <span class="friend-session-meta">${date}${s.exercises ? ` · ${s.exercises} ${I18n.t('profile.exercises_count')}` : ''}</span>
-                  </div>
-                `;
-              }).join('')}
+            <p class="friend-profile-section-title">${I18n.t('profile.perf_section')}</p>
+            <div class="friend-perf-card">
+              <span class="friend-perf-icon">${bestPerf.icon || '🏆'}</span>
+              <div class="friend-perf-info">
+                <span class="friend-perf-label">${label}</span>
+                <span class="friend-perf-value">${bestPerf.value}${dateStr ? ' · ' + dateStr : ''}</span>
+              </div>
             </div>
           </div>
         `;
       }
 
-      if (displayedIds.length === 0 && sharedSessions.length === 0) {
+      if (displayedIds.length === 0 && !bestPerf) {
         html += `<p class="social-empty" style="margin-top:16px">${I18n.t('profile.nothing_shared')}</p>`;
       }
     }

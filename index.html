@@ -846,6 +846,92 @@
     </nav>
   </div><!-- end page-app -->
 
+  <!-- ═══ PAGE — Éditeur de profil public ═══ -->
+  <div id="page-profile-editor" class="page">
+    <div class="pe-header">
+      <button id="btn-pe-back" class="pe-back-btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <h1 class="pe-title" data-i18n="profile.customize_title">Mon profil public</h1>
+      <button id="btn-pe-save" class="pe-save-btn" data-i18n="profile.save">Sauvegarder</button>
+    </div>
+
+    <div class="pe-body">
+
+      <!-- APERÇU -->
+      <p class="pe-section-label" data-i18n="profile.preview_label">APERÇU</p>
+      <div class="pe-preview-card">
+        <div class="pe-preview-top">
+          <div id="pe-preview-avatar" class="pe-preview-avatar"></div>
+          <div class="pe-preview-identity">
+            <span id="pe-preview-name" class="pe-preview-name"></span>
+            <span id="pe-preview-vis" class="pe-preview-vis"></span>
+          </div>
+        </div>
+
+        <!-- Badges (3 slots interactifs) -->
+        <div class="pe-preview-section">
+          <p class="pe-preview-section-label" data-i18n="profile.badges_section">BADGES</p>
+          <div class="pe-badge-slots">
+            <div class="pe-badge-slot" data-slot="0"><span class="pe-slot-placeholder">+</span></div>
+            <div class="pe-badge-slot" data-slot="1"><span class="pe-slot-placeholder">+</span></div>
+            <div class="pe-badge-slot" data-slot="2"><span class="pe-slot-placeholder">+</span></div>
+          </div>
+          <p class="pe-hint" data-i18n="profile.badge_hint">Appuie sur un emplacement pour changer</p>
+        </div>
+
+        <!-- Performance -->
+        <div class="pe-preview-section" id="pe-perf-preview-section">
+          <p class="pe-preview-section-label" data-i18n="profile.perf_section">MEILLEURE PERFORMANCE</p>
+          <div id="pe-perf-card"></div>
+        </div>
+      </div>
+
+      <!-- PERFORMANCE À CHOISIR -->
+      <p class="pe-section-label" data-i18n="profile.perf_pick_label">PERFORMANCE À METTRE EN AVANT</p>
+      <div id="pe-perf-options" class="pe-perf-options"></div>
+
+      <!-- CONFIDENTIALITÉ -->
+      <p class="pe-section-label" data-i18n="profile.visibility_title">CONFIDENTIALITÉ</p>
+      <div class="pe-vis-options">
+        <label class="pe-vis-option">
+          <input type="radio" name="pe-vis" value="private">
+          <div class="pe-vis-row">
+            <span class="pe-vis-icon">🔒</span>
+            <div>
+              <span class="pe-vis-label" data-i18n="profile.visibility_private">Privé</span>
+              <span class="pe-vis-desc" data-i18n="profile.visibility_private_desc">Personne ne peut voir ton profil</span>
+            </div>
+            <span class="pe-vis-check"></span>
+          </div>
+        </label>
+        <label class="pe-vis-option">
+          <input type="radio" name="pe-vis" value="friends">
+          <div class="pe-vis-row">
+            <span class="pe-vis-icon">👥</span>
+            <div>
+              <span class="pe-vis-label" data-i18n="profile.visibility_friends">Amis seulement</span>
+              <span class="pe-vis-desc" data-i18n="profile.visibility_friends_desc">Visible uniquement par tes amis</span>
+            </div>
+            <span class="pe-vis-check"></span>
+          </div>
+        </label>
+        <label class="pe-vis-option">
+          <input type="radio" name="pe-vis" value="public">
+          <div class="pe-vis-row">
+            <span class="pe-vis-icon">🌍</span>
+            <div>
+              <span class="pe-vis-label" data-i18n="profile.visibility_public">Public</span>
+              <span class="pe-vis-desc" data-i18n="profile.visibility_public_desc">Visible par tous les utilisateurs</span>
+            </div>
+            <span class="pe-vis-check"></span>
+          </div>
+        </label>
+      </div>
+
+    </div><!-- end pe-body -->
+  </div><!-- end page-profile-editor -->
+
   <!-- ═══ MODALS ═══ -->
 
   <!-- Profil ami -->
@@ -861,61 +947,15 @@
     </div>
   </div>
 
-  <!-- Personnaliser mon profil -->
-  <div id="modal-customize-profile" class="modal-overlay hidden">
-    <div class="modal-sheet modal-sheet-tall">
+  <!-- Sélecteur de badge -->
+  <div id="modal-badge-picker" class="modal-overlay hidden">
+    <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 class="modal-title" data-i18n="profile.customize_title">Mon profil public</h2>
-        <button id="btn-close-customize-profile" class="modal-close">✕</button>
+        <h2 class="modal-title" data-i18n="profile.pick_badge">Choisir un badge</h2>
+        <button id="btn-close-badge-picker" class="modal-close">✕</button>
       </div>
-      <div class="customize-profile-body">
-
-        <!-- Confidentialité -->
-        <p class="customize-section-title" data-i18n="profile.visibility_title">Confidentialité</p>
-        <div class="visibility-options">
-          <label class="visibility-option">
-            <input type="radio" name="profile-visibility" value="private">
-            <div class="visibility-option-content">
-              <span class="visibility-icon">🔒</span>
-              <div>
-                <span class="visibility-label" data-i18n="profile.visibility_private">Privé</span>
-                <span class="visibility-desc" data-i18n="profile.visibility_private_desc">Personne ne peut voir ton profil</span>
-              </div>
-            </div>
-          </label>
-          <label class="visibility-option">
-            <input type="radio" name="profile-visibility" value="friends">
-            <div class="visibility-option-content">
-              <span class="visibility-icon">👥</span>
-              <div>
-                <span class="visibility-label" data-i18n="profile.visibility_friends">Amis seulement</span>
-                <span class="visibility-desc" data-i18n="profile.visibility_friends_desc">Visible uniquement par tes amis</span>
-              </div>
-            </div>
-          </label>
-          <label class="visibility-option">
-            <input type="radio" name="profile-visibility" value="public">
-            <div class="visibility-option-content">
-              <span class="visibility-icon">🌍</span>
-              <div>
-                <span class="visibility-label" data-i18n="profile.visibility_public">Public</span>
-                <span class="visibility-desc" data-i18n="profile.visibility_public_desc">Visible par tous les utilisateurs</span>
-              </div>
-            </div>
-          </label>
-        </div>
-
-        <!-- Badges -->
-        <p class="customize-section-title" data-i18n="profile.badges_section_title">Badges à afficher</p>
-        <div id="customize-badges-list" class="customize-list"></div>
-
-        <!-- Séances -->
-        <p class="customize-section-title" data-i18n="profile.sessions_section_title">Séances à partager</p>
-        <div id="customize-sessions-list" class="customize-list"></div>
-
-        <button id="btn-save-customize-profile" class="btn-primary btn-full" style="margin-top:20px" data-i18n="profile.save">Enregistrer</button>
-      </div>
+      <div id="badge-picker-list" class="badge-picker-list"></div>
     </div>
   </div>
 
@@ -1510,6 +1550,7 @@
 <script src="/js/history.js"></script>
 <script src="/js/nutrition.js"></script>
 <script src="/js/social.js"></script>
+<script src="/js/profile-editor.js"></script>
 <script src="/js/settings.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/app.js"></script>
