@@ -277,7 +277,7 @@ window.ProfileEditor = (() => {
       });
     });
 
-    document.getElementById('btn-pe-save')?.addEventListener('click', async () => {
+    async function doSave() {
       const profile = App.state.profile;
       if (!profile) return;
 
@@ -297,17 +297,21 @@ window.ProfileEditor = (() => {
       App.state.profile = updated;
       App.local.set('profile', updated);
 
-      const btn = document.getElementById('btn-pe-save');
-      if (btn) { btn.textContent = '✓'; btn.disabled = true; }
+      const btns = [document.getElementById('btn-pe-save'), document.getElementById('btn-pe-save-bottom')];
+      btns.forEach(b => { if (b) { b.textContent = '✓'; b.disabled = true; } });
 
       if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
         await App.supabase.from('profiles').upsert(updated, { onConflict: 'id' });
       }
 
-      if (btn) { btn.textContent = window.I18n ? I18n.t('profile.save') : 'Sauvegarder'; btn.disabled = false; }
+      const label = window.I18n ? I18n.t('profile.save') : 'Sauvegarder';
+      btns.forEach(b => { if (b) { b.textContent = label; b.disabled = false; } });
       App.navigate('app');
       App.switchTab('settings');
-    });
+    }
+
+    document.getElementById('btn-pe-save')?.addEventListener('click', doSave);
+    document.getElementById('btn-pe-save-bottom')?.addEventListener('click', doSave);
   }
 
   /* ─── Ouverture de la page ───────────────────────────── */
