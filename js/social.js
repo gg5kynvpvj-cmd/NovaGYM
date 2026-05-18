@@ -187,13 +187,22 @@ window.Social = (() => {
 
       searchDebounce = setTimeout(async () => {
         try {
-          if (!App.supabase) return;
+          if (!App.supabase) {
+            results.innerHTML = `<div class="social-search-empty">Client non initialisé</div>`;
+            results.classList.remove('hidden');
+            return;
+          }
           const { data, error } = await App.supabase
             .from('profiles')
             .select('id, username, avatar_url')
             .ilike('username', `%${q}%`)
             .limit(8);
-          if (error) console.warn('Search error:', error.message);
+          if (error) {
+            console.warn('Search error:', error.message);
+            results.innerHTML = `<div class="social-search-empty">Erreur : ${error.message}</div>`;
+            results.classList.remove('hidden');
+            return;
+          }
           const users = data || [];
           const filtered = users.filter(u => u.id !== uid());
 
