@@ -168,6 +168,33 @@ window.Groups = (() => {
     }
   }
 
+  /* ─── Photo de groupe ───────────────────────────────── */
+  function renderBannerAvatar(group, isOwner) {
+    const el = document.getElementById('grp-banner-avatar');
+    if (!el) return;
+    if (group.cover_url) {
+      el.innerHTML = `<img src="${group.cover_url}" alt="${group.name}" style="width:100%;height:100%;object-fit:cover;border-radius:20px;">`;
+    } else {
+      el.textContent = group.name.charAt(0).toUpperCase();
+    }
+    el.classList.toggle('grp-banner-avatar-owner', isOwner);
+  }
+
+  async function uploadGroupCover(file) {
+    if (!App.supabase || !currentGroup) return;
+    const path = `${currentGroup.id}/cover.jpg`;
+    const { error: upErr } = await App.supabase.storage
+      .from('groups').upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) { console.warn('Cover upload:', upErr.message); return; }
+    const { data: urlData } = App.supabase.storage.from('groups').getPublicUrl(path);
+    const coverUrl = urlData.publicUrl + '?t=' + Date.now();
+    await App.supabase.from('groups').update({ cover_url: coverUrl }).eq('id', currentGroup.id);
+    currentGroup.cover_url = coverUrl;
+    const grpInList = myGroups.find(g => g.id === currentGroup.id);
+    if (grpInList) grpInList.cover_url = coverUrl;
+    renderBannerAvatar(currentGroup, true);
+  }
+
   /* ─── Ouvrir page groupe ─────────────────────────────── */
   async function openGroup(groupId) {
     currentGroup = myGroups.find(g => g.id === groupId);
@@ -196,15 +223,14 @@ window.Groups = (() => {
     const cnt = currentMembers.length || currentGroup.member_count || 0;
     document.getElementById('grp-header-count').textContent = cnt + ' membre' + (cnt !== 1 ? 's' : '');
 
-    // Banner avatar
-    const bannerAvatar = document.getElementById('grp-banner-avatar');
-    if (bannerAvatar) bannerAvatar.textContent = currentGroup.name.charAt(0).toUpperCase();
+    // Banner avatar / cover
+    const isOwner = currentGroup.created_by === uid() || currentGroup.role === 'owner';
+    renderBannerAvatar(currentGroup, isOwner);
     document.getElementById('grp-banner-name').textContent = currentGroup.name;
     const descEl = document.getElementById('grp-banner-desc');
     if (descEl) descEl.textContent = currentGroup.description || '';
 
     // Bouton paramètres : visible uniquement pour le propriétaire
-    const isOwner = currentGroup.created_by === uid() || currentGroup.role === 'owner';
     document.getElementById('btn-grp-settings')?.classList.toggle('hidden', !isOwner);
 
     // Render onglet actif
@@ -398,7 +424,7 @@ window.Groups = (() => {
     let profileMap = {};
     if (App.supabase && senderIds.length > 0) {
       const { data: profiles } = await App.supabase
-        .from('profiles').select('id, username').in('id', senderIds);
+        .from('profiles').select('id, username, avatar_url').in('id', senderIds);
       if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
     }
     chatMessages = data.map(m => ({
@@ -624,7 +650,7 @@ window.Groups = (() => {
         let profile = { username: '?' };
         if (App.supabase) {
           const { data } = await App.supabase
-            .from('profiles').select('username').eq('id', msg.user_id).single();
+            .from('profiles').select('username, avatar_url').eq('id', msg.user_id).single();
           if (data) profile = data;
         }
         chatMessages.push({ ...msg, profile });
@@ -719,7 +745,7 @@ window.Groups = (() => {
     let profileMap = {};
     if (App.supabase && friendIds.length > 0) {
       const { data: profiles } = await App.supabase
-        .from('profiles').select('id, username').in('id', friendIds);
+        .from('profiles').select('id, username, avatar_url').in('id', friendIds);
       if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
     }
 
@@ -962,6 +988,19 @@ window.Groups = (() => {
     document.getElementById('btn-close-progress-update')?.addEventListener('click', () =>
       document.getElementById('modal-progress-update')?.classList.add('hidden'));
     document.getElementById('btn-save-progress')?.addEventListener('click', saveProgress);
+
+    // ── Photo de groupe (upload cover) ────────────────────
+    const coverInput = document.getElementById('grp-cover-file');
+    document.getElementById('grp-banner-avatar')?.addEventListener('click', () => {
+      if (document.getElementById('grp-banner-avatar')?.classList.contains('grp-banner-avatar-owner')) {
+        coverInput?.click();
+      }
+    });
+    coverInput?.addEventListener('change', () => {
+      const file = coverInput.files?.[0];
+      if (file) uploadGroupCover(file);
+      coverInput.value = '';
+    });
 
     // ── Chat ──────────────────────────────────────────────
     // Envoi texte
