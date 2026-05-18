@@ -101,7 +101,7 @@ window.Groups = (() => {
         const anon = getAnonClient();
         if (anon) {
           const { data: profiles } = await anon
-            .from('profiles').select('id, username, avatar_url').in('id', inviterIds);
+            .from('profiles').select('id, username').in('id', inviterIds);
           if (profiles) inviterMap = Object.fromEntries(profiles.map(p => [p.id, p]));
         }
       }
@@ -133,7 +133,7 @@ window.Groups = (() => {
       if (anon) {
         const { data: profiles } = await anon
           .from('profiles')
-          .select('id, username, avatar_url, best_performance, displayed_badges')
+          .select('id, username, best_performance, displayed_badges')
           .in('id', memberIds);
         if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
       }
@@ -399,7 +399,7 @@ window.Groups = (() => {
     let profileMap = {};
     if (anon) {
       const { data: profiles } = await anon
-        .from('profiles').select('id, username, avatar_url').in('id', senderIds);
+        .from('profiles').select('id, username').in('id', senderIds);
       if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
     }
     chatMessages = data.map(m => ({
@@ -623,10 +623,10 @@ window.Groups = (() => {
         if (msg.user_id === uid()) return; // already added optimistically
 
         const anon = getAnonClient();
-        let profile = { username: '?', avatar_url: null };
+        let profile = { username: '?' };
         if (anon) {
           const { data } = await anon
-            .from('profiles').select('username, avatar_url').eq('id', msg.user_id).single();
+            .from('profiles').select('username').eq('id', msg.user_id).single();
           if (data) profile = data;
         }
         chatMessages.push({ ...msg, profile });
@@ -722,7 +722,7 @@ window.Groups = (() => {
     let profileMap = {};
     if (anon) {
       const { data: profiles } = await anon
-        .from('profiles').select('id, username, avatar_url').in('id', friendIds);
+        .from('profiles').select('id, username').in('id', friendIds);
       if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
     }
 
