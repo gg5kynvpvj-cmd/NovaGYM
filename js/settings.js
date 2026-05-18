@@ -489,7 +489,16 @@ window.Settings = (() => {
 
     document.getElementById('btn-save-username')?.addEventListener('click', async () => {
       const newName = document.getElementById('edit-username-input')?.value?.trim();
+      const errorEl = document.getElementById('username-error');
+      if (errorEl) errorEl.textContent = '';
       if (!newName) return;
+
+      // Validation format + unicité
+      const err = await Auth.checkUsername(newName, App.state.user?.id);
+      if (err) {
+        if (errorEl) errorEl.textContent = I18n.t(err);
+        return;
+      }
 
       const profile = App.state.profile;
       const updated = { ...profile, username: newName };

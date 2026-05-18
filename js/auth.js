@@ -91,6 +91,27 @@ window.Auth = (() => {
     });
   }
 
+  /* ─── Validation pseudonyme ─────────────────────────── */
+  function validateUsernameFormat(username) {
+    const name = (username || '').trim();
+    if (name.length < 3)  return 'username.too_short';
+    if (name.length > 12) return 'username.too_long';
+    if (!/^[a-zA-Z0-9_À-ɏ]+$/.test(name)) return 'username.invalid_chars';
+    return null;
+  }
+
+  async function checkUsername(username, currentUserId) {
+    const fmtErr = validateUsernameFormat(username);
+    if (fmtErr) return fmtErr;
+    if (App.supabase) {
+      let req = App.supabase.from('profiles').select('id').ilike('username', username.trim());
+      if (currentUserId) req = req.neq('id', currentUserId);
+      const { data } = await req.limit(1);
+      if (data && data.length > 0) return 'username.taken';
+    }
+    return null;
+  }
+
   /* ─── REGISTER ───────────────────────────────────────── */
   function initRegister() {
     document.querySelectorAll('.auth-lang-btn').forEach(btn => {
@@ -113,9 +134,23 @@ window.Auth = (() => {
       if (password.length < 6) { showError('register-error', I18n.t('auth.pwd_short')); return; }
       if (password !== confirm) { showError('register-error', I18n.t('auth.pwd_mismatch')); return; }
 
+      // Validation du format du pseudonyme (synchrone)
+      const fmtErr = validateUsernameFormat(username);
+      if (fmtErr) { showError('register-error', I18n.t(fmtErr)); return; }
+
       setLoading('btn-register', true);
 
       try {
+        // Vérification de l'unicité (asynchrone)
+        if (App.supabase) {
+          const { data: existing } = await App.supabase
+            .from('profiles').select('id').ilike('username', username).limit(1);
+          if (existing && existing.length > 0) {
+            showError('register-error', I18n.t('username.taken'));
+            return;
+          }
+        }
+
         if (App.supabase) {
           const { data, error } = await App.supabase.auth.signUp({
             email,
@@ -338,6 +373,6 @@ window.Auth = (() => {
     });
   }
 
-  return { init, checkSession, logout, loadProfile };
+  return { init, checkSession, logout, loadProfile, checkUsername };
 
 })();
