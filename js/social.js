@@ -47,7 +47,7 @@ window.Social = (() => {
       return;
     }
 
-    // Charge les profils des autres via clé anonyme (contourne RLS)
+    // Charge les profils des autres via le client authentifié
     const otherIds = [...new Set(
       data.flatMap(f => [f.requester_id, f.addressee_id]).filter(id => id !== uid())
     )];
@@ -55,14 +55,11 @@ window.Social = (() => {
     let profileMap = {};
     if (otherIds.length > 0) {
       try {
-        const anon = getAnonClient();
-        if (anon) {
-          const { data: profiles } = await anon
-            .from('profiles')
-            .select('id, username, avatar_url, goal, program_type, level, visibility, displayed_badges, best_performance')
-            .in('id', otherIds);
-          if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
-        }
+        const { data: profiles } = await App.supabase
+          .from('profiles')
+          .select('id, username, avatar_url, goal, program_type, level, visibility, displayed_badges, best_performance')
+          .in('id', otherIds);
+        if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
       } catch { }
     }
 
@@ -190,16 +187,14 @@ window.Social = (() => {
 
       searchDebounce = setTimeout(async () => {
         try {
-          const anon = getAnonClient();
-          let users = [];
-          if (anon) {
-            const { data } = await anon
-              .from('profiles')
-              .select('id, username, avatar_url')
-              .ilike('username', `%${q}%`)
-              .limit(8);
-            users = data || [];
-          }
+          if (!App.supabase) return;
+          const { data, error } = await App.supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .ilike('username', `%${q}%`)
+            .limit(8);
+          if (error) console.warn('Search error:', error.message);
+          const users = data || [];
           const filtered = users.filter(u => u.id !== uid());
 
           if (filtered.length === 0) {
