@@ -979,12 +979,31 @@
         <button class="grp-tab" data-tab="members">
           <span>👥</span><span data-i18n="group.tab_members">Membres</span>
         </button>
+        <button class="grp-tab" data-tab="chat">
+          <span>💬</span><span data-i18n="group.tab_chat">Chat</span>
+        </button>
       </div>
 
       <!-- Contenu tabs -->
       <div id="grp-tab-ranking"    class="grp-tab-content"></div>
       <div id="grp-tab-challenges" class="grp-tab-content hidden"></div>
       <div id="grp-tab-members"    class="grp-tab-content hidden"></div>
+      <div id="grp-tab-chat"       class="grp-chat-content hidden"></div>
+    </div>
+
+    <!-- Barre d'envoi chat (hors grp-body pour rester fixe en bas) -->
+    <div id="grp-chat-bar" class="grp-chat-bar hidden">
+      <input id="chat-image-file" type="file" accept="image/*" class="hidden">
+      <button id="btn-chat-image" class="grp-chat-action-btn" title="Photo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </button>
+      <button id="btn-chat-session" class="grp-chat-action-btn" title="Séance">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14"/><path d="M18 5v14"/><path d="M6 12h12"/><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+      </button>
+      <input id="chat-input" type="text" class="grp-chat-input" placeholder="Message..." autocomplete="off">
+      <button id="btn-chat-send" class="grp-chat-send-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
     </div>
   </div><!-- end page-group -->
 
@@ -1111,6 +1130,33 @@
         <button id="btn-leave-group" class="btn-secondary btn-full" data-i18n="group.leave_group">Quitter le groupe</button>
         <button id="btn-delete-group" class="btn-danger btn-full hidden" data-i18n="group.delete_group">Supprimer le groupe</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Partager une séance via le chat -->
+  <div id="modal-share-session" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="group.share_session_title">Partager une séance</h2>
+        <button id="btn-close-share-session" class="modal-close">✕</button>
+      </div>
+      <div id="share-session-list" class="modal-scroll-list"></div>
+    </div>
+  </div>
+
+  <!-- Sauvegarder une séance reçue dans le chat -->
+  <div id="modal-receive-session" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="group.receive_session_title">Ajouter à ma bibliothèque</h2>
+        <button id="btn-close-receive-session" class="modal-close">✕</button>
+      </div>
+      <p class="grp-form-label" style="margin-bottom:6px" data-i18n="group.receive_name_label">Nom de la séance</p>
+      <input id="receive-session-name" type="text" class="settings-input" style="margin-bottom:12px" placeholder="...">
+      <div id="receive-session-exercises" class="receive-session-exercises"></div>
+      <button id="btn-save-received-session" class="btn-full btn-primary" style="margin-top:12px" data-i18n="group.save_session">Sauvegarder</button>
     </div>
   </div>
 

@@ -13,6 +13,12 @@ window.Groups = (() => {
   let currentProgress = {};   // { challengeId: { userId: value } }
   let _anonClient     = null;
 
+  // Chat state
+  let chatMessages    = [];
+  let chatChannel     = null;
+  let chatGroupId     = null;
+  let _pendingSession = null;
+
   /* ─── Types de défis ─────────────────────────────────── */
   const CHALLENGE_TYPES = [
     { id: 'sessions',  icon: '🏋️', fr: 'Séances',      en: 'Sessions',    ufr: 'séances', uen: 'sessions' },
@@ -169,6 +175,7 @@ window.Groups = (() => {
     currentMembers = [];
     currentChallenges = [];
     currentProgress = {};
+    if (chatGroupId && chatGroupId !== groupId) unsubscribeFromChat();
 
     // Reset tab to ranking
     document.querySelectorAll('.grp-tab').forEach(tb => tb.classList.toggle('active', tb.dataset.tab === 'ranking'));
@@ -206,12 +213,22 @@ window.Groups = (() => {
   }
 
   function renderGroupTab(tab) {
-    ['ranking', 'challenges', 'members'].forEach(name => {
+    ['ranking', 'challenges', 'members', 'chat'].forEach(name => {
       document.getElementById('grp-tab-' + name)?.classList.toggle('hidden', name !== tab);
     });
+    document.getElementById('grp-chat-bar')?.classList.toggle('hidden', tab !== 'chat');
+
     if (tab === 'ranking')    renderRankingTab();
     if (tab === 'challenges') renderChallengesTab();
     if (tab === 'members')    renderMembersTab();
+    if (tab === 'chat') {
+      if (chatGroupId !== currentGroup?.id) {
+        loadMessages(currentGroup.id);
+        subscribeToChat(currentGroup.id);
+      } else {
+        scrollChatToBottom();
+      }
+    }
   }
 
   /* ─── Onglet Classement ──────────────────────────────── */
@@ -358,6 +375,272 @@ window.Groups = (() => {
         await loadGroupDetails(currentGroup.id);
         renderGroupPage();
       }));
+  }
+
+  /* ─── Chat ──────────────────────────────────────────────── */
+
+  async function loadMessages(groupId) {
+    chatGroupId = groupId;
+    chatMessages = [];
+    const container = document.getElementById('grp-tab-chat');
+    if (container) container.innerHTML = `<p class="social-empty" style="margin:auto">Chargement...</p>`;
+
+    const { data } = await App.supabase
+      .from('group_messages')
+      .select('*')
+      .eq('group_id', groupId)
+      .order('created_at', { ascending: true })
+      .limit(100);
+
+    if (!data || data.length === 0) { renderChatMessages(); return; }
+
+    const senderIds = [...new Set(data.map(m => m.user_id))];
+    const anon = getAnonClient();
+    let profileMap = {};
+    if (anon) {
+      const { data: profiles } = await anon
+        .from('profiles').select('id, username, avatar_url').in('id', senderIds);
+      if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
+    }
+    chatMessages = data.map(m => ({
+      ...m, profile: profileMap[m.user_id] || { username: '?', avatar_url: null },
+    }));
+    renderChatMessages();
+  }
+
+  function scrollChatToBottom() {
+    const body = document.querySelector('#page-group .grp-body');
+    if (body) setTimeout(() => { body.scrollTop = body.scrollHeight; }, 60);
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+  }
+
+  function renderMessage(msg) {
+    const isMe  = msg.user_id === uid();
+    const p     = msg.profile || {};
+    const letter = (p.username || '?').charAt(0).toUpperCase();
+    const av = p.avatar_url
+      ? `<img src="${p.avatar_url}" class="chat-avatar" alt="${letter}">`
+      : `<div class="chat-avatar chat-avatar-letter">${letter}</div>`;
+    const time = new Date(msg.created_at).toLocaleTimeString(
+      lang() === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+
+    let bubbleContent = '';
+    if (msg.message_type === 'image' && msg.image_url) {
+      bubbleContent = `<img src="${msg.image_url}" class="chat-img" alt="photo">`;
+    } else if (msg.message_type === 'session' && msg.session_data) {
+      const sd = typeof msg.session_data === 'string'
+        ? JSON.parse(msg.session_data) : msg.session_data;
+      const exCount = (sd.exercises || []).length;
+      const safeData = escapeHtml(JSON.stringify(sd));
+      bubbleContent = `
+        <div class="chat-session-card">
+          <div class="chat-session-icon">🏋️</div>
+          <div class="chat-session-info">
+            <span class="chat-session-name">${escapeHtml(sd.name || t('group.session_unnamed'))}</span>
+            <span class="chat-session-meta">${exCount} ${t('group.session_exercises')}</span>
+          </div>
+          <button class="chat-session-save-btn" data-session='${safeData}'>${t('group.session_save')}</button>
+        </div>`;
+    } else {
+      bubbleContent = `<span class="chat-bubble-text">${escapeHtml(msg.content || '')}</span>`;
+    }
+
+    return `
+      <div class="chat-row ${isMe ? 'chat-row-me' : 'chat-row-other'}">
+        ${!isMe ? av : ''}
+        <div class="chat-col">
+          ${!isMe ? `<span class="chat-username">${escapeHtml(p.username || '?')}</span>` : ''}
+          <div class="chat-bubble ${isMe ? 'chat-bubble-me' : 'chat-bubble-other'}">
+            ${bubbleContent}
+          </div>
+          <span class="chat-time">${time}</span>
+        </div>
+        ${isMe ? av : ''}
+      </div>`;
+  }
+
+  function renderChatMessages() {
+    const container = document.getElementById('grp-tab-chat');
+    if (!container) return;
+    if (chatMessages.length === 0) {
+      container.innerHTML = `<p class="social-empty" style="margin:auto">${t('group.chat_empty')}</p>`;
+    } else {
+      container.innerHTML = chatMessages.map(renderMessage).join('');
+    }
+    scrollChatToBottom();
+  }
+
+  async function sendTextMessage() {
+    const input = document.getElementById('chat-input');
+    const text  = input?.value?.trim();
+    if (!text || !currentGroup) return;
+    input.value = '';
+
+    const { data: msg, error } = await App.supabase.from('group_messages').insert({
+      group_id: currentGroup.id, user_id: uid(),
+      content: text, message_type: 'text',
+    }).select().single();
+
+    if (!error && msg) {
+      chatMessages.push({ ...msg, profile: {
+        username:   App.state.profile?.username || '?',
+        avatar_url: App.local.get('avatar_url') || App.local.get('avatar') || null,
+      }});
+      renderChatMessages();
+    }
+  }
+
+  async function handleImageUpload(file) {
+    if (!file || !currentGroup) return;
+    const ext  = file.name.split('.').pop() || 'jpg';
+    const path = `${currentGroup.id}/${Date.now()}.${ext}`;
+
+    const { error: upErr } = await App.supabase.storage
+      .from('group-chat').upload(path, file, { contentType: file.type });
+    if (upErr) { console.warn('Upload image:', upErr.message); return; }
+
+    const { data: urlData } = App.supabase.storage.from('group-chat').getPublicUrl(path);
+    const imageUrl = urlData?.publicUrl;
+    if (!imageUrl) return;
+
+    const { data: msg, error } = await App.supabase.from('group_messages').insert({
+      group_id: currentGroup.id, user_id: uid(),
+      message_type: 'image', image_url: imageUrl,
+    }).select().single();
+
+    if (!error && msg) {
+      chatMessages.push({ ...msg, profile: {
+        username:   App.state.profile?.username || '?',
+        avatar_url: App.local.get('avatar_url') || App.local.get('avatar') || null,
+      }});
+      renderChatMessages();
+    }
+  }
+
+  function openShareSessionPicker() {
+    const lib  = App.local.get('workout_library') || [];
+    const list = document.getElementById('share-session-list');
+    if (!list) return;
+
+    if (lib.length === 0) {
+      list.innerHTML = `<p class="social-empty">${t('group.no_saved_sessions')}</p>`;
+    } else {
+      list.innerHTML = lib.map(s => `
+        <div class="social-search-item">
+          <span style="font-size:24px;flex-shrink:0">🏋️</span>
+          <div style="flex:1;min-width:0">
+            <span class="social-card-name">${escapeHtml(s.name)}</span>
+            <span style="display:block;font-size:12px;color:var(--text-2)">${(s.exercises||[]).length} exercice(s)</span>
+          </div>
+          <button class="btn-soc btn-soc-add" data-sid="${s.id}">${t('group.share_btn')}</button>
+        </div>`).join('');
+
+      list.querySelectorAll('.btn-soc-add').forEach(btn =>
+        btn.addEventListener('click', async () => {
+          const sid     = parseInt(btn.dataset.sid);
+          const session = lib.find(s => s.id === sid);
+          if (!session) return;
+          btn.disabled = true; btn.textContent = '...';
+          await shareSession(session);
+          document.getElementById('modal-share-session')?.classList.add('hidden');
+        }));
+    }
+    document.getElementById('modal-share-session')?.classList.remove('hidden');
+  }
+
+  async function shareSession(session) {
+    if (!currentGroup) return;
+    const sessionData = {
+      name: session.name,
+      exercises: (session.exercises || []).map(e => ({
+        id: e.id, name: e.name, muscles: e.muscles,
+        defaultSets: e.defaultSets, defaultReps: e.defaultReps,
+        isUnilateral: e.isUnilateral,
+      })),
+    };
+
+    const { data: msg, error } = await App.supabase.from('group_messages').insert({
+      group_id: currentGroup.id, user_id: uid(),
+      message_type: 'session', session_data: sessionData,
+    }).select().single();
+
+    if (!error && msg) {
+      chatMessages.push({ ...msg, profile: {
+        username:   App.state.profile?.username || '?',
+        avatar_url: App.local.get('avatar_url') || App.local.get('avatar') || null,
+      }});
+      renderChatMessages();
+    }
+  }
+
+  function openReceiveSession(sessionData) {
+    _pendingSession = sessionData;
+    const nameInput = document.getElementById('receive-session-name');
+    if (nameInput) nameInput.value = sessionData.name || '';
+
+    const exList = document.getElementById('receive-session-exercises');
+    if (exList) {
+      exList.innerHTML = (sessionData.exercises || []).map(e => `
+        <div class="receive-session-ex">
+          <span class="receive-session-ex-name">${escapeHtml(e.name || '')}</span>
+          ${(e.muscles || []).length
+            ? `<span class="receive-session-ex-muscles">${escapeHtml(e.muscles.join(', '))}</span>`
+            : ''}
+        </div>`).join('');
+    }
+    document.getElementById('modal-receive-session')?.classList.remove('hidden');
+  }
+
+  function saveReceivedSession() {
+    if (!_pendingSession) return;
+    const name = document.getElementById('receive-session-name')?.value?.trim();
+    if (!name) return;
+
+    const lib = App.local.get('workout_library') || [];
+    lib.push({ id: Date.now(), name, exercises: _pendingSession.exercises || [] });
+    App.local.set('workout_library', lib);
+
+    document.getElementById('modal-receive-session')?.classList.add('hidden');
+    _pendingSession = null;
+  }
+
+  function subscribeToChat(groupId) {
+    if (chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
+
+    chatChannel = App.supabase
+      .channel('group-chat:' + groupId)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public',
+        table: 'group_messages',
+        filter: `group_id=eq.${groupId}`,
+      }, async (payload) => {
+        const msg = payload.new;
+        if (msg.user_id === uid()) return; // already added optimistically
+
+        const anon = getAnonClient();
+        let profile = { username: '?', avatar_url: null };
+        if (anon) {
+          const { data } = await anon
+            .from('profiles').select('username, avatar_url').eq('id', msg.user_id).single();
+          if (data) profile = data;
+        }
+        chatMessages.push({ ...msg, profile });
+        if (!document.getElementById('grp-tab-chat')?.classList.contains('hidden')) {
+          renderChatMessages();
+        }
+      })
+      .subscribe();
+  }
+
+  function unsubscribeFromChat() {
+    if (chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
+    chatMessages = [];
+    chatGroupId  = null;
   }
 
   /* ─── Créer un groupe ────────────────────────────────── */
@@ -563,17 +846,21 @@ window.Groups = (() => {
   /* ─── Quitter / Supprimer le groupe ─────────────────── */
   async function leaveGroup() {
     if (!confirm(t('group.confirm_leave'))) return;
+    unsubscribeFromChat();
     await App.supabase.from('group_members').delete()
       .eq('group_id', currentGroup.id).eq('user_id', uid());
     document.getElementById('modal-group-settings')?.classList.add('hidden');
+    document.getElementById('grp-chat-bar')?.classList.add('hidden');
     App.navigate('app'); App.switchTab('social');
     await loadGroups(); renderGroupsList();
   }
 
   async function deleteGroup() {
     if (!confirm(t('group.confirm_delete'))) return;
+    unsubscribeFromChat();
     await App.supabase.from('groups').delete().eq('id', currentGroup.id);
     document.getElementById('modal-group-settings')?.classList.add('hidden');
+    document.getElementById('grp-chat-bar')?.classList.add('hidden');
     App.navigate('app'); App.switchTab('social');
     await loadGroups(); renderGroupsList();
   }
@@ -623,8 +910,10 @@ window.Groups = (() => {
 
   /* ─── Init ───────────────────────────────────────────── */
   function init() {
-    // Back
+    // Back — désinscrit le canal Realtime
     document.getElementById('btn-grp-back')?.addEventListener('click', () => {
+      unsubscribeFromChat();
+      document.getElementById('grp-chat-bar')?.classList.add('hidden');
       App.navigate('app'); App.switchTab('social');
     });
 
@@ -676,6 +965,53 @@ window.Groups = (() => {
     document.getElementById('btn-close-progress-update')?.addEventListener('click', () =>
       document.getElementById('modal-progress-update')?.classList.add('hidden'));
     document.getElementById('btn-save-progress')?.addEventListener('click', saveProgress);
+
+    // ── Chat ──────────────────────────────────────────────
+    // Envoi texte
+    document.getElementById('btn-chat-send')?.addEventListener('click', sendTextMessage);
+    document.getElementById('chat-input')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendTextMessage(); }
+    });
+
+    // Upload image
+    const fileInput = document.getElementById('chat-image-file');
+    document.getElementById('btn-chat-image')?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (file) handleImageUpload(file);
+      fileInput.value = '';
+    });
+
+    // Partager séance
+    document.getElementById('btn-chat-session')?.addEventListener('click', openShareSessionPicker);
+    document.getElementById('btn-close-share-session')?.addEventListener('click', () =>
+      document.getElementById('modal-share-session')?.classList.add('hidden'));
+    document.getElementById('modal-share-session')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+
+    // Sauvegarder séance reçue
+    document.getElementById('btn-close-receive-session')?.addEventListener('click', () => {
+      document.getElementById('modal-receive-session')?.classList.add('hidden');
+      _pendingSession = null;
+    });
+    document.getElementById('btn-save-received-session')?.addEventListener('click', saveReceivedSession);
+
+    // Délégation : clic sur bouton "Récupérer" dans les messages du chat
+    document.getElementById('grp-tab-chat')?.addEventListener('click', e => {
+      const btn = e.target.closest('.chat-session-save-btn');
+      if (!btn) return;
+      try {
+        const sd = JSON.parse(btn.dataset.session);
+        openReceiveSession(sd);
+      } catch { /* JSON invalide — ignorer */ }
+    });
+
+    // Clic sur image pour agrandir/réduire
+    document.getElementById('grp-tab-chat')?.addEventListener('click', e => {
+      const img = e.target.closest('.chat-img');
+      if (img) img.classList.toggle('expanded');
+    });
   }
 
   async function render() {
