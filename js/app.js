@@ -38,6 +38,7 @@
     if (tabName === 'stats')     Stats.refresh();
     if (tabName === 'history')   History.load();
     if (tabName === 'nutrition') Nutrition.render();
+    if (tabName === 'social')    { Social.render(); Groups.render(); }
     if (tabName === 'settings')  Settings.refreshHeader();
   }
 
@@ -130,6 +131,9 @@
     Stats.init();
     Nutrition.init();
     History.init();
+    Social.init();
+    Groups.init();
+    ProfileEditor.init();
     Settings.init();
   }
 

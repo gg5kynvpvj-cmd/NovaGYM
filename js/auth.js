@@ -100,22 +100,26 @@ window.Auth = (() => {
     return null;
   }
 
+  let _anonClient = null;
+  function getAnonClient() {
+    if (!_anonClient && window.supabase && typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_ANON !== 'undefined') {
+      _anonClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+    }
+    return _anonClient;
+  }
+
   async function checkUsername(username, currentUserId) {
     const fmtErr = validateUsernameFormat(username);
     if (fmtErr) return fmtErr;
-    if (!App.supabase) return null;
+    const anon = getAnonClient();
+    if (!anon) return null;
     try {
-      // Fetch direct avec la clé anonyme → ignore la session utilisateur et son RLS
-      const name = encodeURIComponent(username.trim());
-      let url = `${SUPABASE_URL}/rest/v1/profiles?select=id&username=ilike.${name}&limit=1`;
-      if (currentUserId) url += `&id=neq.${encodeURIComponent(currentUserId)}`;
-      const resp = await fetch(url, {
-        headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` },
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        if (Array.isArray(data) && data.length > 0) return 'username.taken';
-      }
+      let query = anon.from('profiles').select('id').ilike('username', username.trim()).limit(1);
+      if (currentUserId) query = query.neq('id', currentUserId);
+      const { data } = await query;
+      if (Array.isArray(data) && data.length > 0) return 'username.taken';
     } catch { /* ne pas bloquer si réseau indisponible */ }
     return null;
   }

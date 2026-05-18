@@ -2727,6 +2727,651 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   color: #fff;
 }
 
+/* ─── Social / Communauté ───────────────────────────────── */
+.social-section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .6px;
+  text-transform: uppercase; color: var(--text-2);
+  margin: 20px 0 8px;
+}
+.social-empty { font-size: 14px; color: var(--text-2); text-align: center; padding: 32px 0; }
+
+/* Recherche */
+.social-search-wrap { position: relative; margin-bottom: 4px; }
+.social-search-input {
+  width: 100%; padding: 12px 16px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text);
+  font-size: 15px;
+}
+.social-search-results {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.social-search-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.social-search-item:last-child { border-bottom: none; }
+.social-search-empty { padding: 14px; text-align: center; font-size: 14px; color: var(--text-2); }
+.social-search-action { margin-left: auto; }
+
+/* Avatars */
+.social-avatar {
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+}
+.social-avatar-letter {
+  background: var(--accent); color: #000;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px;
+}
+
+/* Noms */
+.social-card-name { font-size: 15px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Cartes demandes */
+.social-request-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border-radius: var(--radius-md);
+  padding: 12px 14px; margin-bottom: 8px;
+}
+.social-card-actions { display: flex; gap: 8px; margin-left: auto; }
+
+/* Cartes amis */
+.social-friend-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border-radius: var(--radius-md);
+  padding: 12px 14px; margin-bottom: 8px;
+}
+.social-friend-info { flex: 1; min-width: 0; }
+
+/* Badges statut */
+.social-badge-friends {
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  background: var(--accent-15); border-radius: 20px; padding: 4px 10px;
+  white-space: nowrap;
+}
+.social-badge-pending {
+  font-size: 12px; font-weight: 700; color: var(--text-2);
+  background: var(--bg-elevated); border-radius: 20px; padding: 4px 10px;
+  white-space: nowrap;
+}
+
+/* Boutons sociaux */
+.btn-soc {
+  font-size: 13px; font-weight: 700; border-radius: var(--radius-sm);
+  padding: 6px 12px; cursor: pointer; border: none; transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btn-soc:disabled { opacity: 0.5; }
+.btn-soc-accept  { background: var(--accent); color: #000; }
+.btn-soc-decline { background: var(--bg-elevated); color: var(--danger); }
+.btn-soc-cancel  { background: var(--bg-elevated); color: var(--text-2); margin-left: auto; }
+.btn-soc-add     { background: var(--accent); color: #000; }
+.btn-soc-view    { background: var(--bg-elevated); color: var(--text); margin-left: auto; }
+
+/* Modal profil ami — header */
+.friend-profile-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 4px 0 20px;
+}
+.friend-profile-header .social-avatar { width: 64px; height: 64px; font-size: 24px; flex-shrink: 0; }
+.friend-profile-username { font-size: 20px; font-weight: 700; color: var(--text); }
+.friend-profile-private {
+  text-align: center; color: var(--text-2); font-size: 15px;
+  padding: 20px 0; font-style: italic;
+}
+.friend-profile-section { margin-top: 4px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.friend-profile-section:last-of-type { border-bottom: none; }
+.friend-profile-section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  color: var(--text-2); text-transform: uppercase; margin-bottom: 10px;
+}
+.friend-profile-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.friend-badge-chip {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 12px; font-size: 13px; color: var(--text);
+}
+.friend-profile-sessions { display: flex; flex-direction: column; gap: 8px; }
+.friend-session-item {
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--bg-elevated); border-radius: 10px; padding: 10px 14px;
+}
+.friend-session-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.friend-session-meta { font-size: 12px; color: var(--text-2); }
+
+/* ─── Page Éditeur de profil public ─────────────────────── */
+#page-profile-editor {
+  background: var(--bg);
+  height: 100dvh;
+  overflow: hidden;
+}
+.pe-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.pe-back-btn {
+  background: none; border: none; color: var(--text);
+  cursor: pointer; padding: 4px; display: flex; align-items: center;
+}
+.pe-title { font-size: 17px; font-weight: 700; color: var(--text); margin: 0; }
+.pe-save-btn {
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 20px;
+  padding: 8px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.pe-body {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column;
+}
+.pe-section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  color: var(--text-2); text-transform: uppercase;
+  margin: 20px 0 10px;
+}
+.pe-section-label:first-child { margin-top: 4px; }
+
+/* Carte aperçu */
+.pe-preview-card {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 20px; padding: 20px; overflow: hidden; position: relative;
+}
+.pe-preview-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 56px;
+  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+  opacity: .14; pointer-events: none;
+}
+.pe-preview-top { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.pe-preview-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 800; flex-shrink: 0;
+  overflow: hidden; border: 3px solid var(--bg);
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
+}
+.pe-preview-identity { display: flex; flex-direction: column; gap: 4px; }
+.pe-preview-name { font-size: 20px; font-weight: 800; color: var(--text); }
+.pe-preview-vis { font-size: 12px; color: var(--text-2); }
+.pe-preview-vis.vis-friends { color: #7c5af7; }
+.pe-preview-vis.vis-public  { color: #22c55e; }
+.pe-preview-section {
+  border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;
+}
+.pe-preview-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--text-2); margin-bottom: 10px;
+}
+
+/* Slots de badges */
+.pe-badge-slots { display: flex; gap: 12px; }
+.pe-badge-slot {
+  width: 64px; height: 64px; border-radius: 16px;
+  background: var(--bg); border: 2px dashed var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: border-color .18s, transform .12s;
+  user-select: none;
+}
+.pe-badge-slot.filled { border: 2px solid var(--primary); background: rgba(124,90,247,.08); }
+.pe-badge-slot:active { transform: scale(.92); }
+.pe-slot-placeholder { font-size: 22px; color: var(--text-2); line-height: 1; }
+.pe-hint { font-size: 11px; color: var(--text-2); margin-top: 8px; font-style: italic; }
+
+/* Carte performance (aperçu) */
+.pe-perf-card { background: var(--bg); border-radius: 12px; padding: 12px 14px; min-height: 48px; }
+.pe-perf-card-inner { display: flex; align-items: center; gap: 12px; }
+.pe-perf-card-icon { font-size: 26px; flex-shrink: 0; }
+.pe-perf-card-label { display: block; font-size: 12px; color: var(--text-2); }
+.pe-perf-card-value { display: block; font-size: 18px; font-weight: 800; color: var(--text); margin-top: 2px; }
+.pe-perf-empty { font-size: 13px; color: var(--text-2); font-style: italic; margin: 0; }
+
+/* Options performance */
+.pe-perf-options { display: flex; flex-direction: column; gap: 8px; }
+.pe-perf-option {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; cursor: pointer;
+  transition: border-color .18s;
+}
+.pe-perf-option.active { border-color: var(--primary); }
+.pe-perf-option.active .pe-po-label { color: var(--primary); }
+.pe-po-icon { font-size: 22px; flex-shrink: 0; }
+.pe-po-info { flex: 1; min-width: 0; }
+.pe-po-label { display: block; font-size: 14px; font-weight: 600; color: var(--text); }
+.pe-po-value { display: block; font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.pe-po-check { font-size: 16px; color: var(--primary); font-weight: 700; width: 20px; text-align: center; }
+
+/* Options confidentialité */
+.pe-vis-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.pe-vis-option { display: block; cursor: pointer; }
+.pe-vis-option input[type="radio"] { display: none; }
+.pe-vis-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; transition: border-color .18s;
+}
+.pe-vis-option:has(input:checked) .pe-vis-row { border-color: var(--primary); }
+.pe-vis-icon { font-size: 20px; flex-shrink: 0; }
+.pe-vis-label { display: block; font-size: 15px; font-weight: 600; color: var(--text); }
+.pe-vis-option:has(input:checked) .pe-vis-label { color: var(--primary); }
+.pe-vis-desc { display: block; font-size: 12px; color: var(--text-2); margin-top: 1px; }
+.pe-vis-check {
+  margin-left: auto; width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.pe-vis-option:has(input:checked) .pe-vis-check {
+  background: var(--primary); border-color: var(--primary);
+}
+.pe-vis-option:has(input:checked) .pe-vis-check::after {
+  content: '✓'; color: #fff; font-size: 13px; font-weight: 700;
+}
+
+/* Badge picker modal */
+.badge-picker-list { display: flex; flex-direction: column; gap: 8px; padding: 4px 0 8px; }
+.badge-picker-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; background: var(--bg-elevated);
+  border: 1px solid var(--border); border-radius: 12px;
+  cursor: pointer; transition: border-color .18s;
+}
+.badge-picker-item.active { border-color: var(--primary); }
+.badge-picker-emoji { font-size: 28px; flex-shrink: 0; }
+.badge-picker-name { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+.badge-picker-check { color: var(--primary); font-size: 16px; font-weight: 700; }
+.badge-picker-remove { color: var(--text-2); border-color: var(--border); }
+.badge-picker-remove:hover { border-color: #ef4444; }
+
+/* Profil ami — carte performance */
+.friend-perf-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-elevated); border-radius: 12px; padding: 12px 14px;
+}
+.friend-perf-icon { font-size: 26px; flex-shrink: 0; }
+.friend-perf-info { display: flex; flex-direction: column; gap: 2px; }
+.friend-perf-label { font-size: 12px; color: var(--text-2); }
+.friend-perf-value { font-size: 18px; font-weight: 800; color: var(--text); }
+
+/* ─── Groupes & Défis ───────────────────────────────────── */
+
+/* Social tab — bouton créer groupe */
+.btn-create-group {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; background: none;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  color: var(--primary); font-size: 14px; font-weight: 600;
+  padding: 12px 14px; cursor: pointer; margin: 8px 0 16px;
+  transition: background .18s, border-color .18s;
+}
+.btn-create-group:active { background: rgba(124,90,247,.06); }
+
+/* Carte groupe dans le fil social */
+.group-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 14px; cursor: pointer;
+  margin-bottom: 8px; transition: border-color .18s;
+}
+.group-card:active { border-color: var(--primary); }
+.group-card-avatar {
+  width: 46px; height: 46px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+  color: #fff; font-size: 20px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.group-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.group-card-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.group-card-meta { font-size: 12px; color: var(--text-2); }
+.grp-invite-from { display: block; font-size: 12px; color: var(--text-2); margin-top: 1px; }
+
+/* Page groupe */
+#page-group {
+  background: var(--bg);
+  height: 100dvh;
+  overflow: hidden;
+}
+.grp-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; background: var(--bg);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.grp-back-btn {
+  background: none; border: none; color: var(--text);
+  cursor: pointer; padding: 4px; display: flex; align-items: center;
+}
+.grp-header-center { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.grp-header-name  { font-size: 16px; font-weight: 700; color: var(--text); }
+.grp-header-count { font-size: 12px; color: var(--text-2); }
+.grp-settings-btn {
+  background: none; border: none; color: var(--text-2);
+  font-size: 22px; cursor: pointer; padding: 4px 8px;
+}
+.grp-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+/* Bannière */
+.grp-banner {
+  background: linear-gradient(160deg, var(--primary) 0%, #8b5cf6 100%);
+  padding: 24px 20px 20px; display: flex; flex-direction: column;
+  align-items: center; gap: 8px; flex-shrink: 0;
+}
+.grp-banner-avatar {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: rgba(255,255,255,.2); color: #fff;
+  font-size: 32px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.grp-banner-name { font-size: 22px; font-weight: 800; color: #fff; text-align: center; }
+.grp-banner-desc { font-size: 13px; color: rgba(255,255,255,.8); text-align: center; }
+
+/* Tabs */
+.grp-tabs {
+  display: flex; background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.grp-tab {
+  flex: 1; background: none; border: none;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 4px; cursor: pointer; font-size: 11px; font-weight: 600;
+  color: var(--text-2); border-bottom: 2px solid transparent;
+  transition: color .18s, border-color .18s;
+}
+.grp-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.grp-tab span:first-child { font-size: 18px; }
+
+/* Contenu onglets */
+.grp-tab-content { flex: 1; padding: 16px; overflow-y: auto; }
+
+/* État vide */
+.grp-empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 32px 0; text-align: center;
+}
+.grp-empty-icon { font-size: 40px; line-height: 1; }
+.grp-empty-text { font-size: 14px; color: var(--text-2); max-width: 240px; }
+
+/* Labels section */
+.grp-section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-2); margin-bottom: 10px;
+}
+
+/* Classement challenge header */
+.grp-ranking-challenge-header {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-elevated); border: 1px solid var(--primary);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 14px;
+}
+.grp-ch-icon { font-size: 26px; flex-shrink: 0; }
+.grp-ch-header-info { display: flex; flex-direction: column; gap: 2px; }
+.grp-ch-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.grp-ch-meta  { font-size: 12px; color: var(--text-2); }
+
+/* Classement items */
+.grp-ranking-list { display: flex; flex-direction: column; gap: 10px; }
+.grp-rank-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 14px;
+}
+.grp-rank-item.grp-rank-me { border-color: var(--primary); }
+.grp-rank-medal { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+.grp-rank-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.grp-rank-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.grp-rank-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.grp-rank-me-label {
+  font-size: 10px; background: var(--primary); color: #fff;
+  border-radius: 6px; padding: 1px 5px; font-weight: 700; margin-left: 4px;
+}
+.grp-rank-bar-wrap {
+  height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+}
+.grp-rank-bar {
+  height: 100%; background: var(--primary); border-radius: 3px;
+  transition: width .4s ease;
+}
+.grp-rank-value { font-size: 11px; color: var(--text-2); }
+.grp-rank-add-btn {
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 50%; width: 32px; height: 32px;
+  font-size: 20px; font-weight: 300; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Cartes défis */
+.grp-challenge-card {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 10px;
+}
+.grp-challenge-past { opacity: .6; }
+.grp-ch-card-top {
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;
+}
+.grp-ch-card-info { display: flex; flex-direction: column; gap: 2px; }
+.grp-ch-bar-wrap {
+  height: 8px; background: var(--border); border-radius: 4px;
+  overflow: hidden; margin-bottom: 8px;
+}
+.grp-ch-bar {
+  height: 100%; background: linear-gradient(90deg, var(--primary), #8b5cf6);
+  border-radius: 4px; transition: width .4s ease;
+}
+.grp-ch-progress-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.grp-ch-progress-val { font-size: 12px; color: var(--text-2); }
+.grp-ch-add-btn {
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 20px; padding: 6px 12px;
+  font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+
+/* Membres */
+.grp-members-list { display: flex; flex-direction: column; gap: 8px; }
+.grp-member-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 14px;
+}
+.grp-member-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.grp-member-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.grp-member-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.grp-member-perf { font-size: 12px; color: var(--text-2); }
+.grp-member-kick {
+  background: none; border: none; color: var(--text-2);
+  font-size: 16px; cursor: pointer; padding: 4px 6px;
+  transition: color .18s;
+}
+.grp-member-kick:hover { color: #ef4444; }
+
+/* Modal — formulaires groupe */
+.grp-privacy-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px;
+  font-size: 14px; color: var(--text-2);
+}
+.grp-form-label {
+  font-size: 12px; font-weight: 600; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+}
+.grp-progress-current { font-size: 14px; color: var(--text-2); }
+.challenge-type-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+}
+.challenge-type-option {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: var(--bg-elevated); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 8px 4px; cursor: pointer;
+  font-size: 11px; font-weight: 600; color: var(--text-2);
+  transition: border-color .18s, color .18s;
+}
+.challenge-type-option span:first-of-type { font-size: 20px; }
+.challenge-type-option input[type="radio"] { display: none; }
+.challenge-type-option:has(input:checked) { border-color: var(--primary); color: var(--primary); }
+
+/* ─── Chat groupe ───────────────────────────────────────── */
+/* Layout : page-group est flex-column via .page.active ; grp-chat-bar reste au bas */
+.grp-body { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; }
+
+.grp-chat-content {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 14px 8px;
+  min-height: 200px;
+}
+
+/* Barre d'envoi */
+.grp-chat-bar {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 10px max(10px, env(safe-area-inset-bottom)) 10px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+}
+.grp-chat-action-btn {
+  background: none; border: none; color: var(--text-2);
+  padding: 6px; cursor: pointer; flex-shrink: 0;
+  border-radius: 10px; transition: color .18s, background .18s;
+}
+.grp-chat-action-btn:active { background: var(--bg-card); color: var(--primary); }
+.grp-chat-input {
+  flex: 1; background: var(--bg-card); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 9px 14px;
+  font-size: 15px; color: var(--text); outline: none;
+  transition: border-color .18s;
+}
+.grp-chat-input:focus { border-color: var(--primary); }
+.grp-chat-send-btn {
+  background: var(--primary); color: #fff; border: none;
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; cursor: pointer;
+  transition: opacity .18s, transform .15s;
+}
+.grp-chat-send-btn:active { opacity: .8; transform: scale(.92); }
+
+/* Lignes de messages */
+.chat-row {
+  display: flex; align-items: flex-end; gap: 8px;
+  max-width: 86%;
+}
+.chat-row-me    { align-self: flex-end;  flex-direction: row-reverse; }
+.chat-row-other { align-self: flex-start; }
+
+.chat-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+}
+.chat-avatar-letter {
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+
+.chat-col {
+  display: flex; flex-direction: column; gap: 2px;
+  align-items: flex-start;
+}
+.chat-row-me .chat-col { align-items: flex-end; }
+
+.chat-username {
+  font-size: 11px; font-weight: 600; color: var(--text-2);
+  padding: 0 4px;
+}
+.chat-bubble {
+  padding: 9px 13px; border-radius: 18px;
+  max-width: 100%; word-break: break-word;
+  line-height: 1.45;
+}
+.chat-bubble-other {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+  color: var(--text); font-size: 15px;
+}
+.chat-bubble-me {
+  background: var(--primary);
+  border-bottom-right-radius: 4px;
+  color: #fff; font-size: 15px;
+}
+.chat-time {
+  font-size: 10px; color: var(--text-2); padding: 0 4px;
+}
+
+/* Image dans le chat */
+.chat-img {
+  max-width: 240px; max-height: 240px; border-radius: 12px;
+  object-fit: cover; cursor: zoom-in; display: block;
+  transition: max-width .2s, max-height .2s;
+}
+.chat-img.expanded { max-width: 90vw; max-height: 60vh; cursor: zoom-out; }
+
+/* Carte séance partagée */
+.chat-session-card {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 14px; padding: 10px 12px; min-width: 200px;
+}
+.chat-bubble-me .chat-session-card {
+  background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.25);
+}
+.chat-session-icon { font-size: 26px; flex-shrink: 0; }
+.chat-session-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.chat-session-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-bubble-me .chat-session-name { color: #fff; }
+.chat-session-meta { font-size: 11px; color: var(--text-2); }
+.chat-bubble-me .chat-session-meta { color: rgba(255,255,255,.75); }
+.chat-session-save-btn {
+  background: var(--primary); color: #fff; border: none;
+  border-radius: 10px; padding: 5px 10px; font-size: 12px; font-weight: 600;
+  cursor: pointer; flex-shrink: 0; white-space: nowrap;
+  transition: opacity .18s;
+}
+.chat-bubble-me .chat-session-save-btn {
+  background: rgba(255,255,255,.25); color: #fff;
+}
+.chat-session-save-btn:active { opacity: .75; }
+
+/* Modal liste scrollable (partager séance) */
+.modal-scroll-list {
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 55vh; overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+/* Exercices dans modal sauvegarder séance */
+.receive-session-exercises {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 180px; overflow-y: auto;
+  background: var(--bg-card); border-radius: 12px;
+  padding: 8px 12px;
+}
+.receive-session-ex {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 4px 0; border-bottom: 1px solid var(--border);
+}
+.receive-session-ex:last-child { border-bottom: none; }
+.receive-session-ex-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.receive-session-ex-muscles { font-size: 11px; color: var(--text-2); }
+
 /* ─── History — toggle Séances / Repas ─────────────────── */
 .history-toggle-row {
   display: flex;

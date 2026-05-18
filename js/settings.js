@@ -520,6 +520,13 @@ window.Settings = (() => {
     });
   }
 
+  /* ─── Personnaliser le profil public ────────────────────── */
+  function initCustomizeProfile() {
+    document.getElementById('btn-customize-profile')?.addEventListener('click', () => {
+      if (window.ProfileEditor) ProfileEditor.open();
+    });
+  }
+
   /* ─── Sync manuel ───────────────────────────────────────── */
   function initSyncButton() {
     document.getElementById('btn-sync-now')?.addEventListener('click', async () => {
@@ -629,6 +636,7 @@ window.Settings = (() => {
     initLanguage();
     initEditProfile();
     initChangeUsername();
+    initCustomizeProfile();
     initExport();
     initReset();
     initHelp();
