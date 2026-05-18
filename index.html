@@ -677,6 +677,20 @@
         <div id="social-sent-list"></div>
       </div>
 
+      <!-- Groupes — invitations -->
+      <div id="group-invites-section" class="hidden">
+        <p class="social-section-label" data-i18n="group.invites_title">INVITATIONS DE GROUPE</p>
+        <div id="group-invites-list"></div>
+      </div>
+
+      <!-- Groupes — mes groupes -->
+      <p class="social-section-label" data-i18n="group.my_groups">MES GROUPES</p>
+      <div id="groups-list"><p class="social-empty" data-i18n="group.no_groups">Aucun groupe pour l'instant</p></div>
+      <button id="btn-create-group" class="btn-create-group">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span data-i18n="group.create_group">Créer un groupe</span>
+      </button>
+
       <!-- Mes amis -->
       <div id="social-friends-section">
         <p class="social-section-label" data-i18n="social.friends_title">Mes amis</p>
@@ -932,6 +946,48 @@
     </div><!-- end pe-body -->
   </div><!-- end page-profile-editor -->
 
+  <!-- ═══ PAGE — Groupe ═══ -->
+  <div id="page-group" class="page">
+    <!-- Header sticky -->
+    <div class="grp-header">
+      <button id="btn-grp-back" class="grp-back-btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="grp-header-center">
+        <span id="grp-header-name" class="grp-header-name">Groupe</span>
+        <span id="grp-header-count" class="grp-header-count">0 membre</span>
+      </div>
+      <button id="btn-grp-settings" class="grp-settings-btn hidden">⋯</button>
+    </div>
+
+    <div class="grp-body">
+      <!-- Bannière groupe -->
+      <div class="grp-banner">
+        <div id="grp-banner-avatar" class="grp-banner-avatar">G</div>
+        <h2 id="grp-banner-name" class="grp-banner-name"></h2>
+        <p id="grp-banner-desc" class="grp-banner-desc"></p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="grp-tabs">
+        <button class="grp-tab active" data-tab="ranking">
+          <span>🏆</span><span data-i18n="group.tab_ranking">Classement</span>
+        </button>
+        <button class="grp-tab" data-tab="challenges">
+          <span>⚡</span><span data-i18n="group.tab_challenges">Défis</span>
+        </button>
+        <button class="grp-tab" data-tab="members">
+          <span>👥</span><span data-i18n="group.tab_members">Membres</span>
+        </button>
+      </div>
+
+      <!-- Contenu tabs -->
+      <div id="grp-tab-ranking"    class="grp-tab-content"></div>
+      <div id="grp-tab-challenges" class="grp-tab-content hidden"></div>
+      <div id="grp-tab-members"    class="grp-tab-content hidden"></div>
+    </div>
+  </div><!-- end page-group -->
+
   <!-- ═══ MODALS ═══ -->
 
   <!-- Profil ami -->
@@ -956,6 +1012,105 @@
         <button id="btn-close-badge-picker" class="modal-close">✕</button>
       </div>
       <div id="badge-picker-list" class="badge-picker-list"></div>
+    </div>
+  </div>
+
+  <!-- Créer un groupe -->
+  <div id="modal-create-group" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="group.create_group">Créer un groupe</h2>
+        <button id="btn-close-create-group" class="modal-close">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;padding-top:4px">
+        <input id="new-group-name" type="text" class="form-input" maxlength="40" data-i18n-ph="group.group_name_ph" placeholder="Nom du groupe">
+        <textarea id="new-group-desc" class="form-input" rows="2" maxlength="120" data-i18n-ph="group.group_desc_ph" placeholder="Description (optionnel)" style="resize:none"></textarea>
+        <div class="grp-privacy-badge">🔒 <span data-i18n="group.private_only">Groupe privé</span></div>
+        <button id="btn-confirm-create-group" class="btn-primary btn-full" data-i18n="group.create">Créer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inviter des amis dans un groupe -->
+  <div id="modal-invite-friends" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="group.invite_title">Inviter un ami</h2>
+        <button id="btn-close-invite-friends" class="modal-close">✕</button>
+      </div>
+      <div id="invite-friends-list" style="display:flex;flex-direction:column;gap:8px;padding-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- Créer un défi -->
+  <div id="modal-challenge-create" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="group.challenge_title">Nouveau défi</h2>
+        <button id="btn-close-challenge-create" class="modal-close">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;padding-top:4px">
+        <input id="challenge-title" type="text" class="form-input" maxlength="40" data-i18n-ph="group.challenge_name_ph" placeholder="Nom du défi">
+        <div>
+          <p class="grp-form-label" data-i18n="group.challenge_type">Type</p>
+          <div class="challenge-type-grid">
+            <label class="challenge-type-option"><input type="radio" name="challenge-type" value="sessions" checked><span>🏋️</span><span data-i18n="group.type_sessions">Séances</span></label>
+            <label class="challenge-type-option"><input type="radio" name="challenge-type" value="volume"><span>📦</span><span data-i18n="group.type_volume">Volume</span></label>
+            <label class="challenge-type-option"><input type="radio" name="challenge-type" value="hydration"><span>💧</span><span data-i18n="group.type_hydration">Hydratation</span></label>
+            <label class="challenge-type-option"><input type="radio" name="challenge-type" value="cardio"><span>🏃</span><span data-i18n="group.type_cardio">Cardio</span></label>
+            <label class="challenge-type-option"><input type="radio" name="challenge-type" value="calories"><span>🔥</span><span data-i18n="group.type_calories">Calories</span></label>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1">
+            <p class="grp-form-label" data-i18n="group.challenge_target">Objectif</p>
+            <input id="challenge-target" type="number" class="form-input" min="1" placeholder="Ex: 10">
+          </div>
+          <div style="flex:1">
+            <p class="grp-form-label" data-i18n="group.challenge_end_date">Date de fin</p>
+            <input id="challenge-end-date" type="date" class="form-input">
+          </div>
+        </div>
+        <button id="btn-confirm-create-challenge" class="btn-primary btn-full" data-i18n="group.create">Créer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mettre à jour ma progression -->
+  <div id="modal-progress-update" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 id="progress-challenge-name" class="modal-title"></h2>
+        <button id="btn-close-progress-update" class="modal-close">✕</button>
+      </div>
+      <input id="progress-challenge-id" type="hidden">
+      <div style="display:flex;flex-direction:column;gap:14px;padding-top:4px">
+        <p class="grp-progress-current" data-i18n="group.current_progress">Ma progression actuelle : <span id="progress-current-val">0</span></p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input id="progress-add-val" type="number" class="form-input" min="0.1" step="any" placeholder="+ valeur" style="flex:1">
+          <span id="progress-unit-label" class="grp-form-label" style="margin:0;min-width:32px"></span>
+        </div>
+        <button id="btn-save-progress" class="btn-primary btn-full" data-i18n="group.save_progress">Ajouter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paramètres groupe -->
+  <div id="modal-group-settings" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="group.settings_title">Paramètres</h2>
+        <button id="btn-close-group-settings" class="modal-close">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding-top:8px">
+        <button id="btn-leave-group" class="btn-secondary btn-full" data-i18n="group.leave_group">Quitter le groupe</button>
+        <button id="btn-delete-group" class="btn-danger btn-full hidden" data-i18n="group.delete_group">Supprimer le groupe</button>
+      </div>
     </div>
   </div>
 
@@ -1550,6 +1705,7 @@
 <script src="/js/history.js"></script>
 <script src="/js/nutrition.js"></script>
 <script src="/js/social.js"></script>
+<script src="/js/groups.js"></script>
 <script src="/js/profile-editor.js"></script>
 <script src="/js/settings.js"></script>
 <script src="/js/i18n.js"></script>
