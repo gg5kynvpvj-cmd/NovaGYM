@@ -310,7 +310,6 @@ window.ProfileEditor = (() => {
       App.switchTab('settings');
     }
 
-    document.getElementById('btn-pe-save')?.addEventListener('click', doSave);
     document.getElementById('btn-pe-save-bottom')?.addEventListener('click', doSave);
   }
 
