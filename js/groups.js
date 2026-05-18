@@ -395,15 +395,14 @@ window.Groups = (() => {
     if (!data || data.length === 0) { renderChatMessages(); return; }
 
     const senderIds = [...new Set(data.map(m => m.user_id))];
-    const anon = getAnonClient();
     let profileMap = {};
-    if (anon) {
-      const { data: profiles } = await anon
+    if (App.supabase && senderIds.length > 0) {
+      const { data: profiles } = await App.supabase
         .from('profiles').select('id, username').in('id', senderIds);
       if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
     }
     chatMessages = data.map(m => ({
-      ...m, profile: profileMap[m.user_id] || { username: '?', avatar_url: null },
+      ...m, profile: profileMap[m.user_id] || { username: '?' },
     }));
     renderChatMessages();
   }
@@ -622,10 +621,9 @@ window.Groups = (() => {
         const msg = payload.new;
         if (msg.user_id === uid()) return; // already added optimistically
 
-        const anon = getAnonClient();
         let profile = { username: '?' };
-        if (anon) {
-          const { data } = await anon
+        if (App.supabase) {
+          const { data } = await App.supabase
             .from('profiles').select('username').eq('id', msg.user_id).single();
           if (data) profile = data;
         }
@@ -718,10 +716,9 @@ window.Groups = (() => {
       .eq('status', 'invited');
     const alreadyInvited = new Set((existingInvites || []).map(m => m.user_id));
 
-    const anon = getAnonClient();
     let profileMap = {};
-    if (anon) {
-      const { data: profiles } = await anon
+    if (App.supabase && friendIds.length > 0) {
+      const { data: profiles } = await App.supabase
         .from('profiles').select('id, username').in('id', friendIds);
       if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
     }
