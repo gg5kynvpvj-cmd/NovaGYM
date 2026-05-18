@@ -128,15 +128,12 @@ window.Groups = (() => {
 
     const memberIds = (members || []).map(m => m.user_id);
     let profileMap = {};
-    if (memberIds.length > 0) {
-      const anon = getAnonClient();
-      if (anon) {
-        const { data: profiles } = await anon
-          .from('profiles')
-          .select('id, username, best_performance, displayed_badges')
-          .in('id', memberIds);
-        if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
-      }
+    if (memberIds.length > 0 && App.supabase) {
+      const { data: profiles } = await App.supabase
+        .from('profiles')
+        .select('id, username, avatar_url, best_performance, displayed_badges')
+        .in('id', memberIds);
+      if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
     }
 
     currentMembers = (members || []).map(m => ({
@@ -182,10 +179,16 @@ window.Groups = (() => {
 
   async function uploadGroupCover(file) {
     if (!App.supabase || !currentGroup) return;
+    const el = document.getElementById('grp-banner-avatar');
+    if (el) { el.style.opacity = '0.5'; }
     const path = `${currentGroup.id}/cover.jpg`;
     const { error: upErr } = await App.supabase.storage
       .from('groups').upload(path, file, { upsert: true, contentType: file.type });
-    if (upErr) { console.warn('Cover upload:', upErr.message); return; }
+    if (el) { el.style.opacity = ''; }
+    if (upErr) {
+      alert('Erreur upload : ' + upErr.message);
+      return;
+    }
     const { data: urlData } = App.supabase.storage.from('groups').getPublicUrl(path);
     const coverUrl = urlData.publicUrl + '?t=' + Date.now();
     await App.supabase.from('groups').update({ cover_url: coverUrl }).eq('id', currentGroup.id);
@@ -514,7 +517,7 @@ window.Groups = (() => {
     if (!error && msg) {
       chatMessages.push({ ...msg, profile: {
         username:   App.state.profile?.username || '?',
-        avatar_url: App.local.get('avatar_url') || App.local.get('avatar') || null,
+        avatar_url: App.state.profile?.avatar_url || App.local.get('avatar_url') || null,
       }});
       renderChatMessages();
     }
@@ -541,7 +544,7 @@ window.Groups = (() => {
     if (!error && msg) {
       chatMessages.push({ ...msg, profile: {
         username:   App.state.profile?.username || '?',
-        avatar_url: App.local.get('avatar_url') || App.local.get('avatar') || null,
+        avatar_url: App.state.profile?.avatar_url || App.local.get('avatar_url') || null,
       }});
       renderChatMessages();
     }
@@ -597,7 +600,7 @@ window.Groups = (() => {
     if (!error && msg) {
       chatMessages.push({ ...msg, profile: {
         username:   App.state.profile?.username || '?',
-        avatar_url: App.local.get('avatar_url') || App.local.get('avatar') || null,
+        avatar_url: App.state.profile?.avatar_url || App.local.get('avatar_url') || null,
       }});
       renderChatMessages();
     }
