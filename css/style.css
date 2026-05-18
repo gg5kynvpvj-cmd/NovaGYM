@@ -139,6 +139,11 @@ a { text-decoration: none; color: inherit; }
   min-height: 18px;
   text-align: center;
 }
+.form-error {
+  font-size: 13px;
+  color: var(--danger);
+  min-height: 16px;
+}
 .btn-forgot {
   color: var(--text-2);
   font-size: 14px;

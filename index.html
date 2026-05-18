@@ -1224,10 +1224,11 @@
         <h2 class="modal-title" data-i18n="set.edit.username">Changer le pseudonyme</h2>
         <button id="btn-close-username" class="modal-close">✕</button>
       </div>
-      <div class="input-group" style="margin-bottom:16px">
+      <div class="input-group" style="margin-bottom:8px">
         <label class="input-label" data-i18n="modal.username_lbl">Nouveau pseudonyme</label>
-        <input id="edit-username-input" type="text" placeholder="TonPseudo" data-i18n-ph="modal.username_ph">
+        <input id="edit-username-input" type="text" placeholder="TonPseudo" data-i18n-ph="modal.username_ph" maxlength="12">
       </div>
+      <p id="username-error" class="form-error" style="margin-bottom:12px"></p>
       <button id="btn-save-username" class="btn-primary btn-full" data-i18n="modal.save">Enregistrer</button>
     </div>
   </div>

@@ -128,10 +128,13 @@ window.Onboarding = (() => {
     const user = App.state.user;
     if (!user) return;
 
-    const username = App.local.get('pending_username')
+    let username = App.local.get('pending_username')
       || user.user_metadata?.username
       || user.email?.split('@')[0]
       || 'Champion';
+
+    // Sanitize : trim + tronquer à 12 car. si nécessaire (sécurité)
+    username = username.trim().slice(0, 12) || 'Champion';
 
     const profile = {
       id:            user.id,

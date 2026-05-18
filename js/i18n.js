@@ -301,6 +301,11 @@ window.I18n = (() => {
       'auth.pwd_short': 'Mot de passe trop court (6 caractères min).',
       'auth.pwd_mismatch': 'Les mots de passe ne correspondent pas.',
       'auth.email_first': "Saisis ton email d'abord.",
+      // Username validation
+      'username.taken': 'Ce pseudonyme est déjà utilisé.',
+      'username.too_short': 'Le pseudonyme doit faire au moins 3 caractères.',
+      'username.too_long': 'Le pseudonyme ne peut pas dépasser 12 caractères.',
+      'username.invalid_chars': 'Seuls les lettres, chiffres et _ sont autorisés.',
       'auth.reset_sent': '📧 Email de réinitialisation envoyé !',
       'auth.contact_support': '📧 Contacte-nous à novagympro@proton.me pour retrouver ton compte.',
       'auth.account_not_found': "Compte introuvable. Crée un compte d'abord.",
@@ -705,6 +710,11 @@ window.I18n = (() => {
       'auth.pwd_short': 'Password too short (min. 6 characters).',
       'auth.pwd_mismatch': 'Passwords do not match.',
       'auth.email_first': 'Enter your email first.',
+      // Username validation
+      'username.taken': 'This username is already taken.',
+      'username.too_short': 'Username must be at least 3 characters.',
+      'username.too_long': 'Username cannot exceed 12 characters.',
+      'username.invalid_chars': 'Only letters, numbers and _ are allowed.',
       'auth.reset_sent': '📧 Password reset email sent!',
       'auth.contact_support': '📧 Contact us at novagympro@proton.me to recover your account.',
       'auth.account_not_found': 'Account not found. Create an account first.',
