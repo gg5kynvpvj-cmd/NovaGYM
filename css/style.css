@@ -2845,8 +2845,6 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 /* ─── Page Éditeur de profil public ─────────────────────── */
 #page-profile-editor {
   background: var(--bg);
-  display: flex;
-  flex-direction: column;
   height: 100dvh;
   overflow: hidden;
 }
@@ -3034,8 +3032,9 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 
 /* Page groupe */
 #page-group {
-  background: var(--bg); display: flex;
-  flex-direction: column; height: 100dvh; overflow: hidden;
+  background: var(--bg);
+  height: 100dvh;
+  overflow: hidden;
 }
 .grp-header {
   display: flex; align-items: center; gap: 10px;
@@ -3231,9 +3230,8 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .challenge-type-option:has(input:checked) { border-color: var(--primary); color: var(--primary); }
 
 /* ─── Chat groupe ───────────────────────────────────────── */
-/* Layout : page-group utilise flex-column, grp-chat-bar est au bas */
-#page-group { display: flex; flex-direction: column; overflow: hidden; }
-.grp-body    { flex: 1; overflow-y: auto; min-height: 0; }
+/* Layout : page-group est flex-column via .page.active ; grp-chat-bar reste au bas */
+.grp-body { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; }
 
 .grp-chat-content {
   display: flex; flex-direction: column; gap: 10px;
