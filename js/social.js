@@ -9,9 +9,19 @@ window.Social = (() => {
   let pendingReceived = [];
   let pendingSent     = [];
   let searchDebounce  = null;
+  let _anonClient     = null;
 
   /* ─── Helpers ─────────────────────────────────────── */
   const uid = () => App.state.user?.id;
+
+  function getAnonClient() {
+    if (!_anonClient && window.supabase && typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_ANON !== 'undefined') {
+      _anonClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+    }
+    return _anonClient;
+  }
 
   function avatarEl(url, username) {
     const l = (username || '?').charAt(0).toUpperCase();
@@ -45,13 +55,13 @@ window.Social = (() => {
     let profileMap = {};
     if (otherIds.length > 0) {
       try {
-        const resp = await fetch(
-          `${SUPABASE_URL}/rest/v1/profiles?select=id,username,avatar_url,goal,program_type,level&id=in.(${otherIds.join(',')})`,
-          { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
-        );
-        if (resp.ok) {
-          const profiles = await resp.json();
-          profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
+        const anon = getAnonClient();
+        if (anon) {
+          const { data: profiles } = await anon
+            .from('profiles')
+            .select('id, username, avatar_url, goal, program_type, level')
+            .in('id', otherIds);
+          if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
         }
       } catch { }
     }
@@ -180,13 +190,17 @@ window.Social = (() => {
 
       searchDebounce = setTimeout(async () => {
         try {
-          const qEnc = encodeURIComponent(`%${q}%`);
-          const resp = await fetch(
-            `${SUPABASE_URL}/rest/v1/profiles?select=id,username,avatar_url&username=ilike.${qEnc}&limit=8`,
-            { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
-          );
-          const users = resp.ok ? await resp.json() : [];
-          const filtered = (users || []).filter(u => u.id !== uid());
+          const anon = getAnonClient();
+          let users = [];
+          if (anon) {
+            const { data } = await anon
+              .from('profiles')
+              .select('id, username, avatar_url')
+              .ilike('username', `%${q}%`)
+              .limit(8);
+            users = data || [];
+          }
+          const filtered = users.filter(u => u.id !== uid());
 
           if (filtered.length === 0) {
             results.innerHTML = `<div class="social-search-empty">${I18n.t('social.no_results')}</div>`;
