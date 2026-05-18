@@ -657,8 +657,32 @@
       <div class="tab-header-row">
         <h1 class="page-title" data-i18n="nav.social">Communauté</h1>
       </div>
-      <div id="social-container">
-        <!-- Amis, profils, classements, partage — à venir -->
+
+      <!-- Recherche -->
+      <div class="social-search-wrap">
+        <input id="social-search-input" type="text" class="social-search-input"
+          placeholder="Rechercher par pseudonyme..." data-i18n-ph="social.search_ph">
+        <div id="social-search-results" class="social-search-results hidden"></div>
+      </div>
+
+      <!-- Demandes reçues -->
+      <div id="social-pending-section" class="hidden">
+        <p class="social-section-label" data-i18n="social.pending_title">Demandes reçues</p>
+        <div id="social-pending-list"></div>
+      </div>
+
+      <!-- Demandes envoyées -->
+      <div id="social-sent-section" class="hidden">
+        <p class="social-section-label" data-i18n="social.sent_title">Demandes envoyées</p>
+        <div id="social-sent-list"></div>
+      </div>
+
+      <!-- Mes amis -->
+      <div id="social-friends-section">
+        <p class="social-section-label" data-i18n="social.friends_title">Mes amis</p>
+        <div id="social-friends-list">
+          <p class="social-empty" data-i18n="social.friends_empty">Pas encore d'amis. Recherche un utilisateur !</p>
+        </div>
       </div>
     </div>
 
@@ -819,6 +843,19 @@
   </div><!-- end page-app -->
 
   <!-- ═══ MODALS ═══ -->
+
+  <!-- Profil ami -->
+  <div id="modal-friend-profile" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 id="friend-modal-name" class="modal-title">Profil</h2>
+        <button id="btn-close-friend-profile" class="modal-close">✕</button>
+      </div>
+      <div id="friend-profile-content"></div>
+      <button id="btn-remove-friend" class="btn-danger btn-full" style="margin-top:16px" data-i18n="social.remove_friend">Supprimer de mes amis</button>
+    </div>
+  </div>
 
   <!-- Détail exercice -->
   <div id="modal-exercise" class="modal-overlay hidden">

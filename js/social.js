@@ -1,16 +1,303 @@
 /* ═══════════════════════════════════════════════════════════
    NovaGYM — Social / Communauté
-   Amis, profils, progression, classements, partage
+   Recherche, demandes d'amis, liste d'amis, profil public
    ═══════════════════════════════════════════════════════════ */
 
 window.Social = (() => {
 
-  function render() {
-    // Placeholder — fonctionnalités sociales à venir
+  let friends         = [];
+  let pendingReceived = [];
+  let pendingSent     = [];
+  let searchDebounce  = null;
+
+  /* ─── Helpers ─────────────────────────────────────── */
+  const uid = () => App.state.user?.id;
+
+  function avatarEl(url, username) {
+    const l = (username || '?').charAt(0).toUpperCase();
+    if (url) return `<img src="${url}" class="social-avatar" alt="${l}">`;
+    return `<div class="social-avatar social-avatar-letter">${l}</div>`;
   }
 
+  function friendProfile(f) {
+    return f.requester_id === uid() ? f.addressee : f.requester;
+  }
+
+  /* ─── Chargement des amitiés ──────────────────────── */
+  async function loadFriendships() {
+    if (!App.supabase || !uid()) return;
+
+    const { data } = await App.supabase
+      .from('friendships')
+      .select('id, status, requester_id, addressee_id, created_at')
+      .or(`requester_id.eq.${uid()},addressee_id.eq.${uid()}`);
+
+    if (!data || data.length === 0) {
+      friends = pendingReceived = pendingSent = [];
+      return;
+    }
+
+    // Charge les profils des autres via clé anonyme (contourne RLS)
+    const otherIds = [...new Set(
+      data.flatMap(f => [f.requester_id, f.addressee_id]).filter(id => id !== uid())
+    )];
+
+    let profileMap = {};
+    if (otherIds.length > 0) {
+      try {
+        const resp = await fetch(
+          `${SUPABASE_URL}/rest/v1/profiles?select=id,username,avatar_url,goal,program_type,level&id=in.(${otherIds.join(',')})`,
+          { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
+        );
+        if (resp.ok) {
+          const profiles = await resp.json();
+          profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
+        }
+      } catch { }
+    }
+
+    const enriched = data.map(f => ({
+      ...f,
+      requester: profileMap[f.requester_id] || { id: f.requester_id, username: '?' },
+      addressee: profileMap[f.addressee_id] || { id: f.addressee_id, username: '?' },
+    }));
+
+    friends         = enriched.filter(f => f.status === 'accepted');
+    pendingReceived = enriched.filter(f => f.status === 'pending' && f.addressee_id === uid());
+    pendingSent     = enriched.filter(f => f.status === 'pending' && f.requester_id === uid());
+  }
+
+  /* ─── Actions Supabase ────────────────────────────── */
+  async function sendRequest(addresseeId) {
+    if (!App.supabase) return;
+    const { error } = await App.supabase.from('friendships').insert({
+      requester_id: uid(),
+      addressee_id: addresseeId,
+    });
+    if (error) console.warn('sendRequest:', error.message);
+    await loadFriendships();
+    renderAll();
+  }
+
+  async function acceptRequest(friendshipId) {
+    if (!App.supabase) return;
+    await App.supabase.from('friendships')
+      .update({ status: 'accepted' })
+      .eq('id', friendshipId);
+    await loadFriendships();
+    renderAll();
+  }
+
+  async function deleteRelation(friendshipId) {
+    if (!App.supabase) return;
+    await App.supabase.from('friendships').delete().eq('id', friendshipId);
+    await loadFriendships();
+    renderAll();
+  }
+
+  /* ─── Rendu ───────────────────────────────────────── */
+  function renderPending() {
+    const section = document.getElementById('social-pending-section');
+    const list    = document.getElementById('social-pending-list');
+    if (!section || !list) return;
+    section.classList.toggle('hidden', pendingReceived.length === 0);
+    list.innerHTML = pendingReceived.map(f => `
+      <div class="social-request-card">
+        ${avatarEl(f.requester.avatar_url, f.requester.username)}
+        <span class="social-card-name">${f.requester.username}</span>
+        <div class="social-card-actions">
+          <button class="btn-soc btn-soc-accept" data-id="${f.id}">${I18n.t('social.accept')}</button>
+          <button class="btn-soc btn-soc-decline" data-id="${f.id}">${I18n.t('social.decline')}</button>
+        </div>
+      </div>
+    `).join('');
+    list.querySelectorAll('.btn-soc-accept').forEach(b =>
+      b.addEventListener('click', () => acceptRequest(b.dataset.id)));
+    list.querySelectorAll('.btn-soc-decline').forEach(b =>
+      b.addEventListener('click', () => deleteRelation(b.dataset.id)));
+  }
+
+  function renderSent() {
+    const section = document.getElementById('social-sent-section');
+    const list    = document.getElementById('social-sent-list');
+    if (!section || !list) return;
+    section.classList.toggle('hidden', pendingSent.length === 0);
+    list.innerHTML = pendingSent.map(f => `
+      <div class="social-request-card">
+        ${avatarEl(f.addressee.avatar_url, f.addressee.username)}
+        <span class="social-card-name">${f.addressee.username}</span>
+        <span class="social-badge-pending">${I18n.t('social.pending_sent')}</span>
+        <button class="btn-soc btn-soc-cancel" data-id="${f.id}">${I18n.t('social.cancel_request')}</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.btn-soc-cancel').forEach(b =>
+      b.addEventListener('click', async () => {
+        if (confirm(I18n.t('social.confirm_cancel'))) await deleteRelation(b.dataset.id);
+      }));
+  }
+
+  function renderFriends() {
+    const list = document.getElementById('social-friends-list');
+    if (!list) return;
+    if (friends.length === 0) {
+      list.innerHTML = `<p class="social-empty">${I18n.t('social.friends_empty')}</p>`;
+      return;
+    }
+    list.innerHTML = friends.map(f => {
+      const p = friendProfile(f);
+      return `
+        <div class="social-friend-card">
+          ${avatarEl(p.avatar_url, p.username)}
+          <div class="social-friend-info">
+            <span class="social-card-name">${p.username}</span>
+          </div>
+          <button class="btn-soc btn-soc-view" data-id="${f.id}" data-name="${p.username}">
+            ${I18n.t('social.view_profile')}
+          </button>
+        </div>
+      `;
+    }).join('');
+    list.querySelectorAll('.btn-soc-view').forEach(b =>
+      b.addEventListener('click', () => openProfile(b.dataset.id, b.dataset.name)));
+  }
+
+  function renderAll() {
+    renderPending();
+    renderSent();
+    renderFriends();
+  }
+
+  /* ─── Recherche ───────────────────────────────────── */
+  function initSearch() {
+    const input   = document.getElementById('social-search-input');
+    const results = document.getElementById('social-search-results');
+    if (!input || !results) return;
+
+    input.addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      const q = input.value.trim();
+      if (q.length < 2) { results.classList.add('hidden'); results.innerHTML = ''; return; }
+
+      searchDebounce = setTimeout(async () => {
+        try {
+          const qEnc = encodeURIComponent(`%${q}%`);
+          const resp = await fetch(
+            `${SUPABASE_URL}/rest/v1/profiles?select=id,username,avatar_url&username=ilike.${qEnc}&limit=8`,
+            { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
+          );
+          const users = resp.ok ? await resp.json() : [];
+          const filtered = (users || []).filter(u => u.id !== uid());
+
+          if (filtered.length === 0) {
+            results.innerHTML = `<div class="social-search-empty">${I18n.t('social.no_results')}</div>`;
+            results.classList.remove('hidden');
+            return;
+          }
+
+          results.innerHTML = filtered.map(u => {
+            const isFriend   = friends.some(f => friendProfile(f).id === u.id);
+            const isSent     = pendingSent.some(f => f.addressee_id === u.id);
+            const recvF      = pendingReceived.find(f => f.requester_id === u.id);
+
+            let btn = '';
+            if (isFriend)    btn = `<span class="social-badge-friends">${I18n.t('social.already_friends')}</span>`;
+            else if (isSent) btn = `<span class="social-badge-pending">${I18n.t('social.pending_sent')}</span>`;
+            else if (recvF)  btn = `<button class="btn-soc btn-soc-accept" data-id="${recvF.id}">${I18n.t('social.accept')}</button>`;
+            else             btn = `<button class="btn-soc btn-soc-add" data-user-id="${u.id}">${I18n.t('social.add_friend')}</button>`;
+
+            return `
+              <div class="social-search-item">
+                ${avatarEl(u.avatar_url, u.username)}
+                <span class="social-card-name">${u.username}</span>
+                <div class="social-search-action">${btn}</div>
+              </div>
+            `;
+          }).join('');
+
+          results.classList.remove('hidden');
+
+          results.querySelectorAll('.btn-soc-add').forEach(b =>
+            b.addEventListener('click', async () => {
+              b.textContent = '...'; b.disabled = true;
+              await sendRequest(b.dataset.userId);
+              input.dispatchEvent(new Event('input'));
+            }));
+          results.querySelectorAll('.btn-soc-accept').forEach(b =>
+            b.addEventListener('click', async () => {
+              await acceptRequest(b.dataset.id);
+              input.dispatchEvent(new Event('input'));
+            }));
+
+        } catch { results.classList.add('hidden'); }
+      }, 380);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!input.contains(e.target) && !results.contains(e.target)) {
+        results.classList.add('hidden');
+      }
+    }, true);
+  }
+
+  /* ─── Modal profil ami ────────────────────────────── */
+  const GOAL_LABELS = {
+    lose_weight: '🔥 Perte de poids', build_muscle: '💪 Prise de masse',
+    maintain: '⚖️ Maintien', endurance: '🏃 Endurance', general_fitness: '✨ Forme générale',
+  };
+  const LEVEL_LABELS = {
+    beginner: '🌱 Débutant', intermediate: '⚡ Intermédiaire', advanced: '🔥 Avancé',
+  };
+  const PROGRAM_LABELS = {
+    ppl: 'PPL', upper_lower: 'Upper / Lower', full_body: 'Full Body',
+    bro_split: 'Bro Split', home: 'Maison', custom: 'Personnalisé',
+  };
+
+  function openProfile(friendshipId, name) {
+    document.getElementById('friend-modal-name').textContent = name;
+    document.getElementById('btn-remove-friend').dataset.id = friendshipId;
+
+    const f = friends.find(f => f.id === friendshipId);
+    const p = f ? friendProfile(f) : null;
+    const content = document.getElementById('friend-profile-content');
+    if (!content) return;
+
+    if (!p) { content.innerHTML = ''; return; }
+
+    const rows = [
+      p.goal         ? `<div class="friend-stat-row"><span class="friend-stat-lbl">${I18n.t('social.profile_goal')}</span><span>${GOAL_LABELS[p.goal] || p.goal}</span></div>` : '',
+      p.level        ? `<div class="friend-stat-row"><span class="friend-stat-lbl">${I18n.t('social.profile_level')}</span><span>${LEVEL_LABELS[p.level] || p.level}</span></div>` : '',
+      p.program_type ? `<div class="friend-stat-row"><span class="friend-stat-lbl">${I18n.t('social.profile_program')}</span><span>${PROGRAM_LABELS[p.program_type] || p.program_type}</span></div>` : '',
+    ].join('');
+
+    content.innerHTML = `
+      <div class="friend-profile-body">
+        <div class="friend-profile-avatar-wrap">${avatarEl(p.avatar_url, p.username)}</div>
+        ${rows}
+      </div>
+    `;
+    document.getElementById('modal-friend-profile')?.classList.remove('hidden');
+  }
+
+  /* ─── Init ───────────────────────────────────────── */
   function init() {
-    // Initialisations futures (listeners, WebSocket, etc.)
+    document.getElementById('btn-close-friend-profile')?.addEventListener('click', () => {
+      document.getElementById('modal-friend-profile')?.classList.add('hidden');
+    });
+    document.getElementById('modal-friend-profile')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+    document.getElementById('btn-remove-friend')?.addEventListener('click', async function() {
+      if (!confirm(I18n.t('social.confirm_remove'))) return;
+      await deleteRelation(this.dataset.id);
+      document.getElementById('modal-friend-profile')?.classList.add('hidden');
+    });
+    initSearch();
+  }
+
+  async function render() {
+    if (!App.state.user) return;
+    await loadFriendships();
+    renderAll();
   }
 
   return { init, render };

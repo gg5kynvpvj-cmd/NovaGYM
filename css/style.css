@@ -2727,6 +2727,105 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   color: #fff;
 }
 
+/* ─── Social / Communauté ───────────────────────────────── */
+.social-section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .6px;
+  text-transform: uppercase; color: var(--text-2);
+  margin: 20px 0 8px;
+}
+.social-empty { font-size: 14px; color: var(--text-2); text-align: center; padding: 32px 0; }
+
+/* Recherche */
+.social-search-wrap { position: relative; margin-bottom: 4px; }
+.social-search-input {
+  width: 100%; padding: 12px 16px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text);
+  font-size: 15px;
+}
+.social-search-results {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.social-search-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.social-search-item:last-child { border-bottom: none; }
+.social-search-empty { padding: 14px; text-align: center; font-size: 14px; color: var(--text-2); }
+.social-search-action { margin-left: auto; }
+
+/* Avatars */
+.social-avatar {
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+}
+.social-avatar-letter {
+  background: var(--accent); color: #000;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px;
+}
+
+/* Noms */
+.social-card-name { font-size: 15px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Cartes demandes */
+.social-request-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border-radius: var(--radius-md);
+  padding: 12px 14px; margin-bottom: 8px;
+}
+.social-card-actions { display: flex; gap: 8px; margin-left: auto; }
+
+/* Cartes amis */
+.social-friend-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border-radius: var(--radius-md);
+  padding: 12px 14px; margin-bottom: 8px;
+}
+.social-friend-info { flex: 1; min-width: 0; }
+
+/* Badges statut */
+.social-badge-friends {
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  background: var(--accent-15); border-radius: 20px; padding: 4px 10px;
+  white-space: nowrap;
+}
+.social-badge-pending {
+  font-size: 12px; font-weight: 700; color: var(--text-2);
+  background: var(--bg-elevated); border-radius: 20px; padding: 4px 10px;
+  white-space: nowrap;
+}
+
+/* Boutons sociaux */
+.btn-soc {
+  font-size: 13px; font-weight: 700; border-radius: var(--radius-sm);
+  padding: 6px 12px; cursor: pointer; border: none; transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btn-soc:disabled { opacity: 0.5; }
+.btn-soc-accept  { background: var(--accent); color: #000; }
+.btn-soc-decline { background: var(--bg-elevated); color: var(--danger); }
+.btn-soc-cancel  { background: var(--bg-elevated); color: var(--text-2); margin-left: auto; }
+.btn-soc-add     { background: var(--accent); color: #000; }
+.btn-soc-view    { background: var(--bg-elevated); color: var(--text); margin-left: auto; }
+
+/* Modal profil ami */
+.friend-profile-body { padding: 16px 0; }
+.friend-profile-avatar-wrap {
+  display: flex; justify-content: center; margin-bottom: 20px;
+}
+.friend-profile-avatar-wrap .social-avatar { width: 72px; height: 72px; font-size: 28px; }
+.friend-stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+  font-size: 15px;
+}
+.friend-stat-row:last-child { border-bottom: none; }
+.friend-stat-lbl { color: var(--text-2); font-size: 14px; }
+
 /* ─── History — toggle Séances / Repas ─────────────────── */
 .history-toggle-row {
   display: flex;
