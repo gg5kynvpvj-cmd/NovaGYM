@@ -714,6 +714,10 @@
           <span class="settings-item-label" data-i18n="set.edit_physical">Modifier le profil physique</span>
           <span class="settings-arrow">›</span>
         </div>
+        <div id="btn-customize-profile" class="settings-item" style="cursor:pointer">
+          <span class="settings-item-label" data-i18n="set.customize_profile">Personnaliser mon profil</span>
+          <span class="settings-arrow">›</span>
+        </div>
       </div>
 
       <p class="settings-section-title" data-i18n="set.program_section">PROGRAMME</p>
@@ -849,11 +853,69 @@
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h2 id="friend-modal-name" class="modal-title">Profil</h2>
+        <h2 class="modal-title" data-i18n="social.view_profile">Profil</h2>
         <button id="btn-close-friend-profile" class="modal-close">✕</button>
       </div>
       <div id="friend-profile-content"></div>
       <button id="btn-remove-friend" class="btn-danger btn-full" style="margin-top:16px" data-i18n="social.remove_friend">Supprimer de mes amis</button>
+    </div>
+  </div>
+
+  <!-- Personnaliser mon profil -->
+  <div id="modal-customize-profile" class="modal-overlay hidden">
+    <div class="modal-sheet modal-sheet-tall">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="profile.customize_title">Mon profil public</h2>
+        <button id="btn-close-customize-profile" class="modal-close">✕</button>
+      </div>
+      <div class="customize-profile-body">
+
+        <!-- Confidentialité -->
+        <p class="customize-section-title" data-i18n="profile.visibility_title">Confidentialité</p>
+        <div class="visibility-options">
+          <label class="visibility-option">
+            <input type="radio" name="profile-visibility" value="private">
+            <div class="visibility-option-content">
+              <span class="visibility-icon">🔒</span>
+              <div>
+                <span class="visibility-label" data-i18n="profile.visibility_private">Privé</span>
+                <span class="visibility-desc" data-i18n="profile.visibility_private_desc">Personne ne peut voir ton profil</span>
+              </div>
+            </div>
+          </label>
+          <label class="visibility-option">
+            <input type="radio" name="profile-visibility" value="friends">
+            <div class="visibility-option-content">
+              <span class="visibility-icon">👥</span>
+              <div>
+                <span class="visibility-label" data-i18n="profile.visibility_friends">Amis seulement</span>
+                <span class="visibility-desc" data-i18n="profile.visibility_friends_desc">Visible uniquement par tes amis</span>
+              </div>
+            </div>
+          </label>
+          <label class="visibility-option">
+            <input type="radio" name="profile-visibility" value="public">
+            <div class="visibility-option-content">
+              <span class="visibility-icon">🌍</span>
+              <div>
+                <span class="visibility-label" data-i18n="profile.visibility_public">Public</span>
+                <span class="visibility-desc" data-i18n="profile.visibility_public_desc">Visible par tous les utilisateurs</span>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Badges -->
+        <p class="customize-section-title" data-i18n="profile.badges_section_title">Badges à afficher</p>
+        <div id="customize-badges-list" class="customize-list"></div>
+
+        <!-- Séances -->
+        <p class="customize-section-title" data-i18n="profile.sessions_section_title">Séances à partager</p>
+        <div id="customize-sessions-list" class="customize-list"></div>
+
+        <button id="btn-save-customize-profile" class="btn-primary btn-full" style="margin-top:20px" data-i18n="profile.save">Enregistrer</button>
+      </div>
     </div>
   </div>
 

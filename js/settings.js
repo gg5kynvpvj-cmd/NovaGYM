@@ -520,6 +520,109 @@ window.Settings = (() => {
     });
   }
 
+  /* ─── Personnaliser le profil public ────────────────────── */
+  function initCustomizeProfile() {
+    document.getElementById('btn-customize-profile')?.addEventListener('click', () => {
+      const profile  = App.state.profile;
+      const vis      = profile?.visibility || 'private';
+      const radio    = document.querySelector(`input[name="profile-visibility"][value="${vis}"]`);
+      if (radio) radio.checked = true;
+
+      // Badges gagnés
+      const badgesContainer = document.getElementById('customize-badges-list');
+      if (badgesContainer) {
+        const earned     = App.state.badges || [];
+        const earnedIds  = earned.map(b => b.type || b.id);
+        const displayed  = profile?.displayed_badges || [];
+        if (earnedIds.length === 0) {
+          badgesContainer.innerHTML = `<p class="social-empty">${I18n.t('profile.no_badges')}</p>`;
+        } else {
+          badgesContainer.innerHTML = Badges.ALL_BADGES
+            .filter(b => earnedIds.includes(b.id))
+            .map(b => `
+              <label class="customize-check-item">
+                <input type="checkbox" name="displayed-badge" value="${b.id}" ${displayed.includes(b.id) ? 'checked' : ''}>
+                <span class="customize-check-label">${b.emoji} ${b.name}</span>
+              </label>
+            `).join('');
+        }
+      }
+
+      // Séances complétées (max 30, plus récentes en premier)
+      const sessionsContainer = document.getElementById('customize-sessions-list');
+      if (sessionsContainer) {
+        const sessions    = (App.state.sessions || []).filter(s => s.completed);
+        const shared      = profile?.shared_sessions || [];
+        const sharedIds   = shared.map(s => s.id);
+        const locale      = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+        const sorted      = [...sessions].sort((a, b) =>
+          new Date(b.date || b.created_at) - new Date(a.date || a.created_at)
+        ).slice(0, 30);
+
+        if (sorted.length === 0) {
+          sessionsContainer.innerHTML = `<p class="social-empty">${I18n.t('profile.no_sessions')}</p>`;
+        } else {
+          sessionsContainer.innerHTML = sorted.map(s => {
+            const title = I18n.t('session.' + s.type) || s.type || I18n.t('profile.session_default');
+            const date  = new Date(s.date || s.created_at).toLocaleDateString(locale);
+            const nbEx  = (s.exercises || []).length;
+            return `
+              <label class="customize-check-item">
+                <input type="checkbox" name="shared-session" value="${s.id}" ${sharedIds.includes(s.id) ? 'checked' : ''}>
+                <div class="customize-session-label">
+                  <span class="customize-session-title">${title}</span>
+                  <span class="customize-session-meta">${date} · ${nbEx} ex.</span>
+                </div>
+              </label>
+            `;
+          }).join('');
+        }
+      }
+
+      openModal('modal-customize-profile');
+    });
+
+    document.getElementById('btn-close-customize-profile')?.addEventListener('click', () => {
+      closeModal('modal-customize-profile');
+    });
+
+    document.getElementById('modal-customize-profile')?.addEventListener('click', function(e) {
+      if (e.target === this) closeModal('modal-customize-profile');
+    });
+
+    document.getElementById('btn-save-customize-profile')?.addEventListener('click', async () => {
+      const profile = App.state.profile;
+      if (!profile) return;
+
+      const visibility = document.querySelector('input[name="profile-visibility"]:checked')?.value || 'private';
+
+      const displayed_badges = [...document.querySelectorAll('input[name="displayed-badge"]:checked')]
+        .map(el => el.value);
+
+      const sharedIds = [...document.querySelectorAll('input[name="shared-session"]:checked')]
+        .map(el => el.value);
+      const sessions = (App.state.sessions || []).filter(s => s.completed);
+      const shared_sessions = sessions
+        .filter(s => sharedIds.includes(s.id))
+        .map(s => ({
+          id:        s.id,
+          date:      (s.date || s.created_at || '').slice(0, 10),
+          type:      s.type || '',
+          exercises: (s.exercises || []).length,
+        }));
+
+      const updated = { ...profile, visibility, displayed_badges, shared_sessions };
+      App.state.profile = updated;
+      App.local.set('profile', updated);
+
+      if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
+        await App.supabase.from('profiles').upsert(updated, { onConflict: 'id' });
+      }
+
+      closeModal('modal-customize-profile');
+    });
+  }
+
   /* ─── Sync manuel ───────────────────────────────────────── */
   function initSyncButton() {
     document.getElementById('btn-sync-now')?.addEventListener('click', async () => {
@@ -629,6 +732,7 @@ window.Settings = (() => {
     initLanguage();
     initEditProfile();
     initChangeUsername();
+    initCustomizeProfile();
     initExport();
     initReset();
     initHelp();

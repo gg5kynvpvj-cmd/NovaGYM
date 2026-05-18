@@ -59,7 +59,7 @@ window.Social = (() => {
         if (anon) {
           const { data: profiles } = await anon
             .from('profiles')
-            .select('id, username, avatar_url, goal, program_type, level')
+            .select('id, username, avatar_url, goal, program_type, level, visibility, displayed_badges, shared_sessions')
             .in('id', otherIds);
           if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
         }
@@ -254,41 +254,69 @@ window.Social = (() => {
   }
 
   /* ─── Modal profil ami ────────────────────────────── */
-  const GOAL_LABELS = {
-    lose_weight: '🔥 Perte de poids', build_muscle: '💪 Prise de masse',
-    maintain: '⚖️ Maintien', endurance: '🏃 Endurance', general_fitness: '✨ Forme générale',
-  };
-  const LEVEL_LABELS = {
-    beginner: '🌱 Débutant', intermediate: '⚡ Intermédiaire', advanced: '🔥 Avancé',
-  };
-  const PROGRAM_LABELS = {
-    ppl: 'PPL', upper_lower: 'Upper / Lower', full_body: 'Full Body',
-    bro_split: 'Bro Split', home: 'Maison', custom: 'Personnalisé',
-  };
-
   function openProfile(friendshipId, name) {
-    document.getElementById('friend-modal-name').textContent = name;
     document.getElementById('btn-remove-friend').dataset.id = friendshipId;
 
     const f = friends.find(f => f.id === friendshipId);
     const p = f ? friendProfile(f) : null;
     const content = document.getElementById('friend-profile-content');
     if (!content) return;
+    if (!p) { content.innerHTML = ''; document.getElementById('modal-friend-profile')?.classList.remove('hidden'); return; }
 
-    if (!p) { content.innerHTML = ''; return; }
-
-    const rows = [
-      p.goal         ? `<div class="friend-stat-row"><span class="friend-stat-lbl">${I18n.t('social.profile_goal')}</span><span>${GOAL_LABELS[p.goal] || p.goal}</span></div>` : '',
-      p.level        ? `<div class="friend-stat-row"><span class="friend-stat-lbl">${I18n.t('social.profile_level')}</span><span>${LEVEL_LABELS[p.level] || p.level}</span></div>` : '',
-      p.program_type ? `<div class="friend-stat-row"><span class="friend-stat-lbl">${I18n.t('social.profile_program')}</span><span>${PROGRAM_LABELS[p.program_type] || p.program_type}</span></div>` : '',
-    ].join('');
-
-    content.innerHTML = `
-      <div class="friend-profile-body">
-        <div class="friend-profile-avatar-wrap">${avatarEl(p.avatar_url, p.username)}</div>
-        ${rows}
+    let html = `
+      <div class="friend-profile-header">
+        ${avatarEl(p.avatar_url, p.username)}
+        <span class="friend-profile-username">${p.username}</span>
       </div>
     `;
+
+    const vis = p.visibility || 'private';
+
+    if (vis === 'private') {
+      html += `<p class="friend-profile-private">${I18n.t('profile.private_msg')}</p>`;
+    } else {
+      const displayedIds   = Array.isArray(p.displayed_badges) ? p.displayed_badges : [];
+      const sharedSessions = Array.isArray(p.shared_sessions)  ? p.shared_sessions  : [];
+
+      if (displayedIds.length > 0) {
+        const badgeDefs = (Badges.ALL_BADGES || []).filter(b => displayedIds.includes(b.id));
+        html += `
+          <div class="friend-profile-section">
+            <p class="friend-profile-section-title">${I18n.t('profile.badges_section')}</p>
+            <div class="friend-profile-badges">
+              ${badgeDefs.map(b => `<span class="friend-badge-chip">${b.emoji} ${b.name}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (sharedSessions.length > 0) {
+        const locale = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+        html += `
+          <div class="friend-profile-section">
+            <p class="friend-profile-section-title">${I18n.t('profile.sessions_section')}</p>
+            <div class="friend-profile-sessions">
+              ${sharedSessions.map(s => {
+                const title = (window.I18n ? I18n.t('session.' + s.type) : '') || s.type || I18n.t('profile.session_default');
+                const date  = s.date ? new Date(s.date).toLocaleDateString(locale) : '';
+                return `
+                  <div class="friend-session-item">
+                    <span class="friend-session-title">${title}</span>
+                    <span class="friend-session-meta">${date}${s.exercises ? ` · ${s.exercises} ${I18n.t('profile.exercises_count')}` : ''}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (displayedIds.length === 0 && sharedSessions.length === 0) {
+        html += `<p class="social-empty" style="margin-top:16px">${I18n.t('profile.nothing_shared')}</p>`;
+      }
+    }
+
+    content.innerHTML = html;
     document.getElementById('modal-friend-profile')?.classList.remove('hidden');
   }
 
