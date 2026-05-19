@@ -57,7 +57,7 @@ window.Social = (() => {
       try {
         const { data: profiles } = await App.supabase
           .from('profiles')
-          .select('id, username, avatar_url, goal, program_type, level, visibility, displayed_badges, best_performance')
+          .select('id, username, avatar_url, goal, program_type, level, visibility, displayed_badges, best_performance, bio')
           .in('id', otherIds);
         if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
       } catch { }
