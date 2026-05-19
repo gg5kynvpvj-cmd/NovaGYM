@@ -898,15 +898,20 @@ window.Groups = (() => {
 
     list.innerHTML = myGroups.length === 0
       ? `<p class="social-empty">${t('group.no_groups')}</p>`
-      : myGroups.map(g => `
+      : myGroups.map(g => {
+          const avatarHtml = g.cover_url
+            ? `<img src="${g.cover_url}" class="group-card-avatar" style="object-fit:cover;" alt="${g.name.charAt(0).toUpperCase()}">`
+            : `<div class="group-card-avatar">${g.name.charAt(0).toUpperCase()}</div>`;
+          return `
           <div class="group-card" data-gid="${g.id}">
-            <div class="group-card-avatar">${g.name.charAt(0).toUpperCase()}</div>
+            ${avatarHtml}
             <div class="group-card-info">
               <span class="group-card-name">${g.name}</span>
               <span class="group-card-meta">${g.member_count} membre${g.member_count !== 1 ? 's' : ''}${g.role === 'owner' ? ' · Admin' : ''}</span>
             </div>
             <span class="settings-arrow">›</span>
-          </div>`).join('');
+          </div>`;
+        }).join('');
 
     list.querySelectorAll('.group-card').forEach(card =>
       card.addEventListener('click', () => openGroup(card.dataset.gid)));
