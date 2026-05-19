@@ -156,55 +156,11 @@ window.DevTools = (() => {
     if (ver) { ver.textContent = 'NovaGYM v1.0'; ver.classList.remove('dev-active'); }
   }
 
-  /* ─── Activation : appui long (mobile) ou 5 clics (PC) ─── */
-  function initVersionActivation() {
-    const ver = document.querySelector('.app-version');
-    if (!ver) return;
-
-    // Appui long — mobile / trackpad
-    ver.addEventListener('pointerdown', () => {
-      pressTimer = setTimeout(() => {
-        if (App.local.get(DEV_KEY)) disableDev();
-        else enableDev();
-      }, 2000);
-    });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(e => {
-      ver.addEventListener(e, () => clearTimeout(pressTimer));
-    });
-
-    // 5 clics rapides — souris PC
-    let clickCount = 0;
-    let clickTimer  = null;
-    ver.addEventListener('click', () => {
-      clickCount++;
-      clearTimeout(clickTimer);
-      clickTimer = setTimeout(() => { clickCount = 0; }, 800);
-      if (clickCount >= 5) {
-        clickCount = 0;
-        clearTimeout(clickTimer);
-        if (App.local.get(DEV_KEY)) disableDev();
-        else enableDev();
-      }
-    });
-  }
-
   /* ─── Init ──────────────────────────────────────────────── */
   function init() {
-    // Restaure la police sauvegardée immédiatement
+    // Restaure uniquement la police choisie — pas d'activation dev en production
     const savedFont = App.local.get(FONT_KEY);
     if (savedFont) applyFont(savedFont);
-
-    initVersionActivation();
-
-    // Bouton désactiver dans la section dev
-    document.getElementById('btn-dev-disable')?.addEventListener('click', disableDev);
-
-    // Affiche la section si le mode était actif
-    if (App.local.get(DEV_KEY)) {
-      const ver = document.querySelector('.app-version');
-      if (ver) { ver.textContent = 'NovaGYM v1.0 ⚙'; ver.classList.add('dev-active'); }
-      showDevSection();
-    }
   }
 
   return { init, selectFont };
