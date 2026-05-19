@@ -3521,6 +3521,17 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   object-fit: cover; cursor: zoom-in; display: block;
   transition: max-width .2s, max-height .2s;
 }
+
+/* Image éphémère */
+.chat-ephemeral-wrap { display: flex; flex-direction: column; gap: 5px; }
+.chat-img-save {
+  font-size: 12px; color: var(--text-2); text-decoration: none;
+  text-align: center; padding: 2px 4px;
+  opacity: 0.75; transition: opacity 0.15s, color 0.15s;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-card);
+}
+.chat-img-save:hover { opacity: 1; color: var(--accent); border-color: var(--accent-30); }
 .chat-img.expanded { max-width: 90vw; max-height: 60vh; cursor: zoom-out; }
 
 /* Carte séance partagée */

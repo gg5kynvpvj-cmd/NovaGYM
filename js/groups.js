@@ -415,6 +415,7 @@ window.Groups = (() => {
       .from('group_messages')
       .select('*')
       .eq('group_id', groupId)
+      .neq('message_type', 'image') // images éphémères — pas de persistance
       .order('created_at', { ascending: true })
       .limit(100);
 
@@ -455,7 +456,13 @@ window.Groups = (() => {
       lang() === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
 
     let bubbleContent = '';
-    if (msg.message_type === 'image' && msg.image_url) {
+    if (msg.message_type === 'ephemeral_image' && msg.image_data) {
+      bubbleContent = `
+        <div class="chat-ephemeral-wrap">
+          <img src="${msg.image_data}" class="chat-img" alt="photo">
+          <a class="chat-img-save" href="${msg.image_data}" download="photo.jpg">⬇ ${lang() === 'fr' ? 'Enregistrer' : 'Save'}</a>
+        </div>`;
+    } else if (msg.message_type === 'image' && msg.image_url) {
       bubbleContent = `<img src="${msg.image_url}" class="chat-img" alt="photo">`;
     } else if (msg.message_type === 'session' && msg.session_data) {
       const sd = typeof msg.session_data === 'string'
@@ -520,31 +527,71 @@ window.Groups = (() => {
     }
   }
 
+  /* ─── Compresse une image en base64 (canvas) ───────────── */
+  function compressImage(file, maxWidth, quality) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(null);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ─── Envoi image éphémère via Realtime (pas de stockage) ── */
   async function handleImageUpload(file) {
-    if (!file || !currentGroup) return;
-    const ext  = file.name.split('.').pop() || 'jpg';
-    const path = `${currentGroup.id}/${Date.now()}.${ext}`;
+    if (!file || !currentGroup || !chatChannel) return;
 
-    const { error: upErr } = await App.supabase.storage
-      .from('group-chat').upload(path, file, { contentType: file.type });
-    if (upErr) { console.warn('Upload image:', upErr.message); return; }
+    const btnImg = document.getElementById('btn-chat-image');
+    if (btnImg) { btnImg.disabled = true; btnImg.textContent = '...'; }
 
-    const { data: urlData } = App.supabase.storage.from('group-chat').getPublicUrl(path);
-    const imageUrl = urlData?.publicUrl;
-    if (!imageUrl) return;
-
-    const { data: msg, error } = await App.supabase.from('group_messages').insert({
-      group_id: currentGroup.id, user_id: uid(),
-      message_type: 'image', image_url: imageUrl,
-    }).select().single();
-
-    if (!error && msg) {
-      chatMessages.push({ ...msg, profile: {
-        username:   App.state.profile?.username || '?',
-        avatar_url: App.state.profile?.avatar_url || App.local.get('avatar_url') || null,
-      }});
-      renderChatMessages();
+    const imageData = await compressImage(file, 700, 0.72);
+    if (!imageData) {
+      if (btnImg) { btnImg.disabled = false; btnImg.textContent = '🖼'; }
+      return;
     }
+
+    const msgId   = 'eph_' + Date.now();
+    const profile = {
+      username:   App.state.profile?.username  || '?',
+      avatar_url: App.state.profile?.avatar_url || App.local.get('avatar_url') || null,
+    };
+
+    // Ajout local immédiat
+    chatMessages.push({
+      id: msgId, user_id: uid(),
+      message_type: 'ephemeral_image',
+      image_data: imageData,
+      created_at: new Date().toISOString(),
+      profile,
+    });
+    renderChatMessages();
+
+    // Broadcast aux autres membres (non stocké en DB)
+    chatChannel.send({
+      type:    'broadcast',
+      event:   'ephemeral_image',
+      payload: {
+        id: msgId, user_id: uid(),
+        image_data: imageData,
+        created_at: new Date().toISOString(),
+        username:   profile.username,
+        avatar_url: profile.avatar_url,
+      },
+    });
+
+    if (btnImg) { btnImg.disabled = false; btnImg.textContent = '🖼'; }
   }
 
   function openShareSessionPicker() {
@@ -645,7 +692,7 @@ window.Groups = (() => {
         filter: `group_id=eq.${groupId}`,
       }, async (payload) => {
         const msg = payload.new;
-        if (msg.user_id === uid()) return; // already added optimistically
+        if (msg.user_id === uid()) return;
 
         let profile = { username: '?' };
         if (App.supabase) {
@@ -654,6 +701,21 @@ window.Groups = (() => {
           if (data) profile = data;
         }
         chatMessages.push({ ...msg, profile });
+        if (!document.getElementById('grp-tab-chat')?.classList.contains('hidden')) {
+          renderChatMessages();
+        }
+      })
+      .on('broadcast', { event: 'ephemeral_image' }, payload => {
+        const d = payload.payload;
+        if (!d || d.user_id === uid()) return; // déjà ajouté localement
+        chatMessages.push({
+          id:           d.id,
+          user_id:      d.user_id,
+          message_type: 'ephemeral_image',
+          image_data:   d.image_data,
+          created_at:   d.created_at,
+          profile: { username: d.username || '?', avatar_url: d.avatar_url || null },
+        });
         if (!document.getElementById('grp-tab-chat')?.classList.contains('hidden')) {
           renderChatMessages();
         }
