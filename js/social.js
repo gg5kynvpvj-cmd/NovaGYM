@@ -258,7 +258,7 @@ window.Social = (() => {
   }
 
   /* ─── Modal profil ami ────────────────────────────── */
-  function openProfile(friendshipId, name) {
+  function openProfile(friendshipId) {
     document.getElementById('btn-remove-friend').dataset.id = friendshipId;
 
     const f = friends.find(f => f.id === friendshipId);
@@ -267,44 +267,59 @@ window.Social = (() => {
     if (!content) return;
     if (!p) { content.innerHTML = ''; document.getElementById('modal-friend-profile')?.classList.remove('hidden'); return; }
 
+    const avatarHtml = p.avatar_url
+      ? `<div class="fp-avatar"><img src="${p.avatar_url}" alt="${p.username}"></div>`
+      : `<div class="fp-avatar">${(p.username || '?').charAt(0).toUpperCase()}</div>`;
+
     let html = `
-      <div class="friend-profile-header">
-        ${avatarEl(p.avatar_url, p.username)}
-        <span class="friend-profile-username">${p.username}</span>
+      <div class="fp-header">
+        ${avatarHtml}
+        <p class="fp-username">${p.username || ''}</p>
       </div>
     `;
 
     const vis = p.visibility || 'private';
 
     if (vis === 'private') {
-      html += `<p class="friend-profile-private">${I18n.t('profile.private_msg')}</p>`;
+      html += `<p class="fp-private">${I18n.t('profile.private_msg')}</p>`;
     } else {
-      const displayedIds  = Array.isArray(p.displayed_badges) ? p.displayed_badges : [];
-      const bestPerf      = p.best_performance || null;
+      const displayedIds = Array.isArray(p.displayed_badges) ? p.displayed_badges : [];
+      const badgeDefs    = (Badges.ALL_BADGES || []).filter(b => displayedIds.includes(b.id));
+      const bestPerf     = p.best_performance || null;
+      const bio          = p.bio || '';
 
-      if (displayedIds.length > 0) {
-        const badgeDefs = (Badges.ALL_BADGES || []).filter(b => displayedIds.includes(b.id));
+      if (badgeDefs.length > 0) {
         html += `
-          <div class="friend-profile-section">
-            <p class="friend-profile-section-title">${I18n.t('profile.badges_section')}</p>
-            <div class="friend-profile-badges">
+          <div class="fp-section">
+            <p class="fp-section-title">${I18n.t('profile.badges_section')}</p>
+            <div class="fp-badges-row">
               ${badgeDefs.map(b => {
                 const bName = window.I18n ? I18n.t('badge.' + b.id + '.name') : b.id;
-                return `<span class="friend-badge-chip"><img src="${Badges.img(b.id)}" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;" alt="" onerror="this.style.display='none'">${bName}</span>`;
+                return `<div class="fp-badge-item" data-badge-id="${b.id}" title="${bName}">
+                  <img class="fp-badge-img" src="${Badges.img(b.id)}" alt="${bName}" onerror="this.style.display='none'">
+                </div>`;
               }).join('')}
             </div>
           </div>
         `;
       }
 
-      if (bestPerf && bestPerf.value) {
-        const locale   = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
-        const lang     = window.I18n ? I18n.lang : 'fr';
-        const label    = lang === 'fr' ? (bestPerf.label_fr || bestPerf.type) : (bestPerf.label_en || bestPerf.type);
-        const dateStr  = bestPerf.date ? new Date(bestPerf.date).toLocaleDateString(locale) : '';
+      if (bio) {
         html += `
-          <div class="friend-profile-section">
-            <p class="friend-profile-section-title">${I18n.t('profile.perf_section')}</p>
+          <div class="fp-section">
+            <p class="fp-bio">${bio.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+          </div>
+        `;
+      }
+
+      if (bestPerf && bestPerf.value) {
+        const locale  = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+        const lang    = window.I18n ? I18n.lang : 'fr';
+        const label   = lang === 'fr' ? (bestPerf.label_fr || bestPerf.type) : (bestPerf.label_en || bestPerf.type);
+        const dateStr = bestPerf.date ? new Date(bestPerf.date).toLocaleDateString(locale) : '';
+        html += `
+          <div class="fp-section">
+            <p class="fp-section-title">${I18n.t('profile.perf_section')}</p>
             <div class="friend-perf-card">
               <span class="friend-perf-icon">${bestPerf.icon || '🏆'}</span>
               <div class="friend-perf-info">
@@ -316,13 +331,30 @@ window.Social = (() => {
         `;
       }
 
-      if (displayedIds.length === 0 && !bestPerf) {
+      if (badgeDefs.length === 0 && !bestPerf && !bio) {
         html += `<p class="social-empty" style="margin-top:16px">${I18n.t('profile.nothing_shared')}</p>`;
       }
     }
 
     content.innerHTML = html;
+
+    // Clic badge → zoom
+    content.querySelectorAll('.fp-badge-item').forEach(el => {
+      el.addEventListener('click', () => showBadgeZoom(el.dataset.badgeId));
+    });
+
     document.getElementById('modal-friend-profile')?.classList.remove('hidden');
+  }
+
+  function showBadgeZoom(badgeId) {
+    const overlay = document.getElementById('badge-zoom-overlay');
+    if (!overlay) return;
+    const name = window.I18n ? I18n.t('badge.' + badgeId + '.name') : badgeId;
+    const desc = window.I18n ? I18n.t('badge.' + badgeId + '.desc') : '';
+    document.getElementById('badge-zoom-img').src = Badges.img(badgeId);
+    document.getElementById('badge-zoom-name').textContent = name;
+    document.getElementById('badge-zoom-desc').textContent = desc;
+    overlay.classList.remove('hidden');
   }
 
   /* ─── Init ───────────────────────────────────────── */
@@ -332,6 +364,9 @@ window.Social = (() => {
     });
     document.getElementById('modal-friend-profile')?.addEventListener('click', function(e) {
       if (e.target === this) this.classList.add('hidden');
+    });
+    document.getElementById('badge-zoom-overlay')?.addEventListener('click', () => {
+      document.getElementById('badge-zoom-overlay').classList.add('hidden');
     });
     document.getElementById('btn-remove-friend')?.addEventListener('click', async function() {
       if (!confirm(I18n.t('social.confirm_remove'))) return;

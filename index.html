@@ -893,12 +893,22 @@
           <p class="pe-hint" data-i18n="profile.badge_hint">Appuie sur un emplacement pour changer</p>
         </div>
 
+        <!-- Bio preview -->
+        <div class="pe-preview-section" id="pe-bio-preview-section">
+          <p id="pe-preview-bio" class="pe-preview-bio"></p>
+        </div>
+
         <!-- Performance -->
         <div class="pe-preview-section" id="pe-perf-preview-section">
           <p class="pe-preview-section-label" data-i18n="profile.perf_section">MEILLEURE PERFORMANCE</p>
           <div id="pe-perf-card"></div>
         </div>
       </div>
+
+      <!-- DESCRIPTION -->
+      <p class="pe-section-label" data-i18n="profile.bio_label">DESCRIPTION</p>
+      <textarea id="pe-bio-input" class="pe-bio-input" maxlength="200" data-i18n-placeholder="profile.bio_placeholder" placeholder="Décris-toi en quelques mots..."></textarea>
+      <p class="pe-char-count"><span id="pe-bio-count">0</span>/200</p>
 
       <!-- PERFORMANCE À CHOISIR -->
       <p class="pe-section-label" data-i18n="profile.perf_pick_label">PERFORMANCE À METTRE EN AVANT</p>
@@ -1013,14 +1023,23 @@
 
   <!-- Profil ami -->
   <div id="modal-friend-profile" class="modal-overlay hidden">
-    <div class="modal-sheet">
+    <div class="modal-sheet modal-sheet-tall">
       <div class="modal-handle"></div>
       <div class="modal-header">
         <h2 class="modal-title" data-i18n="social.view_profile">Profil</h2>
         <button id="btn-close-friend-profile" class="modal-close">✕</button>
       </div>
-      <div id="friend-profile-content"></div>
+      <div id="friend-profile-content" class="friend-profile-content"></div>
       <button id="btn-remove-friend" class="btn-danger btn-full" style="margin-top:16px" data-i18n="social.remove_friend">Supprimer de mes amis</button>
+    </div>
+  </div>
+
+  <!-- Zoom badge -->
+  <div id="badge-zoom-overlay" class="badge-zoom-overlay hidden">
+    <div class="badge-zoom-content">
+      <img id="badge-zoom-img" src="" alt="" class="badge-zoom-img">
+      <p id="badge-zoom-name" class="badge-zoom-name"></p>
+      <p id="badge-zoom-desc" class="badge-zoom-desc"></p>
     </div>
   </div>
 

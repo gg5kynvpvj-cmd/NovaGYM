@@ -9,6 +9,7 @@ window.ProfileEditor = (() => {
   let tempBadges     = [null, null, null];
   let tempPerf       = null;
   let tempVisibility = 'private';
+  let tempBio        = '';
 
   /* ─── Types de performance ──────────────────────────── */
   const PERF_TYPES = [
@@ -169,6 +170,15 @@ window.ProfileEditor = (() => {
     `;
   }
 
+  /* ─── Mise à jour bio aperçu ────────────────────────── */
+  function updatePreviewBio() {
+    const el = document.getElementById('pe-preview-bio');
+    const section = document.getElementById('pe-bio-preview-section');
+    if (!el) return;
+    el.textContent = tempBio;
+    if (section) section.style.display = tempBio ? '' : 'none';
+  }
+
   /* ─── Mise à jour aperçu ─────────────────────────────── */
   function updatePreviewBadges() {
     const filled = tempBadges.filter(Boolean);
@@ -272,6 +282,16 @@ window.ProfileEditor = (() => {
       if (e.target === this) this.classList.add('hidden');
     });
 
+    const bioInput = document.getElementById('pe-bio-input');
+    const bioCount = document.getElementById('pe-bio-count');
+    if (bioInput) {
+      bioInput.addEventListener('input', () => {
+        tempBio = bioInput.value;
+        if (bioCount) bioCount.textContent = tempBio.length;
+        updatePreviewBio();
+      });
+    }
+
     document.querySelectorAll('input[name="pe-vis"]').forEach(radio => {
       radio.addEventListener('change', () => {
         tempVisibility = radio.value;
@@ -295,7 +315,7 @@ window.ProfileEditor = (() => {
         label_en: PERF_TYPES.find(p => p.id === tempPerf)?.en || '',
       } : null;
 
-      const updated = { ...profile, visibility: tempVisibility, displayed_badges, best_performance };
+      const updated = { ...profile, visibility: tempVisibility, displayed_badges, best_performance, bio: tempBio };
       App.state.profile = updated;
       App.local.set('profile', updated);
 
@@ -322,6 +342,12 @@ window.ProfileEditor = (() => {
     tempBadges     = [saved[0] || null, saved[1] || null, saved[2] || null];
     tempPerf       = profile?.best_performance?.type || null;
     tempVisibility = profile?.visibility || 'private';
+    tempBio        = profile?.bio || '';
+
+    const bioInput = document.getElementById('pe-bio-input');
+    const bioCount = document.getElementById('pe-bio-count');
+    if (bioInput) { bioInput.value = tempBio; }
+    if (bioCount) { bioCount.textContent = tempBio.length; }
 
     // Visibility radio
     const radio = document.querySelector(`input[name="pe-vis"][value="${tempVisibility}"]`);
@@ -329,6 +355,7 @@ window.ProfileEditor = (() => {
 
     updatePreviewHeader();
     renderBadgeSlots();
+    updatePreviewBio();
     renderPerfOptions();
     updatePerfCard();
 

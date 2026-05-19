@@ -2876,35 +2876,79 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .btn-soc-add     { background: var(--accent); color: #000; }
 .btn-soc-view    { background: var(--bg-elevated); color: var(--text); margin-left: auto; }
 
-/* Modal profil ami — header */
-.friend-profile-header {
+/* Modal profil ami */
+.modal-sheet-tall { max-height: 88dvh; }
+.friend-profile-content { overflow-y: auto; }
+
+.fp-header {
   display: flex; align-items: center; gap: 16px;
-  padding: 4px 0 20px;
+  padding: 4px 0 24px;
 }
-.friend-profile-header .social-avatar { width: 64px; height: 64px; font-size: 24px; flex-shrink: 0; }
-.friend-profile-username { font-size: 20px; font-weight: 700; color: var(--text); }
-.friend-profile-private {
+.fp-avatar { width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bg-card-2); display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: var(--text); overflow: hidden;
+}
+.fp-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.fp-username { font-size: 22px; font-weight: 800; color: var(--text); }
+
+.fp-section { padding: 16px 0; border-top: 1px solid var(--border); }
+.fp-section:first-of-type { border-top: none; padding-top: 0; }
+.fp-section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em;
+  color: var(--text-2); text-transform: uppercase; margin-bottom: 14px;
+}
+
+.fp-badges-row { display: flex; gap: 16px; }
+.fp-badge-item {
+  width: 80px; height: 80px; cursor: pointer;
+  transition: transform 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.fp-badge-item:active { transform: scale(0.92); }
+.fp-badge-img { width: 80px; height: 80px; object-fit: contain; }
+
+.fp-bio {
+  font-size: 15px; color: var(--text-2); line-height: 1.65;
+  white-space: pre-wrap; word-break: break-word;
+}
+
+.fp-private {
   text-align: center; color: var(--text-2); font-size: 15px;
-  padding: 20px 0; font-style: italic;
+  padding: 24px 0; font-style: italic;
 }
-.friend-profile-section { margin-top: 4px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-.friend-profile-section:last-of-type { border-bottom: none; }
-.friend-profile-section-title {
-  font-size: 11px; font-weight: 700; letter-spacing: .08em;
-  color: var(--text-2); text-transform: uppercase; margin-bottom: 10px;
+
+/* Badge zoom overlay */
+.badge-zoom-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
 }
-.friend-profile-badges { display: flex; flex-wrap: wrap; gap: 8px; }
-.friend-badge-chip {
-  background: var(--bg-elevated); border: 1px solid var(--border);
-  border-radius: 20px; padding: 5px 12px; font-size: 13px; color: var(--text);
+.badge-zoom-overlay.hidden { display: none; }
+.badge-zoom-content {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 32px;
 }
-.friend-profile-sessions { display: flex; flex-direction: column; gap: 8px; }
-.friend-session-item {
-  display: flex; flex-direction: column; gap: 2px;
-  background: var(--bg-elevated); border-radius: 10px; padding: 10px 14px;
+.badge-zoom-img { width: 200px; height: 200px; object-fit: contain; }
+.badge-zoom-name { font-size: 20px; font-weight: 800; color: var(--text); text-align: center; }
+.badge-zoom-desc { font-size: 14px; color: var(--text-2); text-align: center; max-width: 260px; line-height: 1.5; }
+
+/* Bio editor */
+.pe-bio-input {
+  width: 100%; background: var(--bg-card-2);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-size: 15px; line-height: 1.5;
+  padding: 12px 14px; resize: none; min-height: 90px;
+  transition: border-color 0.2s;
 }
-.friend-session-title { font-size: 14px; font-weight: 600; color: var(--text); }
-.friend-session-meta { font-size: 12px; color: var(--text-2); }
+.pe-bio-input:focus { outline: none; border-color: var(--accent); }
+.pe-char-count { font-size: 11px; color: var(--text-3); text-align: right; margin-top: 4px; }
+.pe-preview-bio {
+  font-size: 14px; color: var(--text-2); line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word; min-height: 1em;
+  font-style: italic;
+}
 
 /* ─── Page Éditeur de profil public ─────────────────────── */
 #page-profile-editor {
