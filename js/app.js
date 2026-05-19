@@ -140,6 +140,7 @@
     Groups.init();
     ProfileEditor.init();
     Settings.init();
+    DevTools.init();
   }
 
   /* ─── CSS animation helper (tab content) ─────────────── */

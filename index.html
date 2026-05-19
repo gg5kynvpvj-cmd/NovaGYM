@@ -803,6 +803,49 @@
         </div>
       </div>
 
+      <!-- ─── Mode DEV (activé par appui long sur la version) ── -->
+      <div id="dev-section" class="hidden">
+        <p class="settings-section-title dev-section-badge">⚙ MODE DEV</p>
+        <div class="settings-section dev-settings-section">
+
+          <div class="dev-font-header">
+            <div>
+              <p class="dev-font-header-title">Police d'écriture</p>
+              <p class="dev-font-header-sub">Fais défiler et appuie pour tester</p>
+            </div>
+            <div class="dev-font-active">
+              <span id="dev-font-active-name">Système</span>
+              <span id="dev-font-active-desc" class="dev-font-active-desc">SF Pro / Roboto selon appareil</span>
+            </div>
+          </div>
+
+          <div id="dev-font-picker" class="dev-font-grid"></div>
+
+          <!-- Aperçu live -->
+          <div class="dev-font-preview">
+            <div class="dev-fp-row">
+              <div>
+                <p class="dev-fp-section-label">Titre</p>
+                <p class="dev-fp-title">Performance</p>
+              </div>
+              <div class="dev-fp-right">
+                <p class="dev-fp-section-label">Statistique</p>
+                <p class="dev-fp-stat">1 234 <span class="dev-fp-unit">kg</span></p>
+              </div>
+            </div>
+            <p class="dev-fp-body">Lundi · Pectoraux & Triceps · 4 exercices</p>
+            <div class="dev-fp-btn-mock">Démarrer la séance</div>
+            <p class="dev-fp-chat">"Super séance aujourd'hui, continue comme ça !"</p>
+          </div>
+
+          <div id="btn-dev-disable" class="settings-item danger" style="cursor:pointer;margin-top:4px">
+            <span class="settings-item-label">Désactiver le mode DEV</span>
+            <span class="settings-arrow">›</span>
+          </div>
+
+        </div>
+      </div>
+
       <button id="btn-logout" class="btn-logout" data-i18n="settings.logout">Se déconnecter</button>
       <p class="app-version">NovaGYM v1.0</p>
     </div>
@@ -1835,6 +1878,7 @@
 <script src="/js/groups.js"></script>
 <script src="/js/profile-editor.js"></script>
 <script src="/js/settings.js"></script>
+<script src="/js/dev.js"></script>
 <script src="/js/i18n.js"></script>
 <script src="/js/app.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>
