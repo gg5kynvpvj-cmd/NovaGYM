@@ -323,6 +323,17 @@ window.Stats = (() => {
     }, 40);
   }
 
+  /* ─── Palier séances (challenge card) ────────────────── */
+  function renderSessionsChallenge() {
+    Badges.renderSessionsChallenge('sessions-challenge-card');
+    document.getElementById('btn-open-sessions-detail')?.addEventListener('click', openSessionsDetail);
+  }
+
+  function openSessionsDetail() {
+    Badges.buildSessionsDetail('sessions-challenge-detail');
+    document.getElementById('modal-sessions-challenge')?.classList.remove('hidden');
+  }
+
   /* ─── Refresh complet ─────────────────────────────────── */
   async function refresh() {
     // Charge les sessions
@@ -336,6 +347,7 @@ window.Stats = (() => {
     drawScatterChart(App.state.sessions || [], volumeRange);
     drawRepsChart(App.state.sessions || [], repsRange);
     renderWeeklyCalendar();
+    renderSessionsChallenge();
     Badges.renderBadges('badges-grid');
     renderCounters();
   }
@@ -402,6 +414,14 @@ window.Stats = (() => {
         App.local.set('custom_schedule', {});
         renderWeeklyCalendar();
       }
+    });
+
+    // Modal détail séances
+    document.getElementById('btn-close-sessions-challenge')?.addEventListener('click', () => {
+      document.getElementById('modal-sessions-challenge')?.classList.add('hidden');
+    });
+    document.getElementById('modal-sessions-challenge')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
     });
 
     // Re-draw au resize pour que le canvas reste net

@@ -468,6 +468,11 @@
       </div>
 
       <div class="stats-card">
+        <h3 class="card-title" data-i18n="stats.sessions_challenge">Défi séances</h3>
+        <div id="sessions-challenge-card"></div>
+      </div>
+
+      <div class="stats-card">
         <h3 class="card-title" data-i18n="stats.badges_lbl">Badges</h3>
         <div id="badges-grid" class="badges-grid"></div>
       </div>
@@ -1216,6 +1221,18 @@
       </div>
       <div id="workout-lib-list" class="workout-lib-list"></div>
       <button id="btn-save-workout-lib" class="btn-secondary btn-full" style="margin-top:12px" data-i18n="modal.save_workout">💾 Sauvegarder la séance actuelle</button>
+    </div>
+  </div>
+
+  <!-- Détail défi séances -->
+  <div id="modal-sessions-challenge" class="modal-overlay hidden">
+    <div class="modal-sheet modal-sheet-tall">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="stats.sessions_challenge">Défi séances</h2>
+        <button id="btn-close-sessions-challenge" class="modal-close">✕</button>
+      </div>
+      <div id="sessions-challenge-detail" class="scd-list"></div>
     </div>
   </div>
 

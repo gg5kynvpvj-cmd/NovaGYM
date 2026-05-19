@@ -90,6 +90,7 @@
     // Badges
     if (App.state.user) {
       await Badges.loadEarned(App.state.user.id);
+      await Badges.check(App.state.user.id);
     }
 
     // Settings header

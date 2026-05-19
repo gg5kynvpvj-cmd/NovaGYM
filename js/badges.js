@@ -51,30 +51,21 @@ window.Badges = (() => {
       hidden: false,
     },
     // ── Séances ───────────────────────────────────────────
-    {
-      id:     'sessions_10',
-      hidden: false,
-    },
-    {
-      id:     'sessions_50',
-      hidden: false,
-    },
-    {
-      id:     'sessions_100',
-      hidden: false,
-    },
-    {
-      id:     'sessions_250',
-      hidden: true,
-    },
-    {
-      id:     'sessions_500',
-      hidden: true,
-    },
-    {
-      id:     'sessions_1000',
-      hidden: true,
-    },
+    { id: 'sessions_10',   hidden: false, tier: true },
+    { id: 'sessions_50',   hidden: false, tier: true },
+    { id: 'sessions_100',  hidden: false, tier: true },
+    { id: 'sessions_250',  hidden: true,  tier: true },
+    { id: 'sessions_500',  hidden: true,  tier: true },
+    { id: 'sessions_1000', hidden: true,  tier: true },
+  ];
+
+  const SESSION_TIERS = [
+    { id: 'sessions_10',   threshold: 10   },
+    { id: 'sessions_50',   threshold: 50   },
+    { id: 'sessions_100',  threshold: 100  },
+    { id: 'sessions_250',  threshold: 250  },
+    { id: 'sessions_500',  threshold: 500  },
+    { id: 'sessions_1000', threshold: 1000 },
   ];
 
   /* ─── Charge les badges de l'utilisateur ────────────── */
@@ -239,7 +230,17 @@ window.Badges = (() => {
     return `${year}-W${String(week - 1).padStart(2,'0')}`;
   }
 
-  /* ─── Render les badges ──────────────────────────────── */
+  /* ─── Calcule le total de séances (max 2/jour) ──────── */
+  function calcTotalDone(sessions) {
+    const dateCounts = {};
+    (sessions || []).filter(s => s.completed).forEach(s => {
+      const key = (s.date || s.created_at || '').slice(0, 10);
+      dateCounts[key] = (dateCounts[key] || 0) + 1;
+    });
+    return Object.values(dateCounts).reduce((sum, n) => sum + Math.min(n, 2), 0);
+  }
+
+  /* ─── Render les badges (hors paliers séances) ───────── */
   function renderBadges(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -248,8 +249,9 @@ window.Badges = (() => {
     const earnedIds = earned.map(b => b.type || b.id);
     const locale    = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
 
-    // Badges visibles : earned + non-hidden non-earned ; hidden s'affichent seulement si earned
-    const visible = ALL_BADGES.filter(b => !b.special || earnedIds.includes(b.id))
+    // Badges visibles : pas de tier séances, earned + non-hidden non-earned, hidden seulement si earned
+    const visible = ALL_BADGES.filter(b => !b.tier)
+                              .filter(b => !b.special || earnedIds.includes(b.id))
                               .filter(b => !b.hidden   || earnedIds.includes(b.id));
 
     const sorted = [...visible].sort((a, b) =>
@@ -283,6 +285,99 @@ window.Badges = (() => {
     }).join('');
   }
 
-  return { check, loadEarned, checkWeekComplete, renderBadges, calculateStreak, ALL_BADGES, img };
+  /* ─── Palier actuel (carte Stats) ───────────────────── */
+  function renderSessionsChallenge(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const earned    = App.state.badges || [];
+    const earnedIds = earned.map(b => b.type || b.id);
+    const totalDone = calcTotalDone(App.state.sessions || []);
+    const currentIdx = SESSION_TIERS.findIndex(t => !earnedIds.includes(t.id));
+
+    if (currentIdx === -1) {
+      const last = SESSION_TIERS[SESSION_TIERS.length - 1];
+      const name  = window.I18n ? I18n.t('badge.' + last.id + '.name') : last.id;
+      container.innerHTML = `
+        <div class="sc-card sc-card-done">
+          <div class="sc-badge-wrap"><img src="${img(last.id)}" alt="${name}" class="sc-badge-img"></div>
+          <div class="sc-info"><div class="sc-name">${window.I18n ? I18n.t('stats.sessions_challenge_done') : 'Tous les défis complétés !'}</div></div>
+        </div>`;
+      return;
+    }
+
+    const tier     = SESSION_TIERS[currentIdx];
+    const prevMax  = currentIdx > 0 ? SESSION_TIERS[currentIdx - 1].threshold : 0;
+    const range    = tier.threshold - prevMax;
+    const done     = Math.max(0, totalDone - prevMax);
+    const pct      = Math.min(100, Math.round(done / range * 100));
+    const name     = window.I18n ? I18n.t('badge.' + tier.id + '.name') : tier.id;
+    const unit     = window.I18n ? I18n.t('stats.sessions_lbl').toLowerCase() : 'séances';
+
+    container.innerHTML = `
+      <div class="sc-card" id="btn-open-sessions-detail">
+        <div class="sc-badge-wrap"><img src="${img(tier.id)}" alt="${name}" class="sc-badge-img"></div>
+        <div class="sc-info">
+          <div class="sc-name">${name}</div>
+          <div class="sc-progress-text">${totalDone} / ${tier.threshold} ${unit}</div>
+          <div class="sc-bar-wrap"><div class="sc-bar" style="width:${pct}%"></div></div>
+        </div>
+        <span class="sc-arrow">›</span>
+      </div>`;
+  }
+
+  /* ─── Détail complet des paliers (modal) ─────────────── */
+  function buildSessionsDetail(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const earned     = App.state.badges || [];
+    const earnedIds  = earned.map(b => b.type || b.id);
+    const totalDone  = calcTotalDone(App.state.sessions || []);
+    const currentIdx = SESSION_TIERS.findIndex(t => !earnedIds.includes(t.id));
+    const locale     = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+    const unit       = window.I18n ? I18n.t('stats.sessions_lbl').toLowerCase() : 'séances';
+
+    container.innerHTML = SESSION_TIERS.map((tier, idx) => {
+      const isEarned  = earnedIds.includes(tier.id);
+      const isCurrent = idx === currentIdx;
+      const name      = window.I18n ? I18n.t('badge.' + tier.id + '.name') : tier.id;
+
+      if (isEarned) {
+        const entry    = earned.find(b => (b.type || b.id) === tier.id);
+        const dateStr  = entry?.earned_at ? new Date(entry.earned_at).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+        const earned_lbl = window.I18n ? I18n.t('badge.earned_on').replace('%s', dateStr) : `Obtenu le ${dateStr}`;
+        return `
+          <div class="scd-tier scd-earned">
+            <div class="scd-badge-wrap"><img src="${img(tier.id)}" alt="${name}" class="scd-badge-img"><span class="scd-check">✓</span></div>
+            <div class="scd-info"><div class="scd-name">${name}</div><div class="scd-sub">${earned_lbl}</div></div>
+          </div>`;
+      }
+
+      if (isCurrent) {
+        const prevMax = idx > 0 ? SESSION_TIERS[idx - 1].threshold : 0;
+        const range   = tier.threshold - prevMax;
+        const done    = Math.max(0, totalDone - prevMax);
+        const pct     = Math.min(100, Math.round(done / range * 100));
+        return `
+          <div class="scd-tier scd-current">
+            <div class="scd-badge-wrap"><img src="${img(tier.id)}" alt="${name}" class="scd-badge-img"></div>
+            <div class="scd-info">
+              <div class="scd-name">${name}</div>
+              <div class="scd-progress-text">${totalDone} / ${tier.threshold} ${unit}</div>
+              <div class="scd-bar-wrap"><div class="scd-bar" style="width:${pct}%"></div></div>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <div class="scd-tier scd-future">
+          <div class="scd-badge-wrap scd-badge-locked"><img src="${img(tier.id)}" alt="${name}" class="scd-badge-img"><span class="scd-lock">🔒</span></div>
+          <div class="scd-info"><div class="scd-name">${name}</div><div class="scd-sub">${tier.threshold} ${unit}</div></div>
+        </div>`;
+    }).join('');
+  }
+
+  return { check, loadEarned, checkWeekComplete, renderBadges, renderSessionsChallenge, buildSessionsDetail, calculateStreak, ALL_BADGES, img };
 
 })();

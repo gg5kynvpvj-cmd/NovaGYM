@@ -272,6 +272,8 @@ window.I18n = (() => {
       'today.change_session': 'Changer de séance',
       // Stats (new)
       'stats.sessions_lbl': 'Séances',
+      'stats.sessions_challenge': 'Défi séances',
+      'stats.sessions_challenge_done': 'Tous les défis complétés !',
       'stats.streak_lbl': 'Streak',
       'stats.badges_lbl': 'Badges',
       'stats.volume_title': 'Volume',
@@ -810,6 +812,8 @@ window.I18n = (() => {
       'today.change_session': 'Change session',
       // Stats (new)
       'stats.sessions_lbl': 'Sessions',
+      'stats.sessions_challenge': 'Sessions challenge',
+      'stats.sessions_challenge_done': 'All challenges completed!',
       'stats.streak_lbl': 'Streak',
       'stats.badges_lbl': 'Badges',
       'stats.volume_title': 'Volume',
