@@ -4148,17 +4148,14 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 /* ─── Grille de polices ──────────────────────────────────── */
 .dev-font-grid {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
   padding-bottom: 14px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
-.dev-font-grid::-webkit-scrollbar { display: none; }
 
 .dev-font-card {
-  flex: 0 0 auto;
-  min-width: 96px;
+  flex: 1 1 calc(33% - 8px);
+  min-width: 88px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--border);
