@@ -279,7 +279,7 @@ window.Badges = (() => {
             <div class="badge-name">${name}</div>
             <div class="badge-date">${isEarned ? earnedLabel : desc}</div>
           </div>
-          ${isEarned ? '' : '<span class="badge-lock">🔒</span>'}
+          ${isEarned ? '' : `<span class="badge-lock">${Icons.s('lock', 14)}</span>`}
         </div>
       `;
     }).join('');
@@ -372,7 +372,7 @@ window.Badges = (() => {
 
       return `
         <div class="scd-tier scd-future">
-          <div class="scd-badge-wrap scd-badge-locked"><img src="${img(tier.id)}" alt="${name}" class="scd-badge-img"><span class="scd-lock">🔒</span></div>
+          <div class="scd-badge-wrap scd-badge-locked"><img src="${img(tier.id)}" alt="${name}" class="scd-badge-img"><span class="scd-lock">${Icons.s('lock', 14)}</span></div>
           <div class="scd-info"><div class="scd-name">${name}</div><div class="scd-sub">${tier.threshold} ${unit}</div></div>
         </div>`;
     }).join('');

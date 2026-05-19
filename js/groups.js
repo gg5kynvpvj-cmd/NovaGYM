@@ -21,11 +21,11 @@ window.Groups = (() => {
 
   /* ─── Types de défis ─────────────────────────────────── */
   const CHALLENGE_TYPES = [
-    { id: 'sessions',  icon: '🏋️', fr: 'Séances',      en: 'Sessions',    ufr: 'séances', uen: 'sessions' },
-    { id: 'volume',    icon: '📦', fr: 'Volume total',  en: 'Total volume', ufr: 'kg',     uen: 'kg' },
-    { id: 'hydration', icon: '💧', fr: 'Hydratation',  en: 'Hydration',   ufr: 'L',       uen: 'L' },
-    { id: 'cardio',    icon: '🏃', fr: 'Cardio',       en: 'Cardio',      ufr: 'km',      uen: 'km' },
-    { id: 'calories',  icon: '🔥', fr: 'Calories',     en: 'Calories',    ufr: 'cal',     uen: 'cal' },
+    { id: 'sessions',  icon: Icons.s('dumbbell', 20), fr: 'Séances',      en: 'Sessions',    ufr: 'séances', uen: 'sessions' },
+    { id: 'volume',    icon: Icons.s('layers',   20), fr: 'Volume total',  en: 'Total volume', ufr: 'kg',     uen: 'kg' },
+    { id: 'hydration', icon: Icons.s('droplet',  20), fr: 'Hydratation',  en: 'Hydration',   ufr: 'L',       uen: 'L' },
+    { id: 'cardio',    icon: Icons.s('activity', 20), fr: 'Cardio',       en: 'Cardio',      ufr: 'km',      uen: 'km' },
+    { id: 'calories',  icon: Icons.s('flame',    20), fr: 'Calories',     en: 'Calories',    ufr: 'cal',     uen: 'cal' },
   ];
 
   /* ─── Helpers ────────────────────────────────────────── */
@@ -268,7 +268,7 @@ window.Groups = (() => {
       const isOwner = currentGroup.created_by === uid() || currentGroup.role === 'owner';
       container.innerHTML = `
         <div class="grp-empty-state">
-          <p class="grp-empty-icon">🏆</p>
+          <p class="grp-empty-icon">${Icons.s('trophy', 40)}</p>
           <p class="grp-empty-text">${t('group.no_active_challenge')}</p>
           ${isOwner ? `<button class="btn-soc btn-soc-add" id="btn-ranking-new-challenge">${t('group.create_challenge')}</button>` : ''}
         </div>`;
@@ -281,7 +281,7 @@ window.Groups = (() => {
     const progress = currentProgress[activeChallenge.id] || {};
     const locale   = lang() === 'fr' ? 'fr-FR' : 'en-US';
     const endStr   = new Date(activeChallenge.end_date + 'T00:00:00').toLocaleDateString(locale);
-    const medals   = ['🥇', '🥈', '🥉'];
+    const medals   = ['<span class="grp-medal grp-medal-1">1</span>', '<span class="grp-medal grp-medal-2">2</span>', '<span class="grp-medal grp-medal-3">3</span>'];
 
     const ranked = [...currentMembers].sort((a, b) =>
       (progress[b.user_id] || 0) - (progress[a.user_id] || 0)
@@ -380,13 +380,13 @@ window.Groups = (() => {
         ${currentMembers.map(m => {
           const p    = m.profile;
           const isMe = m.user_id === uid();
-          const role = m.role === 'owner' ? '👑 ' : m.role === 'admin' ? '⭐ ' : '';
+          const role = m.role === 'owner' ? `<span class="grp-role-icon grp-role-owner">${Icons.s('crown', 14)}</span> ` : m.role === 'admin' ? `<span class="grp-role-icon grp-role-admin">${Icons.s('star', 14)}</span> ` : '';
           return `
             <div class="grp-member-item">
               ${avatarDiv(p.avatar_url, p.username, 'grp-member-avatar')}
               <div class="grp-member-info">
                 <span class="grp-member-name">${role}${p.username}${isMe ? ' <span class="grp-rank-me-label">toi</span>' : ''}</span>
-                ${p.best_performance?.value ? `<span class="grp-member-perf">${p.best_performance.icon || '🏆'} ${p.best_performance.value}</span>` : ''}
+                ${p.best_performance?.value ? `<span class="grp-member-perf">${p.best_performance.icon || Icons.s('trophy', 12)} ${p.best_performance.value}</span>` : ''}
               </div>
               ${isOwner && !isMe ? `<button class="grp-member-kick" data-mid="${m.id}" title="${t('group.remove_member')}">✕</button>` : ''}
             </div>`;
@@ -471,7 +471,7 @@ window.Groups = (() => {
       const safeData = escapeHtml(JSON.stringify(sd));
       bubbleContent = `
         <div class="chat-session-card">
-          <div class="chat-session-icon">🏋️</div>
+          <div class="chat-session-icon">${Icons.s('dumbbell', 24)}</div>
           <div class="chat-session-info">
             <span class="chat-session-name">${escapeHtml(sd.name || t('group.session_unnamed'))}</span>
             <span class="chat-session-meta">${exCount} ${t('group.session_exercises')}</span>
@@ -604,7 +604,7 @@ window.Groups = (() => {
     } else {
       list.innerHTML = lib.map(s => `
         <div class="social-search-item">
-          <span style="font-size:24px;flex-shrink:0">🏋️</span>
+          <span style="display:inline-flex;flex-shrink:0">${Icons.s('dumbbell', 24)}</span>
           <div style="flex:1;min-width:0">
             <span class="social-card-name">${escapeHtml(s.name)}</span>
             <span style="display:block;font-size:12px;color:var(--text-2)">${(s.exercises||[]).length} exercice(s)</span>

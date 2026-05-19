@@ -47,12 +47,12 @@ window.Timer = (() => {
   }
 
   function updateBtns() {
-    const icon = running ? '⏸' : '▶';
+    const icon = running ? Icons.s('pause', 14) : Icons.s('play', 14);
     const bg   = running ? 'rgba(255,255,255,0.15)' : 'var(--accent)';
     const col  = running ? '#fff' : '#000';
     [$('timer-toggle'), $('timer-toggle-big')].forEach(btn => {
       if (!btn) return;
-      btn.textContent     = icon;
+      btn.innerHTML        = icon;
       btn.style.background = bg;
       btn.style.color      = col;
     });

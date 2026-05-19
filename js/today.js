@@ -87,13 +87,13 @@ window.Today = (() => {
 
     list.innerHTML = `
       <div class="challenge-row steps-goal-row${stepsOk ? ' done' : ''}" title="Appuyer pour modifier l'objectif">
-        <span class="challenge-emoji">👟</span>
+        <span class="challenge-emoji">${Icons.s('activity', 16)}</span>
         <span class="challenge-label">${goal.toLocaleString('fr-FR')} pas <span class="steps-goal-edit-hint">✎</span></span>
         <span class="challenge-status">${stepsOk ? '✓' : ''}</span>
       </div>
     ` + customs.map(c => `
       <div class="challenge-row${data.challenges[c.id] ? ' done' : ''}" data-challenge="${c.id}">
-        <span class="challenge-emoji">🎯</span>
+        <span class="challenge-emoji">${Icons.s('target', 16)}</span>
         <span class="challenge-label">${c.label}</span>
         <span class="challenge-status">${data.challenges[c.id] ? '✓' : ''}</span>
         <button class="challenge-del-btn" data-del="${c.id}" title="Supprimer">✕</button>
@@ -504,7 +504,7 @@ window.Today = (() => {
         <div class="uni-side-row" data-side="left">
           <span class="uni-side-label">G</span>
           <div class="set-timer-block">
-            <button class="set-timer-toggle" data-side="left" type="button">▶</button>
+            <button class="set-timer-toggle" data-side="left" type="button">${Icons.s('play', 14)}</button>
             <span class="set-timer-disp" data-side="left">${fmtDur(duration)}</span>
           </div>
           <button class="unilateral-btn" data-side="left" type="button">✓</button>
@@ -512,7 +512,7 @@ window.Today = (() => {
         <div class="uni-side-row" data-side="right">
           <span class="uni-side-label">D</span>
           <div class="set-timer-block">
-            <button class="set-timer-toggle" data-side="right" type="button">▶</button>
+            <button class="set-timer-toggle" data-side="right" type="button">${Icons.s('play', 14)}</button>
             <span class="set-timer-disp" data-side="right">${fmtDur(duration)}</span>
           </div>
           <button class="unilateral-btn" data-side="right" type="button">✓</button>
@@ -542,10 +542,10 @@ window.Today = (() => {
         toggleBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           if (running) {
-            running = false; clearInterval(iv); toggleBtn.textContent = '▶';
+            running = false; clearInterval(iv); toggleBtn.innerHTML = Icons.s('play', 14);
           } else {
             if (rem <= 0) rem = duration;
-            running = true; toggleBtn.textContent = '⏸';
+            running = true; toggleBtn.innerHTML = Icons.s('pause', 14);
             iv = setInterval(() => {
               rem--;
               dispEl.textContent = fmtDur(rem);
@@ -561,7 +561,7 @@ window.Today = (() => {
             validateSide();
           } else {
             clearInterval(iv); running = false; rem = duration;
-            toggleBtn.textContent = '▶'; toggleBtn.disabled = false;
+            toggleBtn.innerHTML = Icons.s('play', 14); toggleBtn.disabled = false;
             dispEl.textContent = fmtDur(duration);
             checkBtn.classList.remove('done'); sideRow.classList.remove('done');
             item.classList.remove('done');
@@ -576,7 +576,7 @@ window.Today = (() => {
       item.innerHTML = `
         <span class="set-number">${label}</span>
         <div class="set-timer-block">
-          <button class="set-timer-toggle" type="button">▶</button>
+          <button class="set-timer-toggle" type="button">${Icons.s('play', 14)}</button>
           <span class="set-timer-disp">${fmtDur(duration)}</span>
         </div>
         <button class="set-check-btn" type="button">✓</button>
@@ -600,10 +600,10 @@ window.Today = (() => {
       toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (running) {
-          running = false; clearInterval(iv); toggleBtn.textContent = '▶';
+          running = false; clearInterval(iv); toggleBtn.innerHTML = Icons.s('play', 14);
         } else {
           if (rem <= 0) rem = duration;
-          running = true; toggleBtn.textContent = '⏸';
+          running = true; toggleBtn.innerHTML = Icons.s('pause', 14);
           iv = setInterval(() => {
             rem--;
             dispEl.textContent = fmtDur(rem);
@@ -625,7 +625,7 @@ window.Today = (() => {
           Timer.start(getRestFn ? getRestFn() : undefined);
         } else {
           rem = duration; dispEl.textContent = fmtDur(duration);
-          toggleBtn.textContent = '▶'; toggleBtn.disabled = false;
+          toggleBtn.innerHTML = Icons.s('play', 14); toggleBtn.disabled = false;
           delete completedSets[exercise.id]?.[index];
         }
         checkCardCompletion(exercise.id); updateProgress();
@@ -819,15 +819,15 @@ window.Today = (() => {
 
     const tt = window.I18n ? I18n.t.bind(I18n) : k => k;
     if (weekComplete) {
-      showCelebration('🏆', tt('today.week_done'),
+      showCelebration(Icons.s('trophy', 52), tt('today.week_done'),
         `Bravo ${profile.username} ! Tu as complété toute ta semaine d'entraînement. Continue comme ça, tu es sur la bonne voie !`
       );
     } else if (newBadges.length > 0) {
       const b = newBadges[0];
       const bName = window.I18n ? I18n.t('badge.' + b.id + '.name') : b.id;
-      showCelebration('🏅', tt('today.new_badge'), `Tu as débloqué : ${bName}`);
+      showCelebration(Icons.s('medal', 52), tt('today.new_badge'), `Tu as débloqué : ${bName}`);
     } else {
-      showCelebration('🎉', tt('today.session_done'),
+      showCelebration(Icons.s('check', 52), tt('today.session_done'),
         `Bravo ${profile.username} ! ${completedCount} exercice${completedCount !== 1 ? 's' : ''} complété${completedCount !== 1 ? 's' : ''}. Récupère bien.`
       );
     }
@@ -838,8 +838,8 @@ window.Today = (() => {
   }
 
   /* ─── Modal célébration ──────────────────────────────── */
-  function showCelebration(emoji, title, body) {
-    document.getElementById('celebration-emoji').textContent = emoji;
+  function showCelebration(icon, title, body) {
+    document.getElementById('celebration-emoji').innerHTML = icon;
     document.getElementById('celebration-title').textContent = title;
     document.getElementById('celebration-body').textContent  = body;
     document.getElementById('modal-celebration')?.classList.remove('hidden');
@@ -995,12 +995,12 @@ window.Today = (() => {
         const cat      = ex._cat || activeCat || '';
         const isCustom = ex.isCustom || cat === 'custom';
         const isHome   = ex.equipment === 'home';
-        const catLabel = showCat ? (cats.find(c => c.key === cat)?.label?.replace('🏠 ', '') || '') : '';
+        const catLabel = showCat ? (cats.find(c => c.key === cat)?.label || '') : '';
         const delIcon  = isCustom
-          ? `<span class="picker-ex-del-icon" data-del-id="${ex.id}" title="${t('nutr.delete_item')}">🗑</span>`
+          ? `<span class="picker-ex-del-icon" data-del-id="${ex.id}" title="${t('nutr.delete_item')}">${Icons.s('trash', 14)}</span>`
           : '';
         const homeBadge = isHome && !isCustom
-          ? `<span class="picker-ex-home-badge">🏠</span>`
+          ? `<span class="picker-ex-home-badge">${Icons.s('home', 12)}</span>`
           : '';
         return `
           <button class="picker-ex-btn${isCustom ? ' picker-ex-custom' : ''}" data-id="${ex.id}" data-cat="${cat}">

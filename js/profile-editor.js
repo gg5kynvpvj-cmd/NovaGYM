@@ -13,10 +13,10 @@ window.ProfileEditor = (() => {
 
   /* ─── Types de performance ──────────────────────────── */
   const PERF_TYPES = [
-    { id: 'volume', icon: '📦', fr: 'Plus gros volume',    en: 'Highest volume' },
-    { id: 'weight', icon: '🏋️', fr: 'Plus lourd soulevé',  en: 'Heaviest lift' },
-    { id: 'reps',   icon: '🔥', fr: 'Plus de répétitions', en: 'Most reps' },
-    { id: 'streak', icon: '📅', fr: 'Meilleur streak',     en: 'Best streak' },
+    { id: 'volume', icon: Icons.s('layers',   16), fr: 'Plus gros volume',    en: 'Highest volume' },
+    { id: 'weight', icon: Icons.s('dumbbell', 16), fr: 'Plus lourd soulevé',  en: 'Heaviest lift' },
+    { id: 'reps',   icon: Icons.s('flame',    16), fr: 'Plus de répétitions', en: 'Most reps' },
+    { id: 'streak', icon: Icons.s('calendar', 16), fr: 'Meilleur streak',     en: 'Best streak' },
   ];
 
   function perfLabel(typeId) {
@@ -220,7 +220,7 @@ window.ProfileEditor = (() => {
       const lang   = window.I18n ? I18n.lang : 'fr';
       const pt     = PERF_TYPES.find(p => p.id === tempPerf);
       const label  = pt ? (lang === 'fr' ? pt.fr : pt.en) : tempPerf;
-      const icon   = pt?.icon || '🏆';
+      const icon   = pt?.icon || Icons.s('trophy', 16);
       html += `
         <div class="fp-section">
           <p class="fp-section-title">${window.I18n ? I18n.t('profile.perf_section') : 'Meilleure performance'}</p>
@@ -298,13 +298,13 @@ window.ProfileEditor = (() => {
     const visEl = document.getElementById('pe-preview-vis');
     if (visEl) {
       const MAP = {
-        private: { icon: '🔒', fr: 'Privé',           en: 'Private' },
-        friends: { icon: '👥', fr: 'Amis seulement',  en: 'Friends only' },
-        public:  { icon: '🌍', fr: 'Public',           en: 'Public' },
+        private: { icon: Icons.s('lock',  14), fr: 'Privé',           en: 'Private' },
+        friends: { icon: Icons.s('users', 14), fr: 'Amis seulement',  en: 'Friends only' },
+        public:  { icon: Icons.s('globe', 14), fr: 'Public',           en: 'Public' },
       };
       const v    = MAP[tempVisibility] || MAP.private;
       const lang = window.I18n ? I18n.lang : 'fr';
-      visEl.textContent = v.icon + ' ' + (lang === 'fr' ? v.fr : v.en);
+      visEl.innerHTML = v.icon + ' ' + (lang === 'fr' ? v.fr : v.en);
       visEl.className   = 'pe-preview-vis vis-' + tempVisibility;
     }
   }
