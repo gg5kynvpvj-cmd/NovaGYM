@@ -204,8 +204,8 @@ window.Groups = (() => {
     currentProgress = {};
     if (chatGroupId && chatGroupId !== groupId) unsubscribeFromChat();
 
-    // Reset tab to ranking
-    document.querySelectorAll('.grp-tab').forEach(tb => tb.classList.toggle('active', tb.dataset.tab === 'ranking'));
+    // Ouvre directement le chat
+    document.querySelectorAll('.grp-tab').forEach(tb => tb.classList.toggle('active', tb.dataset.tab === 'chat'));
 
     App.navigate('group');
     renderGroupPage();               // Show skeleton immediately
