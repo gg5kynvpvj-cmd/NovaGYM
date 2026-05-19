@@ -12,12 +12,12 @@ window.Tutorial = (() => {
 
   const STEPS = [
     { icon: 'dumbbell',  tab: null,        titleKey: 'tut.welcome_title', descKey: 'tut.welcome_desc' },
-    { icon: 'dumbbell',  tab: 'today',     titleKey: 'tut.today_title',   descKey: 'tut.today_desc'   },
-    { icon: 'activity',  tab: 'stats',     titleKey: 'tut.stats_title',   descKey: 'tut.stats_desc'   },
-    { icon: 'calendar',  tab: 'history',   titleKey: 'tut.history_title', descKey: 'tut.history_desc' },
-    { icon: 'droplet',   tab: 'nutrition', titleKey: 'tut.nutri_title',   descKey: 'tut.nutri_desc'   },
-    { icon: 'users',     tab: 'social',    titleKey: 'tut.social_title',  descKey: 'tut.social_desc'  },
-    { icon: 'zap',       tab: 'settings',  titleKey: 'tut.settings_title',descKey: 'tut.settings_desc'},
+    { icon: 'dumbbell',  tab: 'today',     titleKey: 'nav.today',         descKey: 'tut.today_desc'   },
+    { icon: 'activity',  tab: 'stats',     titleKey: 'nav.stats',         descKey: 'tut.stats_desc'   },
+    { icon: 'calendar',  tab: 'history',   titleKey: 'nav.history',       descKey: 'tut.history_desc' },
+    { icon: 'droplet',   tab: 'nutrition', titleKey: 'nav.nutrition',     descKey: 'tut.nutri_desc'   },
+    { icon: 'users',     tab: 'social',    titleKey: 'nav.social',        descKey: 'tut.social_desc'  },
+    { icon: 'zap',       tab: 'settings',  titleKey: 'nav.settings',      descKey: 'tut.settings_desc'},
     { icon: 'trophy',    tab: null,        titleKey: 'tut.final_title',   descKey: 'tut.final_desc'   },
   ];
 
