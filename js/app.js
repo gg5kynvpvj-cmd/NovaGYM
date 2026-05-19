@@ -42,7 +42,7 @@
     if (tabName === 'stats')     Stats.refresh();
     if (tabName === 'history')   History.load();
     if (tabName === 'nutrition') Nutrition.render();
-    if (tabName === 'social')    { Social.render(); Groups.render(); }
+    if (tabName === 'social')    { Social.render(); Groups.render(); if (window.DM) DM.loadConversations(); }
     if (tabName === 'settings')  Settings.refreshHeader();
   }
 
@@ -140,6 +140,7 @@
     Groups.init();
     ProfileEditor.init();
     Settings.init();
+    if (window.DM) DM.init();
     DevTools.init();
   }
 

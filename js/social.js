@@ -343,6 +343,14 @@ window.Social = (() => {
       el.addEventListener('click', () => showBadgeZoom(el.dataset.badgeId));
     });
 
+    // Bouton "Envoyer un message"
+    const dmBtn = document.getElementById('btn-send-dm');
+    if (dmBtn) {
+      dmBtn.dataset.uid      = p.id;
+      dmBtn.dataset.username = p.username || '?';
+      dmBtn.dataset.avatar   = p.avatar_url || '';
+    }
+
     document.getElementById('modal-friend-profile')?.classList.remove('hidden');
   }
 
@@ -373,6 +381,14 @@ window.Social = (() => {
       await deleteRelation(this.dataset.id);
       document.getElementById('modal-friend-profile')?.classList.add('hidden');
     });
+
+    document.getElementById('btn-send-dm')?.addEventListener('click', function() {
+      const { uid, username, avatar } = this.dataset;
+      if (!uid || !window.DM) return;
+      document.getElementById('modal-friend-profile')?.classList.add('hidden');
+      DM.openDM(uid, { id: uid, username: username || '?', avatar_url: avatar || null });
+    });
+
     initSearch();
   }
 

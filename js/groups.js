@@ -479,18 +479,22 @@ window.Groups = (() => {
           <button class="chat-session-save-btn" data-session='${safeData}'>${t('group.session_save')}</button>
         </div>`;
     } else {
-      bubbleContent = `<span class="chat-bubble-text">${escapeHtml(msg.content || '')}</span>`;
+      const editBtn = isMe
+        ? `<button class="chat-edit-btn" data-mid="${escapeHtml(msg.id)}" data-mc="${escapeHtml(msg.content || '')}">${Icons.s('edit', 12)}</button>`
+        : '';
+      bubbleContent = `<span class="chat-bubble-text">${escapeHtml(msg.content || '')}</span>${editBtn}`;
     }
 
+    const edited = msg.is_edited ? `<span class="chat-edited">${t('group.edited')}</span>` : '';
     return `
-      <div class="chat-row ${isMe ? 'chat-row-me' : 'chat-row-other'}">
+      <div class="chat-row ${isMe ? 'chat-row-me' : 'chat-row-other'}" data-msg-id="${msg.id}">
         ${!isMe ? av : ''}
         <div class="chat-col">
           ${!isMe ? `<span class="chat-username">${escapeHtml(p.username || '?')}</span>` : ''}
           <div class="chat-bubble ${isMe ? 'chat-bubble-me' : 'chat-bubble-other'}">
             ${bubbleContent}
           </div>
-          <span class="chat-time">${time}</span>
+          <span class="chat-time">${time}${edited}</span>
         </div>
         ${isMe ? av : ''}
       </div>`;
@@ -503,8 +507,42 @@ window.Groups = (() => {
       container.innerHTML = `<p class="social-empty" style="margin:auto">${t('group.chat_empty')}</p>`;
     } else {
       container.innerHTML = chatMessages.map(renderMessage).join('');
+      container.querySelectorAll('.chat-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => startEditGroupMsg(btn.dataset.mid, btn.dataset.mc));
+      });
     }
     scrollChatToBottom();
+  }
+
+  async function editGroupMsg(msgId, newContent) {
+    if (!newContent?.trim() || !App.supabase) return;
+    await App.supabase.from('group_messages').update({
+      content: newContent.trim(), is_edited: true, updated_at: new Date().toISOString(),
+    }).eq('id', msgId).eq('user_id', uid());
+    const idx = chatMessages.findIndex(m => m.id === msgId);
+    if (idx >= 0) { chatMessages[idx].content = newContent.trim(); chatMessages[idx].is_edited = true; }
+    renderChatMessages();
+  }
+
+  function startEditGroupMsg(msgId, currentContent) {
+    const row = document.querySelector(`#grp-tab-chat [data-msg-id="${msgId}"] .chat-bubble`);
+    if (!row) return;
+    row.innerHTML = `
+      <div class="chat-edit-form">
+        <input type="text" class="chat-edit-input" value="${escapeHtml(currentContent)}">
+        <div class="chat-edit-actions">
+          <button class="chat-edit-cancel">${Icons.s('x', 13)}</button>
+          <button class="chat-edit-save">${Icons.s('check', 13)}</button>
+        </div>
+      </div>`;
+    const input = row.querySelector('.chat-edit-input');
+    input?.focus(); input?.select();
+    row.querySelector('.chat-edit-save')?.addEventListener('click', () => editGroupMsg(msgId, input.value));
+    row.querySelector('.chat-edit-cancel')?.addEventListener('click', renderChatMessages);
+    input?.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { e.preventDefault(); editGroupMsg(msgId, input.value); }
+      if (e.key === 'Escape') renderChatMessages();
+    });
   }
 
   async function sendTextMessage() {
@@ -703,6 +741,17 @@ window.Groups = (() => {
         chatMessages.push({ ...msg, profile });
         if (!document.getElementById('grp-tab-chat')?.classList.contains('hidden')) {
           renderChatMessages();
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public',
+        table: 'group_messages',
+        filter: `group_id=eq.${groupId}`,
+      }, payload => {
+        const idx = chatMessages.findIndex(m => m.id === payload.new.id);
+        if (idx >= 0) {
+          chatMessages[idx] = { ...chatMessages[idx], ...payload.new };
+          if (!document.getElementById('grp-tab-chat')?.classList.contains('hidden')) renderChatMessages();
         }
       })
       .on('broadcast', { event: 'ephemeral_image' }, payload => {
