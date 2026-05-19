@@ -98,12 +98,9 @@ window.Groups = (() => {
       )];
       let inviterMap = {};
       if (inviterIds.length > 0) {
-        const anon = getAnonClient();
-        if (anon) {
-          const { data: profiles } = await anon
-            .from('profiles').select('id, username').in('id', inviterIds);
-          if (profiles) inviterMap = Object.fromEntries(profiles.map(p => [p.id, p]));
-        }
+        const { data: profiles } = await App.supabase
+          .from('profiles').select('id, username, avatar_url').in('id', inviterIds);
+        if (profiles) inviterMap = Object.fromEntries(profiles.map(p => [p.id, p]));
       }
 
       pendingInvites = (invGroups || []).map(g => {
@@ -779,17 +776,50 @@ window.Groups = (() => {
   }
 
   /* ─── Accepter / Refuser une invitation ─────────────── */
-  async function acceptInvite(groupId) {
-    await App.supabase.from('group_members')
+  async function acceptInvite(groupId, btnAccept, btnDecline) {
+    if (btnAccept) { btnAccept.disabled = true; btnAccept.textContent = '...'; }
+    if (btnDecline) btnDecline.disabled = true;
+
+    const { error } = await App.supabase
+      .from('group_members')
       .update({ status: 'active' })
-      .eq('group_id', groupId).eq('user_id', uid());
+      .eq('group_id', groupId)
+      .eq('user_id', uid());
+
+    if (error) {
+      console.error('acceptInvite error:', error);
+      alert('Erreur : ' + error.message);
+      if (btnAccept) { btnAccept.disabled = false; btnAccept.textContent = t('social.accept'); }
+      if (btnDecline) btnDecline.disabled = false;
+      return;
+    }
+
     await loadGroups();
     renderGroupsList();
+
+    // Ouvre directement le groupe accepté
+    const group = myGroups.find(g => g.id === groupId);
+    if (group) openGroup(groupId);
   }
 
-  async function declineInvite(groupId) {
-    await App.supabase.from('group_members')
-      .delete().eq('group_id', groupId).eq('user_id', uid());
+  async function declineInvite(groupId, btnDecline, btnAccept) {
+    if (btnDecline) { btnDecline.disabled = true; btnDecline.textContent = '...'; }
+    if (btnAccept) btnAccept.disabled = true;
+
+    const { error } = await App.supabase
+      .from('group_members')
+      .delete()
+      .eq('group_id', groupId)
+      .eq('user_id', uid());
+
+    if (error) {
+      console.error('declineInvite error:', error);
+      alert('Erreur : ' + error.message);
+      if (btnDecline) { btnDecline.disabled = false; btnDecline.textContent = t('social.decline'); }
+      if (btnAccept) btnAccept.disabled = false;
+      return;
+    }
+
     await loadGroups();
     renderGroupsList();
   }
@@ -921,21 +951,33 @@ window.Groups = (() => {
     const invList    = document.getElementById('group-invites-list');
     if (invSection) invSection.classList.toggle('hidden', pendingInvites.length === 0);
     if (invList) {
-      invList.innerHTML = pendingInvites.map(g => `
-        <div class="social-request-card">
-          <div class="group-card-avatar" style="width:40px;height:40px;font-size:16px;flex-shrink:0">${g.name.charAt(0).toUpperCase()}</div>
-          <div style="flex:1;min-width:0">
-            <span class="social-card-name">${g.name}</span>
-            ${g.inviter ? `<span style="display:block;font-size:12px;color:var(--text-2)">${t('group.invited_by')} ${g.inviter.username}</span>` : ''}
-          </div>
-          <div class="social-card-actions">
-            <button class="btn-soc btn-soc-accept" data-gid="${g.id}">${t('social.accept')}</button>
-            <button class="btn-soc btn-soc-decline" data-gid="${g.id}">${t('social.decline')}</button>
-          </div>
-        </div>`).join('');
+      invList.innerHTML = pendingInvites.map(g => {
+        const avHtml = g.cover_url
+          ? `<img src="${g.cover_url}" class="group-card-avatar" style="width:46px;height:46px;object-fit:cover;flex-shrink:0;" alt="${g.name.charAt(0).toUpperCase()}">`
+          : `<div class="group-card-avatar" style="width:46px;height:46px;font-size:18px;flex-shrink:0;">${g.name.charAt(0).toUpperCase()}</div>`;
+        const inviterLine = g.inviter
+          ? `<span style="display:block;font-size:12px;color:var(--text-2)">${t('group.invited_by')} ${g.inviter.username}</span>`
+          : '';
+        return `
+          <div class="social-request-card grp-invite-card" data-gid="${g.id}">
+            ${avHtml}
+            <div style="flex:1;min-width:0">
+              <span class="social-card-name">${g.name}</span>
+              ${inviterLine}
+            </div>
+            <div class="social-card-actions">
+              <button class="btn-soc btn-soc-accept grp-btn-accept" data-gid="${g.id}">${t('social.accept')}</button>
+              <button class="btn-soc btn-soc-decline grp-btn-decline" data-gid="${g.id}">${t('social.decline')}</button>
+            </div>
+          </div>`;
+      }).join('');
 
-      invList.querySelectorAll('.btn-soc-accept').forEach(b => b.addEventListener('click', () => acceptInvite(b.dataset.gid)));
-      invList.querySelectorAll('.btn-soc-decline').forEach(b => b.addEventListener('click', () => declineInvite(b.dataset.gid)));
+      invList.querySelectorAll('.grp-invite-card').forEach(card => {
+        const btnA = card.querySelector('.grp-btn-accept');
+        const btnD = card.querySelector('.grp-btn-decline');
+        btnA?.addEventListener('click', () => acceptInvite(btnA.dataset.gid, btnA, btnD));
+        btnD?.addEventListener('click', () => declineInvite(btnD.dataset.gid, btnD, btnA));
+      });
     }
   }
 
