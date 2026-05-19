@@ -824,7 +824,8 @@ window.Today = (() => {
       );
     } else if (newBadges.length > 0) {
       const b = newBadges[0];
-      showCelebration(b.emoji, tt('today.new_badge'), `Tu as débloqué : ${b.name}`);
+      const bName = window.I18n ? I18n.t('badge.' + b.id + '.name') : b.id;
+      showCelebration('🏅', tt('today.new_badge'), `Tu as débloqué : ${bName}`);
     } else {
       showCelebration('🎉', tt('today.session_done'),
         `Bravo ${profile.username} ! ${completedCount} exercice${completedCount !== 1 ? 's' : ''} complété${completedCount !== 1 ? 's' : ''}. Récupère bien.`

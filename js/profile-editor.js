@@ -92,8 +92,7 @@ window.ProfileEditor = (() => {
       if (!slot) continue;
       const badgeId = tempBadges[i];
       if (badgeId) {
-        const def = (Badges.ALL_BADGES || []).find(b => b.id === badgeId);
-        slot.innerHTML = `<span style="font-size:30px">${def ? def.emoji : '?'}</span>`;
+        slot.innerHTML = `<img src="${Badges.img(badgeId)}" style="width:36px;height:36px;object-fit:contain;" alt="" onerror="this.style.display='none'">`;
         slot.classList.add('filled');
       } else {
         slot.innerHTML = `<span class="pe-slot-placeholder">+</span>`;
@@ -222,13 +221,16 @@ window.ProfileEditor = (() => {
     const list      = document.getElementById('badge-picker-list');
     if (!list) return;
 
-    const items = (Badges.ALL_BADGES || []).filter(b => earnedIds.includes(b.id)).map(b => `
+    const items = (Badges.ALL_BADGES || []).filter(b => earnedIds.includes(b.id)).map(b => {
+      const bName = window.I18n ? I18n.t('badge.' + b.id + '.name') : b.id;
+      return `
       <div class="badge-picker-item${current === b.id ? ' active' : ''}" data-badge="${b.id}">
-        <span class="badge-picker-emoji">${b.emoji}</span>
-        <span class="badge-picker-name">${b.name}</span>
+        <img class="badge-picker-img" src="${Badges.img(b.id)}" alt="${bName}" onerror="this.style.display='none'">
+        <span class="badge-picker-name">${bName}</span>
         ${current === b.id ? '<span class="badge-picker-check">✓</span>' : ''}
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     const removeBtn = current ? `<div class="badge-picker-item badge-picker-remove" data-badge=""><span>✕</span><span class="badge-picker-name">${window.I18n ? I18n.t('profile.remove_badge') : 'Retirer'}</span></div>` : '';
 

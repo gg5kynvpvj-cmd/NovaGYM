@@ -288,7 +288,10 @@ window.Social = (() => {
           <div class="friend-profile-section">
             <p class="friend-profile-section-title">${I18n.t('profile.badges_section')}</p>
             <div class="friend-profile-badges">
-              ${badgeDefs.map(b => `<span class="friend-badge-chip">${b.emoji} ${b.name}</span>`).join('')}
+              ${badgeDefs.map(b => {
+                const bName = window.I18n ? I18n.t('badge.' + b.id + '.name') : b.id;
+                return `<span class="friend-badge-chip"><img src="${Badges.img(b.id)}" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;" alt="" onerror="this.style.display='none'">${bName}</span>`;
+              }).join('')}
             </div>
           </div>
         `;
