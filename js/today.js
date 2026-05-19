@@ -899,7 +899,7 @@ window.Today = (() => {
     libBtn.className = 'add-exercise-btn';
     libBtn.style.background = 'var(--bg-card-2)';
     libBtn.style.color = 'var(--text-2)';
-    libBtn.textContent = `📚 ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
+    libBtn.innerHTML = `${Icons.s('book-open', 16)} ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
     libBtn.addEventListener('click', openWorkoutLib);
     list.appendChild(libBtn);
 
@@ -1133,7 +1133,7 @@ window.Today = (() => {
           libBtn2.className = 'add-exercise-btn';
           libBtn2.style.background = 'var(--bg-card-2)';
           libBtn2.style.color = 'var(--text-2)';
-          libBtn2.textContent = `📚 ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
+          libBtn2.innerHTML = `${Icons.s('book-open', 16)} ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
           libBtn2.addEventListener('click', openWorkoutLib);
           list.appendChild(libBtn2);
 

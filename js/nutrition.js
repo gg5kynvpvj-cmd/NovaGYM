@@ -462,7 +462,7 @@ window.Nutrition = (() => {
     showEl('food-search-hint', true);
     showEl('food-barcode-section', false);
     const toggleBtn = document.getElementById('btn-toggle-barcode');
-    if (toggleBtn) toggleBtn.textContent = '📷 Taper un code-barres';
+    if (toggleBtn) toggleBtn.innerHTML = `${Icons.s('camera', 15)}<span>${window.I18n ? I18n.t('food.toggle_barcode') : 'Taper un code-barres'}</span>`;
     const bcInput = document.getElementById('food-barcode-input');
     if (bcInput) bcInput.value = '';
     showEl('food-barcode-not-found', false);
@@ -878,7 +878,12 @@ window.Nutrition = (() => {
       const isHidden = section?.classList.contains('hidden');
       section?.classList.toggle('hidden', !isHidden);
       const btn = document.getElementById('btn-toggle-barcode');
-      if (btn) btn.textContent = isHidden ? '📷 Masquer le code-barres' : '📷 Taper un code-barres';
+      if (btn) {
+        const label = isHidden
+          ? (window.I18n ? I18n.t('food.hide_barcode') : 'Masquer le code-barres')
+          : (window.I18n ? I18n.t('food.toggle_barcode') : 'Taper un code-barres');
+        btn.innerHTML = `${Icons.s('camera', 15)}<span>${label}</span>`;
+      }
     });
 
     // Valider code-barres saisi manuellement
