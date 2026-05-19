@@ -2574,6 +2574,55 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .food-fav-del:active { color: var(--danger); }
 .food-favs-empty { font-size: 12px; color: var(--text-3); margin: 4px 0 0; }
 
+/* Mes plats */
+.food-dishes-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.food-dishes-header .food-favs-label { margin-bottom: 0; }
+.btn-new-dish {
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 20px;
+  padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.food-dishes-list { display: flex; flex-direction: column; gap: 6px; }
+.food-dish-chip {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-card-2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 8px 12px; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.food-dish-chip:active { border-color: var(--accent); }
+.food-dish-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.food-dish-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.food-dish-cal  { font-size: 11px; color: var(--text-3); }
+.food-dish-actions { display: flex; gap: 8px; }
+.food-dish-edit, .food-dish-del {
+  background: none; border: none; cursor: pointer;
+  font-size: 14px; color: var(--text-3); padding: 2px 4px;
+}
+.food-dish-del:active { color: var(--danger); }
+
+/* Dish editor */
+.dish-editor-body { flex: 1; overflow-y: auto; padding-bottom: 24px; }
+.dish-add-food-btn { margin: 12px 16px; width: calc(100% - 32px); }
+.dish-foods-list { padding: 0 16px; display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.dish-totals-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--bg-elevated); border-radius: 10px;
+  padding: 8px 12px; margin-bottom: 4px;
+  font-size: 13px; font-weight: 700; color: var(--text);
+}
+.dish-food-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-card-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px;
+}
+.dish-food-info { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.dish-food-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.dish-food-qty  { font-size: 11px; color: var(--text-3); }
+.dish-food-actions { display: flex; gap: 6px; }
+
 /* Résultats de recherche */
 .food-search-results { margin-top: 4px; }
 .food-search-hint {

@@ -11,6 +11,9 @@ window.Nutrition = (() => {
   let baseNutrition   = null; // même objet, pour recalcFromQty
   let searchTimeout   = null;
   let html5Scanner    = null;
+  let foodSearchMode  = 'meal'; // 'meal' | 'dish'
+  let dishEditorItems = [];
+  let editingDishId   = null;
 
   function getMealTypes() {
     const t = window.I18n ? I18n.t.bind(I18n) : k => k;
@@ -471,6 +474,7 @@ window.Nutrition = (() => {
     baseNutrition   = null;
 
     renderFoodFavs();
+    renderDishes();
     document.getElementById('modal-food-search')?.classList.remove('hidden');
   }
 
@@ -663,6 +667,185 @@ window.Nutrition = (() => {
     }
   }
 
+  /* ─── Plats personnalisés ───────────────────────────────── */
+  function getCustomDishes() { return App.local.get('custom_dishes') || []; }
+  function saveCustomDishes(d) { App.local.set('custom_dishes', d); }
+
+  function renderDishes() {
+    const dishes = getCustomDishes();
+    const list   = document.getElementById('food-dishes-list');
+    const empty  = document.getElementById('food-dishes-empty');
+    if (!list) return;
+    if (!dishes.length) {
+      list.innerHTML = '';
+      empty?.classList.remove('hidden');
+      return;
+    }
+    empty?.classList.add('hidden');
+    list.innerHTML = dishes.map(d => {
+      const cal = d.items.reduce((s, i) => s + (i.calories || 0), 0);
+      return `
+        <div class="food-dish-chip">
+          <div class="food-dish-info" data-dish-id="${d.id}">
+            <span class="food-dish-name">${d.name}</span>
+            <span class="food-dish-cal">${cal} kcal · ${d.items.length} aliment${d.items.length > 1 ? 's' : ''}</span>
+          </div>
+          <div class="food-dish-actions">
+            <button class="food-dish-edit" data-dish-id="${d.id}" title="Modifier">✎</button>
+            <button class="food-dish-del"  data-dish-id="${d.id}" title="Supprimer">✕</button>
+          </div>
+        </div>`;
+    }).join('');
+    list.querySelectorAll('.food-dish-info').forEach(el =>
+      el.addEventListener('click', () => addDishToMeal(Number(el.dataset.dishId))));
+    list.querySelectorAll('.food-dish-edit').forEach(btn =>
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.getElementById('modal-food-search')?.classList.add('hidden');
+        openDishEditor(Number(btn.dataset.dishId));
+      }));
+    list.querySelectorAll('.food-dish-del').forEach(btn =>
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const dish = getCustomDishes().find(d => d.id == btn.dataset.dishId);
+        if (!dish || !confirm(`Supprimer "${dish.name}" ?`)) return;
+        saveCustomDishes(getCustomDishes().filter(d => d.id != btn.dataset.dishId));
+        renderDishes();
+      }));
+  }
+
+  function addDishToMeal(dishId) {
+    const dish = getCustomDishes().find(d => d.id === dishId);
+    if (!dish) return;
+    const d = getData();
+    dish.items.forEach(item => {
+      d.meals.push({ ...item, id: Date.now() + Math.random(), mealType: currentMealType });
+    });
+    saveData(d);
+    closeFoodSearch();
+    render();
+  }
+
+  function openDishEditor(dishId = null) {
+    editingDishId = dishId;
+    if (dishId) {
+      const dish = getCustomDishes().find(d => d.id === dishId);
+      if (!dish) return;
+      dishEditorItems = dish.items.map(i => ({ ...i }));
+      const titleEl = document.getElementById('dish-editor-title');
+      if (titleEl) titleEl.textContent = window.I18n ? I18n.t('dish.edit_title') : 'Modifier le plat';
+      const nameEl = document.getElementById('dish-name-input');
+      if (nameEl) nameEl.value = dish.name;
+    } else {
+      dishEditorItems = [];
+      const titleEl = document.getElementById('dish-editor-title');
+      if (titleEl) titleEl.textContent = window.I18n ? I18n.t('dish.new_title') : 'Nouveau plat';
+      const nameEl = document.getElementById('dish-name-input');
+      if (nameEl) nameEl.value = '';
+    }
+    renderDishEditorItems();
+    document.getElementById('modal-dish-editor')?.classList.remove('hidden');
+  }
+
+  function renderDishEditorItems() {
+    const list = document.getElementById('dish-foods-list');
+    if (!list) return;
+    if (!dishEditorItems.length) {
+      list.innerHTML = '<p class="food-favs-empty" style="margin:8px 0">Aucun aliment ajouté.</p>';
+      return;
+    }
+    const tot = dishEditorItems.reduce((a, i) => ({
+      calories: a.calories + (i.calories || 0),
+      protein:  a.protein  + (i.protein  || 0),
+      carbs:    a.carbs    + (i.carbs    || 0),
+      fat:      a.fat      + (i.fat      || 0),
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+    list.innerHTML = `
+      <div class="dish-totals-bar">
+        <span>${Math.round(tot.calories)} kcal</span>
+        <span class="nutr-macro-chip nutr-macro-p">P ${Math.round(tot.protein)}g</span>
+        <span class="nutr-macro-chip nutr-macro-c">G ${Math.round(tot.carbs)}g</span>
+        <span class="nutr-macro-chip nutr-macro-f">L ${Math.round(tot.fat)}g</span>
+      </div>
+      ${dishEditorItems.map((item, idx) => `
+        <div class="dish-food-row">
+          <div class="dish-food-info">
+            <span class="dish-food-name">${item.name}</span>
+            <span class="dish-food-qty">${item.quantity || '—'}g · ${item.calories} kcal</span>
+          </div>
+          <div class="dish-food-actions">
+            <button class="nutr-meal-item-edit" data-idx="${idx}">✎</button>
+            <button class="nutr-meal-item-del"  data-idx="${idx}">✕</button>
+          </div>
+        </div>`).join('')}`;
+    list.querySelectorAll('.nutr-meal-item-edit').forEach(btn =>
+      btn.addEventListener('click', () => {
+        const idx  = parseInt(btn.dataset.idx);
+        const item = dishEditorItems[idx];
+        const inp  = prompt(`Quantité pour "${item.name}" (g) :`, item.quantity || 100);
+        const qty  = parseFloat(inp);
+        if (!qty || qty <= 0) return;
+        if (item.cal100 != null) {
+          const f = qty / 100;
+          item.calories = Math.round(item.cal100     * f);
+          item.protein  = Math.round(item.protein100 * f * 10) / 10;
+          item.carbs    = Math.round(item.carbs100   * f * 10) / 10;
+          item.fat      = Math.round(item.fat100     * f * 10) / 10;
+        } else {
+          const r = qty / (item.quantity || 100);
+          item.calories = Math.round(item.calories * r);
+          item.protein  = Math.round(item.protein  * r * 10) / 10;
+          item.carbs    = Math.round(item.carbs    * r * 10) / 10;
+          item.fat      = Math.round(item.fat      * r * 10) / 10;
+        }
+        item.quantity = qty;
+        renderDishEditorItems();
+      }));
+    list.querySelectorAll('.nutr-meal-item-del').forEach(btn =>
+      btn.addEventListener('click', () => {
+        dishEditorItems.splice(parseInt(btn.dataset.idx), 1);
+        renderDishEditorItems();
+      }));
+  }
+
+  function saveDish() {
+    const name = document.getElementById('dish-name-input')?.value.trim();
+    if (!name) { alert(window.I18n ? I18n.t('dish.name_required') : 'Donne un nom à ton plat.'); return; }
+    if (!dishEditorItems.length) { alert(window.I18n ? I18n.t('dish.items_required') : 'Ajoute au moins un aliment.'); return; }
+    const dishes = getCustomDishes();
+    if (editingDishId) {
+      const idx = dishes.findIndex(d => d.id === editingDishId);
+      if (idx >= 0) dishes[idx] = { id: editingDishId, name, items: dishEditorItems };
+    } else {
+      dishes.push({ id: Date.now(), name, items: [...dishEditorItems] });
+    }
+    saveCustomDishes(dishes);
+    document.getElementById('modal-dish-editor')?.classList.add('hidden');
+    renderDishes();
+  }
+
+  function addFoodToDish() {
+    if (!selectedProduct || !baseNutrition) return;
+    const qty = parseFloat(document.getElementById('food-product-qty')?.value) || 100;
+    const f   = qty / 100;
+    dishEditorItems.push({
+      name:       selectedProduct.name,
+      quantity:   qty,
+      calories:   Math.round(baseNutrition.calories * f),
+      protein:    Math.round(baseNutrition.protein  * f * 10) / 10,
+      carbs:      Math.round(baseNutrition.carbs    * f * 10) / 10,
+      fat:        Math.round(baseNutrition.fat      * f * 10) / 10,
+      cal100:     baseNutrition.calories,
+      protein100: baseNutrition.protein,
+      carbs100:   baseNutrition.carbs,
+      fat100:     baseNutrition.fat,
+    });
+    document.getElementById('modal-food-search')?.classList.add('hidden');
+    foodSearchMode = 'meal';
+    document.getElementById('modal-dish-editor')?.classList.remove('hidden');
+    renderDishEditorItems();
+  }
+
   /* ─── Init ───────────────────────────────────────────────── */
   function init() {
     // Sélecteur de période
@@ -723,13 +906,56 @@ window.Nutrition = (() => {
 
     // Étape 2 — retour
     document.getElementById('btn-food-back')?.addEventListener('click', () => {
+      if (foodSearchMode === 'dish') {
+        document.getElementById('modal-food-search')?.classList.add('hidden');
+        foodSearchMode = 'meal';
+        document.getElementById('modal-dish-editor')?.classList.remove('hidden');
+        return;
+      }
       selectedProduct = null;
       baseNutrition   = null;
       showStep(1);
     });
 
-    // Étape 2 — Ajouter
-    document.getElementById('btn-food-add')?.addEventListener('click', addSelectedProduct);
+    // Étape 2 — Ajouter (repas ou plat selon le mode)
+    document.getElementById('btn-food-add')?.addEventListener('click', () => {
+      if (foodSearchMode === 'dish') addFoodToDish();
+      else addSelectedProduct();
+    });
+
+    // Plats — nouveau plat
+    document.getElementById('btn-new-dish')?.addEventListener('click', () => {
+      document.getElementById('modal-food-search')?.classList.add('hidden');
+      openDishEditor(null);
+    });
+
+    // Plats — ajouter un aliment au plat
+    document.getElementById('btn-dish-add-food')?.addEventListener('click', () => {
+      foodSearchMode = 'dish';
+      const titleEl = document.getElementById('food-search-title');
+      if (titleEl) titleEl.textContent = window.I18n ? I18n.t('dish.add_food') : '+ Ajouter un aliment';
+      showStep(1);
+      selectedProduct = null; baseNutrition = null;
+      const input = document.getElementById('food-search-input');
+      if (input) input.value = '';
+      document.getElementById('food-results-list').innerHTML = '';
+      showEl('food-search-hint', true);
+      renderFoodFavs();
+      renderDishes();
+      document.getElementById('modal-food-search')?.classList.remove('hidden');
+    });
+
+    // Plats — sauvegarder
+    document.getElementById('btn-save-dish')?.addEventListener('click', saveDish);
+
+    // Plats — retour vers recherche
+    document.getElementById('btn-dish-back')?.addEventListener('click', () => {
+      document.getElementById('modal-dish-editor')?.classList.add('hidden');
+      if (editingDishId) {
+        // retour depuis édition d'un plat existant → rouvrir la recherche
+        openFoodSearch(currentMealType);
+      }
+    });
 
     // Formulaire manuel — retour
     document.getElementById('btn-food-back-manual')?.addEventListener('click', () => showStep(1));

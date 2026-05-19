@@ -1254,6 +1254,15 @@
           <p id="food-favs-empty" class="food-favs-empty hidden" data-i18n="food.favs_empty">Aucun favori enregistré.</p>
         </div>
 
+        <div id="food-dishes-section" class="food-favs-section">
+          <div class="food-dishes-header">
+            <p class="food-favs-label" data-i18n="dish.my_dishes">Mes plats</p>
+            <button id="btn-new-dish" class="btn-new-dish" type="button" data-i18n="dish.new">+ Nouveau plat</button>
+          </div>
+          <div id="food-dishes-list" class="food-dishes-list"></div>
+          <p id="food-dishes-empty" class="food-favs-empty hidden" data-i18n="dish.empty">Aucun plat enregistré.</p>
+        </div>
+
         <div id="food-search-results" class="food-search-results">
           <p id="food-search-hint" class="food-search-hint" data-i18n="food.search_hint">Tape le nom d'un aliment pour commencer la recherche.</p>
           <div id="food-results-list"></div>
@@ -1345,6 +1354,26 @@
           </div>
           <button type="submit" class="btn-primary btn-full" style="margin-top:4px" data-i18n="meal.add_btn">Ajouter ce repas</button>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Éditeur de plat personnalisé -->
+  <div id="modal-dish-editor" class="modal-overlay hidden">
+    <div class="modal-sheet modal-sheet-full">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <button id="btn-dish-back" class="btn-food-back" type="button">← <span data-i18n="ob.back">Retour</span></button>
+        <h2 class="modal-title" id="dish-editor-title" data-i18n="dish.new_title">Nouveau plat</h2>
+        <button id="btn-save-dish" class="btn-primary btn-sm" data-i18n="dish.save">Sauvegarder</button>
+      </div>
+      <div class="dish-editor-body">
+        <div class="input-group" style="margin:16px 16px 4px">
+          <label class="input-label" data-i18n="dish.name_label">Nom du plat</label>
+          <input id="dish-name-input" type="text" class="input" placeholder="Ex: Poulet-riz..." autocomplete="off">
+        </div>
+        <div id="dish-foods-list" class="dish-foods-list"></div>
+        <button id="btn-dish-add-food" class="btn-secondary btn-full dish-add-food-btn" type="button" data-i18n="dish.add_food">+ Ajouter un aliment</button>
       </div>
     </div>
   </div>
