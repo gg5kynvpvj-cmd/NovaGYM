@@ -1021,7 +1021,7 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .badge-item.earned { border-color: var(--accent-30); }
 .badge-item.locked { opacity: 0.45; }
 .badge-img-wrap {
-  width: 52px; height: 52px;
+  width: 72px; height: 72px;
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
 }
@@ -1029,7 +1029,7 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   filter: grayscale(1) brightness(0.5);
 }
 .badge-img {
-  width: 52px; height: 52px;
+  width: 72px; height: 72px;
   object-fit: contain;
   mix-blend-mode: normal;
   /* Supprime les contours blancs/noirs sur PNG à fond transparent */
