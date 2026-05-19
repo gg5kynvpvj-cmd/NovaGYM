@@ -22,7 +22,7 @@
   --radius-pill:  100px;
   --shadow-card:  0 2px 20px rgba(0,0,0,0.5);
   --ease:         cubic-bezier(0.4, 0, 0.2, 1);
-  --font:         -apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+  --font:         'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --nav-h:        80px;
   --timer-h:      64px;
 }
