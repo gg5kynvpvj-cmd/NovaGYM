@@ -867,6 +867,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <h1 class="pe-title" data-i18n="profile.customize_title">Mon profil public</h1>
+      <button id="btn-pe-preview" class="pe-preview-btn" data-i18n="profile.view_profile">Voir</button>
     </div>
 
     <div class="pe-body">
@@ -1031,6 +1032,18 @@
       </div>
       <div id="friend-profile-content" class="friend-profile-content"></div>
       <button id="btn-remove-friend" class="btn-danger btn-full" style="margin-top:16px" data-i18n="social.remove_friend">Supprimer de mes amis</button>
+    </div>
+  </div>
+
+  <!-- Aperçu complet profil (depuis l'éditeur) -->
+  <div id="modal-profile-preview" class="modal-overlay hidden">
+    <div class="modal-sheet modal-sheet-tall">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="profile.preview_title">Aperçu de ton profil</h2>
+        <button id="btn-close-profile-preview" class="modal-close">✕</button>
+      </div>
+      <div id="profile-preview-content" class="friend-profile-content"></div>
     </div>
   </div>
 

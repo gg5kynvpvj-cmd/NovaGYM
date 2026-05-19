@@ -93,7 +93,7 @@ window.ProfileEditor = (() => {
       if (!slot) continue;
       const badgeId = tempBadges[i];
       if (badgeId) {
-        slot.innerHTML = `<img src="${Badges.img(badgeId)}" style="width:36px;height:36px;object-fit:contain;" alt="" onerror="this.style.display='none'">`;
+        slot.innerHTML = `<img src="${Badges.img(badgeId)}" style="width:68px;height:68px;object-fit:contain;display:block;" alt="" onerror="this.style.display='none'">`;
         slot.classList.add('filled');
       } else {
         slot.innerHTML = `<span class="pe-slot-placeholder">+</span>`;
@@ -168,6 +168,94 @@ window.ProfileEditor = (() => {
         </div>
       </div>
     `;
+  }
+
+  /* ─── Aperçu complet (vue ami) ──────────────────────── */
+  function showFullPreview() {
+    const profile = App.state.profile;
+    if (!profile) return;
+    const content = document.getElementById('profile-preview-content');
+    if (!content) return;
+
+    const avatarUrl = App.state.profile?.avatar_url || App.local.get('avatar_url');
+    const avatarHtml = avatarUrl
+      ? `<div class="fp-avatar"><img src="${avatarUrl}" alt="${profile.username}"></div>`
+      : `<div class="fp-avatar">${(profile.username || 'N').charAt(0).toUpperCase()}</div>`;
+
+    let html = `
+      <div class="fp-header">
+        ${avatarHtml}
+        <p class="fp-username">${profile.username || ''}</p>
+      </div>
+    `;
+
+    const badgeDefs = (Badges.ALL_BADGES || []).filter(b => tempBadges.includes(b.id));
+    if (badgeDefs.length > 0) {
+      html += `
+        <div class="fp-section">
+          <p class="fp-section-title">${window.I18n ? I18n.t('profile.badges_section') : 'Badges'}</p>
+          <div class="fp-badges-row">
+            ${badgeDefs.map(b => {
+              const bName = window.I18n ? I18n.t('badge.' + b.id + '.name') : b.id;
+              return `<div class="fp-badge-item" data-badge-id="${b.id}" title="${bName}">
+                <img class="fp-badge-img" src="${Badges.img(b.id)}" alt="${bName}" onerror="this.style.display='none'">
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    if (tempBio) {
+      html += `
+        <div class="fp-section">
+          <p class="fp-bio">${tempBio.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+        </div>
+      `;
+    }
+
+    const perfs = computePerformances();
+    const perfData = tempPerf && perfs[tempPerf] ? perfs[tempPerf] : null;
+    if (perfData) {
+      const lang   = window.I18n ? I18n.lang : 'fr';
+      const pt     = PERF_TYPES.find(p => p.id === tempPerf);
+      const label  = pt ? (lang === 'fr' ? pt.fr : pt.en) : tempPerf;
+      const icon   = pt?.icon || '🏆';
+      html += `
+        <div class="fp-section">
+          <p class="fp-section-title">${window.I18n ? I18n.t('profile.perf_section') : 'Meilleure performance'}</p>
+          <div class="friend-perf-card">
+            <span class="friend-perf-icon">${icon}</span>
+            <div class="friend-perf-info">
+              <span class="friend-perf-label">${label}</span>
+              <span class="friend-perf-value">${perfData.value}${perfData.date ? ' · ' + perfData.date : ''}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (badgeDefs.length === 0 && !tempBio && !perfData) {
+      html += `<p class="social-empty" style="margin-top:16px">${window.I18n ? I18n.t('profile.nothing_shared') : 'Rien à afficher'}</p>`;
+    }
+
+    content.innerHTML = html;
+
+    content.querySelectorAll('.fp-badge-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const badgeId = el.dataset.badgeId;
+        const overlay = document.getElementById('badge-zoom-overlay');
+        if (!overlay) return;
+        const name = window.I18n ? I18n.t('badge.' + badgeId + '.name') : badgeId;
+        const desc = window.I18n ? I18n.t('badge.' + badgeId + '.desc') : '';
+        document.getElementById('badge-zoom-img').src = Badges.img(badgeId);
+        document.getElementById('badge-zoom-name').textContent = name;
+        document.getElementById('badge-zoom-desc').textContent = desc;
+        overlay.classList.remove('hidden');
+      });
+    });
+
+    document.getElementById('modal-profile-preview')?.classList.remove('hidden');
   }
 
   /* ─── Mise à jour bio aperçu ────────────────────────── */
@@ -279,6 +367,14 @@ window.ProfileEditor = (() => {
       document.getElementById('modal-badge-picker')?.classList.add('hidden');
     });
     document.getElementById('modal-badge-picker')?.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+
+    document.getElementById('btn-pe-preview')?.addEventListener('click', showFullPreview);
+    document.getElementById('btn-close-profile-preview')?.addEventListener('click', () => {
+      document.getElementById('modal-profile-preview')?.classList.add('hidden');
+    });
+    document.getElementById('modal-profile-preview')?.addEventListener('click', function(e) {
       if (e.target === this) this.classList.add('hidden');
     });
 
