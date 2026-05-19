@@ -5,6 +5,10 @@
 
 (async () => {
 
+  /* ─── Protège les images (clic droit / long press / drag) ─ */
+  document.addEventListener('contextmenu', e => { if (e.target.tagName === 'IMG') e.preventDefault(); }, true);
+  document.addEventListener('dragstart',   e => { if (e.target.tagName === 'IMG') e.preventDefault(); }, true);
+
   /* ─── Navigation entre pages ─────────────────────────── */
   App.navigate = function(pageName) {
     document.querySelectorAll('.page').forEach(p => {
