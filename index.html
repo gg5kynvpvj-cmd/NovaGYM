@@ -806,6 +806,10 @@
           <span class="settings-item-label" data-i18n="settings.help">Aide & FAQ</span>
           <span class="settings-arrow">›</span>
         </div>
+        <div id="btn-replay-tutorial" class="settings-item" style="cursor:pointer">
+          <span class="settings-item-label" data-i18n="tut.replay">Revoir le tutoriel</span>
+          <span class="settings-arrow">›</span>
+        </div>
         <div id="btn-reset-app" class="settings-item danger" style="cursor:pointer">
           <span class="settings-item-label" data-i18n="settings.reset">Effacer données</span>
           <span class="settings-arrow">›</span>
@@ -1918,6 +1922,20 @@
 <script src="/js/social.js"></script>
 <script src="/js/groups.js"></script>
 <script src="/js/dm.js"></script>
+<script src="/js/tutorial.js"></script>
+
+<!-- ─── Tutoriel première utilisation ─────────────── -->
+<div id="tutorial-overlay" class="hidden">
+  <div id="tutorial-modal">
+    <button id="btn-tut-skip" class="tut-skip-btn" data-i18n="tut.skip">Passer</button>
+    <div id="tut-icon" class="tut-icon"></div>
+    <h2 id="tut-title" class="tut-title"></h2>
+    <p id="tut-desc" class="tut-desc"></p>
+    <div id="tut-dots" class="tut-dots"></div>
+    <button id="btn-tut-next" class="btn-primary tut-next-btn" data-i18n="tut.next">Suivant</button>
+  </div>
+</div>
+
 <script src="/js/profile-editor.js"></script>
 <script src="/js/settings.js"></script>
 <script src="/js/dev.js"></script>

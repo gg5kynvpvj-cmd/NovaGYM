@@ -17,6 +17,7 @@
     const target = document.getElementById('page-' + pageName);
     if (target) {
       target.classList.add('active', 'page-enter');
+      target.scrollTop = 0;
     }
 
     // Affiche la nav uniquement sur l'app principale
@@ -33,6 +34,7 @@
     const tab = document.getElementById('tab-' + tabName);
     if (tab) {
       tab.classList.add('active');
+      tab.scrollTop = 0;
       tab.style.animation = 'none';
       tab.offsetHeight;
       tab.style.animation = 'fadeSlideUp 0.3s var(--ease)';
@@ -124,6 +126,7 @@
 
     if (destination === 'app') {
       try { await App.refreshApp(); } catch(e) { console.warn(e); }
+      if (window.Tutorial) Tutorial.maybeShow();
     }
   }
 
@@ -141,6 +144,7 @@
     ProfileEditor.init();
     Settings.init();
     if (window.DM) DM.init();
+    if (window.Tutorial) Tutorial.init();
     DevTools.init();
   }
 

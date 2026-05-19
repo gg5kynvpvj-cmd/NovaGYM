@@ -215,7 +215,8 @@ window.Onboarding = (() => {
         await saveProfile();
         window.App.navigate('app');
         window.App.switchTab('today');
-        window.App.refreshApp();
+        await window.App.refreshApp();
+        if (window.Tutorial) Tutorial.show();
       } catch (e) {
         console.error(e);
         btn.textContent = I18n.t('ob.finish');
