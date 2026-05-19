@@ -482,7 +482,10 @@ window.Groups = (() => {
       const editBtn = isMe
         ? `<button class="chat-edit-btn" data-mid="${escapeHtml(msg.id)}" data-mc="${escapeHtml(msg.content || '')}">${Icons.s('edit', 12)}</button>`
         : '';
-      bubbleContent = `<span class="chat-bubble-text">${escapeHtml(msg.content || '')}</span>${editBtn}`;
+      const delBtn = isMe
+        ? `<button class="chat-delete-btn" data-mid="${escapeHtml(msg.id)}">${Icons.s('trash', 12)}</button>`
+        : '';
+      bubbleContent = `<span class="chat-bubble-text">${escapeHtml(msg.content || '')}</span>${editBtn}${delBtn}`;
     }
 
     const edited = msg.is_edited ? `<span class="chat-edited">${t('group.edited')}</span>` : '';
@@ -510,8 +513,18 @@ window.Groups = (() => {
       container.querySelectorAll('.chat-edit-btn').forEach(btn => {
         btn.addEventListener('click', () => startEditGroupMsg(btn.dataset.mid, btn.dataset.mc));
       });
+      container.querySelectorAll('.chat-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteGroupMsg(btn.dataset.mid));
+      });
     }
     scrollChatToBottom();
+  }
+
+  async function deleteGroupMsg(msgId) {
+    if (!confirm(t('dm.confirm_delete'))) return;
+    await App.supabase.from('group_messages').delete().eq('id', msgId).eq('user_id', uid());
+    chatMessages = chatMessages.filter(m => m.id !== msgId);
+    renderChatMessages();
   }
 
   async function editGroupMsg(msgId, newContent) {
@@ -753,6 +766,14 @@ window.Groups = (() => {
           chatMessages[idx] = { ...chatMessages[idx], ...payload.new };
           if (!document.getElementById('grp-tab-chat')?.classList.contains('hidden')) renderChatMessages();
         }
+      })
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public',
+        table: 'group_messages',
+        filter: `group_id=eq.${groupId}`,
+      }, payload => {
+        chatMessages = chatMessages.filter(m => m.id !== payload.old.id);
+        if (!document.getElementById('grp-tab-chat')?.classList.contains('hidden')) renderChatMessages();
       })
       .on('broadcast', { event: 'ephemeral_image' }, payload => {
         const d = payload.payload;

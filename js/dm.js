@@ -154,6 +154,14 @@ window.DM = (() => {
     reader.readAsDataURL(file);
   }
 
+  /* ─── Suppression message ─────────────────────────────── */
+  async function deleteMessage(msgId) {
+    if (!confirm(t('dm.confirm_delete'))) return;
+    await App.supabase.from('private_messages').delete().eq('id', msgId).eq('sender_id', myId());
+    dmMessages = dmMessages.filter(m => m.id !== msgId);
+    renderMessages();
+  }
+
   /* ─── Modification message ─────────────────────────────── */
   async function editMessage(msgId, newContent) {
     if (!newContent?.trim() || !App.supabase) return;
@@ -200,6 +208,14 @@ window.DM = (() => {
         const idx = dmMessages.findIndex(m => m.id === payload.new.id);
         if (idx >= 0) { dmMessages[idx] = { ...dmMessages[idx], ...payload.new }; renderMessages(); }
       })
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public',
+        table: 'private_messages',
+        filter: `conversation_id=eq.${convId}`,
+      }, payload => {
+        dmMessages = dmMessages.filter(m => m.id !== payload.old.id);
+        renderMessages();
+      })
       .on('broadcast', { event: 'dm_image' }, payload => {
         const d = payload.payload;
         if (!d || d.conv_id !== currentConvId || d.sender_id === myId()) return;
@@ -243,7 +259,10 @@ window.DM = (() => {
       const editBtn = isMe
         ? `<button class="chat-edit-btn" data-mid="${esc(msg.id)}" data-mc="${esc(msg.content || '')}">${Icons.s('edit', 12)}</button>`
         : '';
-      bubble = `<span class="chat-bubble-text">${esc(msg.content || '')}</span>${editBtn}`;
+      const delBtn = isMe
+        ? `<button class="chat-delete-btn" data-mid="${esc(msg.id)}">${Icons.s('trash', 12)}</button>`
+        : '';
+      bubble = `<span class="chat-bubble-text">${esc(msg.content || '')}</span>${editBtn}${delBtn}`;
     }
 
     return `<div class="chat-row ${isMe ? 'chat-row-me' : 'chat-row-other'}" data-msg-id="${esc(msg.id)}">
@@ -270,6 +289,9 @@ window.DM = (() => {
 
     body.querySelectorAll('.chat-edit-btn').forEach(btn => {
       btn.addEventListener('click', () => startInlineEdit(btn.dataset.mid, btn.dataset.mc));
+    });
+    body.querySelectorAll('.chat-delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => deleteMessage(btn.dataset.mid));
     });
   }
 
