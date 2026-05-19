@@ -932,6 +932,7 @@ window.Nutrition = (() => {
     // Plats — ajouter un aliment au plat
     document.getElementById('btn-dish-add-food')?.addEventListener('click', () => {
       foodSearchMode = 'dish';
+      document.getElementById('modal-dish-editor')?.classList.add('hidden');
       const titleEl = document.getElementById('food-search-title');
       if (titleEl) titleEl.textContent = window.I18n ? I18n.t('dish.add_food') : '+ Ajouter un aliment';
       showStep(1);
