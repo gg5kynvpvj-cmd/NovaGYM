@@ -206,10 +206,10 @@ window.History = (() => {
       : `${Math.round(totals.cal)} kcal`;
 
     const mealTypes = [
-      { key: 'breakfast', label: I18n.t('meal.type.breakfast'), icon: '🌅' },
-      { key: 'lunch',     label: I18n.t('meal.type.lunch'),     icon: '☀️' },
-      { key: 'dinner',    label: I18n.t('meal.type.dinner'),    icon: '🌙' },
-      { key: 'snacks',    label: I18n.t('meal.type.snacks'),    icon: '🍎' },
+      { key: 'breakfast', label: I18n.t('meal.type.breakfast'), icon: Icons.s('sunrise', 18) },
+      { key: 'lunch',     label: I18n.t('meal.type.lunch'),     icon: Icons.s('sun',     18) },
+      { key: 'dinner',    label: I18n.t('meal.type.dinner'),    icon: Icons.s('moon',    18) },
+      { key: 'snacks',    label: I18n.t('meal.type.snacks'),    icon: Icons.s('apple',   18) },
     ];
 
     const mealsByType = {};
@@ -235,7 +235,7 @@ window.History = (() => {
       return `
         <div class="hn-meal-group">
           <div class="hn-meal-header">
-            <span>${mt.icon} ${mt.label}</span>
+            <span class="nutr-meal-card-title"><span class="nutr-meal-card-icon">${mt.icon}</span>${mt.label}</span>
             <span class="hn-meal-cal">${typeCal} kcal</span>
           </div>
           ${itemsHtml}
