@@ -654,11 +654,12 @@ window.Groups = (() => {
     if (!file || !currentGroup || !App.supabase) return;
 
     const btnImg = document.getElementById('btn-chat-image');
-    if (btnImg) { btnImg.disabled = true; btnImg.textContent = '...'; }
+    const imgIcon = Icons.s('image', 22);
+    if (btnImg) { btnImg.disabled = true; btnImg.style.opacity = '0.4'; }
 
     const imageData = await compressImage(file, 900, 0.78);
     if (!imageData) {
-      if (btnImg) { btnImg.disabled = false; btnImg.textContent = '🖼'; }
+      if (btnImg) { btnImg.disabled = false; btnImg.style.opacity = ''; btnImg.innerHTML = imgIcon; }
       return;
     }
 
@@ -712,7 +713,7 @@ window.Groups = (() => {
       }
     }
 
-    if (btnImg) { btnImg.disabled = false; btnImg.textContent = '🖼'; }
+    if (btnImg) { btnImg.disabled = false; btnImg.style.opacity = ''; btnImg.innerHTML = imgIcon; }
   }
 
   function openShareSessionPicker() {
