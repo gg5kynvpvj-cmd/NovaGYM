@@ -116,42 +116,72 @@ window.DM = (() => {
     }).eq('id', currentConvId);
   }
 
-  /* ─── Envoi image (éphémère via broadcast) ─────────────── */
-  function handleImageUpload(file) {
-    if (!file || !dmChannel) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX = 700;
-        let w = img.width, h = img.height;
-        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        const b64 = canvas.toDataURL('image/jpeg', 0.72);
+  /* ─── Compression image ──────────────────────────────────── */
+  function compressImage(file, maxWidth, quality) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(null);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
 
-        // Broadcast
+  /* ─── Envoi image persistante via Supabase Storage ────────── */
+  async function handleImageUpload(file) {
+    if (!file || !currentConvId || !App.supabase) return;
+
+    const b64 = await compressImage(file, 900, 0.78);
+    if (!b64) return;
+
+    const me = myId();
+
+    try {
+      const blob = await (await fetch(b64)).blob();
+      const path = `dm/${currentConvId}/${Date.now()}_${me}.jpg`;
+      const { error: upErr } = await App.supabase.storage
+        .from('groups').upload(path, blob, { contentType: 'image/jpeg' });
+      if (upErr) throw upErr;
+
+      const { data: urlData } = App.supabase.storage.from('groups').getPublicUrl(path);
+      const imageUrl = urlData?.publicUrl;
+
+      await App.supabase.from('private_messages').insert({
+        conversation_id: currentConvId,
+        sender_id:       me,
+        content:         '',
+        message_type:    'image',
+        image_url:       imageUrl,
+      });
+
+    } catch (err) {
+      console.warn('DM image upload failed, fallback éphémère:', err?.message || err);
+      if (dmChannel) {
         dmChannel.send({
           type: 'broadcast', event: 'dm_image',
-          payload: { conv_id: currentConvId, sender_id: myId(), image_data: b64 },
+          payload: { conv_id: currentConvId, sender_id: me, image_data: b64 },
         });
-
-        // Affiche localement
-        dmMessages.push({
-          id:           'tmp-img-' + Date.now(),
-          sender_id:    myId(),
-          message_type: 'ephemeral_image',
-          image_data:   b64,
-          created_at:   new Date().toISOString(),
-          sender:       { id: myId(), username: myProfile()?.username, avatar_url: App.local.get('avatar_url') },
-        });
-        renderMessages();
-        scrollToBottom();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+      }
+      dmMessages.push({
+        id: 'tmp-img-' + Date.now(), sender_id: me,
+        message_type: 'ephemeral_image', image_data: b64,
+        created_at: new Date().toISOString(),
+        sender: { id: me, username: myProfile()?.username, avatar_url: App.local.get('avatar_url') },
+      });
+      renderMessages();
+      scrollToBottom();
+    }
   }
 
   /* ─── Suppression message ─────────────────────────────── */
