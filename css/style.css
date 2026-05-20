@@ -1331,8 +1331,9 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
   width: 100%;
   max-width: 430px;
   height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
@@ -1345,6 +1346,9 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   padding: 10px 8px 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 50;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
 }
 .nav-item {
   flex: 1;
@@ -2561,6 +2565,10 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .food-search-input:focus { border-color: var(--accent); }
 :root.light .food-search-input { color: #0B0B0B; background: #F5F5F5; }
 
+.food-action-row {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.food-action-row .btn-toggle-barcode { margin-bottom: 0; }
 .btn-toggle-barcode {
   display: flex;
   align-items: center;
@@ -2572,7 +2580,7 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   padding: 7px 14px;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   transition: all 0.15s;
 }
 .btn-toggle-barcode:active { border-color: var(--accent); color: var(--accent); }
