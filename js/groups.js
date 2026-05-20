@@ -46,6 +46,9 @@ window.Groups = (() => {
   function unit(typeId)   { const c = ctInfo(typeId); return lang() === 'fr' ? c.ufr : c.uen; }
   function today()        { return new Date().toISOString().slice(0, 10); }
 
+  function getLocalInvitePerms(gid) { return App.local.get('inv_perms_' + gid) || {}; }
+  function setLocalInvitePerm(gid, userId, val) { const p = getLocalInvitePerms(gid); p[userId] = val; App.local.set('inv_perms_' + gid, p); }
+
   function avatarDiv(avatarUrl, name, cls = 'grp-avatar') {
     const letter = (name || '?').charAt(0).toUpperCase();
     if (avatarUrl) return `<img src="${avatarUrl}" class="${cls}" alt="${letter}">`;
@@ -136,6 +139,10 @@ window.Groups = (() => {
     currentMembers = (members || []).map(m => ({
       ...m, profile: profileMap[m.user_id] || { id: m.user_id, username: '?' },
     }));
+
+    // Fusionner permissions locales (persistance entre navigations)
+    const localPerms = getLocalInvitePerms(groupId);
+    currentMembers.forEach(m => { if (localPerms[m.user_id] !== undefined) m.can_invite = localPerms[m.user_id]; });
 
     // Défis
     const { data: challenges } = await App.supabase
@@ -381,7 +388,7 @@ window.Groups = (() => {
           const isMe = m.user_id === uid();
           const role = m.role === 'owner' ? `<span class="grp-role-icon grp-role-owner">${Icons.s('crown', 14)}</span> ` : m.role === 'admin' ? `<span class="grp-role-icon grp-role-admin">${Icons.s('star', 14)}</span> ` : '';
           const invBtn = isOwner && !isMe && m.role !== 'owner'
-            ? `<button class="grp-member-inv-toggle${m.can_invite ? ' active' : ''}" data-mid="${m.id}" title="${t(m.can_invite ? 'group.revoke_invite_perm' : 'group.grant_invite_perm')}">${Icons.s('user-plus', 14)}</button>`
+            ? `<button class="grp-member-inv-toggle${m.can_invite ? ' active' : ''}" data-mid="${m.id}" data-uid="${m.user_id}" title="${t(m.can_invite ? 'group.revoke_invite_perm' : 'group.grant_invite_perm')}"><span class="grp-inv-check">${m.can_invite ? '✓' : ''}</span></button>`
             : '';
           return `
             <div class="grp-member-item">
@@ -399,21 +406,18 @@ window.Groups = (() => {
     if (canInvite) document.getElementById('btn-grp-invite')?.addEventListener('click', openInviteFriends);
 
     container.querySelectorAll('.grp-member-inv-toggle').forEach(btn =>
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', () => {
         const newVal = !btn.classList.contains('active');
         const member = currentMembers.find(m => m.id === btn.dataset.mid);
         if (member) member.can_invite = newVal;
+        setLocalInvitePerm(currentGroup.id, btn.dataset.uid, newVal);
         btn.classList.toggle('active', newVal);
+        const check = btn.querySelector('.grp-inv-check');
+        if (check) check.textContent = newVal ? '✓' : '';
         btn.title = t(newVal ? 'group.revoke_invite_perm' : 'group.grant_invite_perm');
         if (App.supabase) {
-          const { error } = await App.supabase
-            .from('group_members').update({ can_invite: newVal }).eq('id', btn.dataset.mid);
-          if (error) {
-            console.warn('Toggle invite perm:', error.message);
-            if (member) member.can_invite = !newVal;
-            btn.classList.toggle('active', !newVal);
-            btn.title = t(!newVal ? 'group.revoke_invite_perm' : 'group.grant_invite_perm');
-          }
+          App.supabase.from('group_members').update({ can_invite: newVal }).eq('id', btn.dataset.mid)
+            .then(({ error }) => { if (error) console.warn('Toggle invite perm DB:', error.message); });
         }
       }));
 

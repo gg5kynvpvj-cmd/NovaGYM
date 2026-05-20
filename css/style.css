@@ -3437,13 +3437,20 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 }
 .grp-ch-del-btn:hover { color: #FF453A; background: rgba(255,69,58,0.1); }
 .grp-member-inv-toggle {
-  background: none; border: 1px solid var(--border);
-  color: var(--text-3); border-radius: 8px; padding: 4px 8px;
-  cursor: pointer; font-size: 12px; transition: all 0.15s; flex-shrink: 0;
+  background: none; border: 2px solid var(--border);
+  border-radius: 6px; width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: all 0.15s; padding: 0;
 }
-.grp-member-inv-toggle:hover, .grp-member-inv-toggle.active {
-  background: rgba(182,255,0,0.12); border-color: var(--primary); color: var(--primary);
+.grp-member-inv-toggle:hover { border-color: var(--primary); }
+.grp-member-inv-toggle.active {
+  background: var(--primary); border-color: var(--primary);
 }
+.grp-inv-check {
+  font-size: 15px; font-weight: 700; line-height: 1;
+  color: transparent; transition: color 0.15s;
+}
+.grp-member-inv-toggle.active .grp-inv-check { color: #000; }
 
 /* Membres */
 .grp-members-list { display: flex; flex-direction: column; gap: 8px; }
