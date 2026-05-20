@@ -258,7 +258,7 @@ window.Social = (() => {
   }
 
   /* ─── Modal profil ami ────────────────────────────── */
-  function openProfile(friendshipId) {
+  async function openProfile(friendshipId) {
     document.getElementById('btn-remove-friend').dataset.id = friendshipId;
 
     const f = friends.find(f => f.id === friendshipId);
@@ -334,6 +334,8 @@ window.Social = (() => {
       if (badgeDefs.length === 0 && !bestPerf && !bio) {
         html += `<p class="social-empty" style="margin-top:16px">${I18n.t('profile.nothing_shared')}</p>`;
       }
+      // Placeholder for shared workouts (loaded async below)
+      html += `<div id="fp-shared-workouts-section"></div>`;
     }
 
     content.innerHTML = html;
@@ -342,6 +344,50 @@ window.Social = (() => {
     content.querySelectorAll('.fp-badge-item').forEach(el => {
       el.addEventListener('click', () => showBadgeZoom(el.dataset.badgeId));
     });
+
+    // Charge les séances partagées en asynchrone
+    if (vis !== 'private' && App.supabase && p.id) {
+      const section = document.getElementById('fp-shared-workouts-section');
+      if (section) {
+        const tStr = k => (window.I18n ? I18n.t(k) : k);
+        const { data: sharedWorkouts } = await App.supabase
+          .from('shared_workouts')
+          .select('id, name, exercises')
+          .eq('user_id', p.id)
+          .order('created_at', { ascending: false })
+          .limit(8);
+        if (sharedWorkouts?.length > 0) {
+          section.innerHTML = `
+            <div class="fp-section">
+              <p class="fp-section-title">${tStr('profile.shared_workouts')}</p>
+              ${sharedWorkouts.map(w => `
+                <div class="fp-workout-card" data-wid="${w.id}">
+                  <div class="fp-workout-info">
+                    <span class="fp-workout-name">${w.name}</span>
+                    <span class="fp-workout-meta">${(w.exercises || []).length} ex.</span>
+                  </div>
+                  <button class="fp-workout-copy" data-wid="${w.id}" data-wname="${(w.name || '').replace(/"/g, '&quot;')}">${tStr('profile.copy_workout')}</button>
+                </div>
+              `).join('')}
+            </div>`;
+          section.querySelectorAll('.fp-workout-copy').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const wname = btn.dataset.wname || 'Séance';
+              const wid   = btn.dataset.wid;
+              const { data: w } = await App.supabase
+                .from('shared_workouts').select('exercises').eq('id', wid).single();
+              if (!w) return;
+              const newName = prompt(tStr('profile.copy_name_prompt'), wname);
+              if (!newName?.trim()) return;
+              const lib = App.local.get('workout_library') || [];
+              lib.unshift({ id: Date.now(), name: newName.trim(), exercises: w.exercises || [] });
+              App.local.set('workout_library', lib);
+              alert(tStr('profile.workout_copied'));
+            });
+          });
+        }
+      }
+    }
 
     // Bouton "Envoyer un message"
     const dmBtn = document.getElementById('btn-send-dm');

@@ -244,7 +244,9 @@ window.DM = (() => {
     const isMe   = msg.sender_id === myId();
     const sender = msg.sender || {};
     const name   = sender.username || '?';
-    const av     = avatarEl(sender.avatar_url, name);
+    const ownUrl = App.state.profile?.avatar_url || App.local.get('avatar_url');
+    const avUrl  = isMe ? (ownUrl || sender.avatar_url) : sender.avatar_url;
+    const av     = avatarEl(avUrl, name);
     const time   = fmtTime(msg.created_at);
     const edited = msg.is_edited ? `<span class="chat-edited">${t('dm.edited')}</span>` : '';
 
