@@ -338,14 +338,22 @@ window.Groups = (() => {
     let html = '';
     if (isOwner) html += `<button id="btn-challenges-create" class="btn-full btn-primary" style="margin-bottom:16px">${t('group.create_challenge')}</button>`;
 
+    const fmtVal = (v, type) => type === 'hydration' ? Number(v).toFixed(1) : Math.round(v);
+    const barColor = pct => {
+      if (pct >= 100) return 'linear-gradient(90deg,#FFD700,#FF9F0A)';
+      if (pct >= 60)  return 'linear-gradient(90deg,var(--primary),#8b5cf6)';
+      if (pct >= 30)  return 'linear-gradient(90deg,#FF9F0A,#FFD60A)';
+      return '#FF453A';
+    };
     const renderCard = (c, isActive) => {
       const ct   = ctInfo(c.type);
       const u    = unit(c.type);
       const val  = currentProgress[c.id]?.[uid()] || 0;
       const pct  = Math.min(100, Math.round((val / c.target_value) * 100));
       const end  = new Date(c.end_date + 'T00:00:00').toLocaleDateString(locale);
+      const done = pct >= 100;
       return `
-        <div class="grp-challenge-card${!isActive ? ' grp-challenge-past' : ''}">
+        <div class="grp-challenge-card${!isActive ? ' grp-challenge-past' : ''}${done ? ' grp-challenge-done' : ''}">
           <div class="grp-ch-card-top">
             <span class="grp-ch-icon">${ct.icon}</span>
             <div class="grp-ch-card-info">
@@ -354,9 +362,15 @@ window.Groups = (() => {
             </div>
             ${isOwner ? `<button class="grp-ch-del-btn" data-cid="${c.id}" title="${t('group.delete_challenge')}">✕</button>` : ''}
           </div>
-          <div class="grp-ch-bar-wrap"><div class="grp-ch-bar" style="width:${pct}%"></div></div>
+          <div class="grp-ch-progress-header">
+            <span class="grp-ch-progress-label">${t('group.my_progress')}</span>
+            <span class="grp-ch-progress-pct${done ? ' grp-ch-pct-done' : ''}">${done ? '🏆 ' : ''}${pct}%</span>
+          </div>
+          <div class="grp-ch-bar-wrap">
+            <div class="grp-ch-bar" style="width:${pct}%;background:${barColor(pct)}"></div>
+          </div>
           <div class="grp-ch-progress-row">
-            <span class="grp-ch-progress-val">${t('group.my_progress')} : ${val} / ${c.target_value} ${u}</span>
+            <span class="grp-ch-progress-val">${fmtVal(val, c.type)} / ${c.target_value} ${u}</span>
           </div>
         </div>`;
     };
