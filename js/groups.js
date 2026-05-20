@@ -308,6 +308,10 @@ window.Groups = (() => {
           const pct  = Math.min(100, Math.round((val / activeChallenge.target_value) * 100));
           const isMe = m.user_id === uid();
           const p    = m.profile;
+          const color = pct >= 100 ? 'linear-gradient(90deg,#FFD700,#FF9F0A)'
+                      : pct >= 60  ? 'linear-gradient(90deg,var(--primary),#8b5cf6)'
+                      : pct >= 30  ? 'linear-gradient(90deg,#FF9F0A,#FFD60A)'
+                      : '#FF453A';
           return `
             <div class="grp-rank-item${isMe ? ' grp-rank-me' : ''}">
               <span class="grp-rank-medal">${medals[i] || (i + 1) + '.'}</span>
@@ -315,7 +319,7 @@ window.Groups = (() => {
               <div class="grp-rank-info">
                 <span class="grp-rank-name">${p.username}${isMe ? ' <span class="grp-rank-me-label">toi</span>' : ''}</span>
                 <div class="grp-rank-bar-wrap">
-                  <div class="grp-rank-bar" style="width:${pct}%"></div>
+                  <div class="grp-rank-bar" style="width:${pct}%;background:${color}"></div>
                 </div>
                 <span class="grp-rank-value">${val} / ${activeChallenge.target_value} ${unitStr} (${pct}%)</span>
               </div>
