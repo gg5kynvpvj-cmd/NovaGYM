@@ -173,7 +173,7 @@ window.ProfileEditor = (() => {
   }
 
   /* ─── Aperçu complet (vue ami) ──────────────────────── */
-  function showFullPreview() {
+  async function showFullPreview() {
     const profile = App.state.profile;
     if (!profile) return;
     const content = document.getElementById('profile-preview-content');
@@ -241,7 +241,32 @@ window.ProfileEditor = (() => {
       html += `<p class="social-empty" style="margin-top:16px">${window.I18n ? I18n.t('profile.nothing_shared') : 'Rien à afficher'}</p>`;
     }
 
+    html += `<div id="fp-shared-workouts-section"></div>`;
+
     content.innerHTML = html;
+
+    // Charge les séances partagées de l'utilisateur
+    if (App.supabase && App.state.user?.id && !App.state.user.id.startsWith('local_')) {
+      const tStr = k => (window.I18n ? I18n.t(k) : k);
+      const { data: sharedWorkouts } = await App.supabase
+        .from('shared_workouts').select('id, name, exercises')
+        .eq('user_id', App.state.user.id).order('created_at', { ascending: false }).limit(8);
+      const section = document.getElementById('fp-shared-workouts-section');
+      if (section && sharedWorkouts?.length > 0) {
+        section.innerHTML = `
+          <div class="fp-section">
+            <p class="fp-section-title">${tStr('profile.shared_workouts')}</p>
+            ${sharedWorkouts.map(w => `
+              <div class="fp-workout-card">
+                <div class="fp-workout-info">
+                  <span class="fp-workout-name">${w.name}</span>
+                  <span class="fp-workout-meta">${(w.exercises || []).length} ex.</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>`;
+      }
+    }
 
     content.querySelectorAll('.fp-badge-item').forEach(el => {
       el.addEventListener('click', () => {
