@@ -544,9 +544,11 @@ window.Groups = (() => {
           <div class="chat-bubble ${isMe ? 'chat-bubble-me' : 'chat-bubble-other'}">
             ${bubbleContent}
           </div>
-          <span class="chat-time">${time}${edited}</span>
+          ${isMe
+            ? `<div class="chat-meta-me"><span class="chat-time">${time}${edited}</span>${av}</div>`
+            : `<span class="chat-time">${time}${edited}</span>`
+          }
         </div>
-        ${isMe ? av : ''}
       </div>`;
   }
 
