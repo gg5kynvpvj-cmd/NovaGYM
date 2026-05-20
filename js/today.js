@@ -12,6 +12,60 @@ window.Today = (() => {
   let completedSets    = {};  // { exerciseId: { setIndex: done } }
   let sessionStartTime = null;
 
+  /* ─── Auto-save séance en cours ─────────────────────── */
+  const DRAFT_KEY = 'session_draft';
+
+  function saveDraft() {
+    if (!currentExercises.length) return;
+    const today = new Date().toISOString().split('T')[0];
+    const inputs = {};
+    currentExercises.forEach(ex => {
+      const card = document.querySelector(`.exercise-card[data-exercise-id="${ex.id}"]`);
+      if (!card) return;
+      inputs[ex.id] = [...card.querySelectorAll('.set-item, .set-item-unilateral')].map(item => ({
+        reps:    item.querySelector('.set-reps-input')?.value    || '',
+        weight:  item.querySelector('.set-weight-input')?.value  || '',
+        repsL:   item.querySelector('.uni-reps-left')?.value     || '',
+        weightL: item.querySelector('.uni-weight-left')?.value   || '',
+        repsR:   item.querySelector('.uni-reps-right')?.value    || '',
+        weightR: item.querySelector('.uni-weight-right')?.value  || '',
+      }));
+    });
+    App.local.set(DRAFT_KEY, {
+      date: today, sessionType, exercises: currentExercises,
+      completedSets, startTime: sessionStartTime, inputs,
+    });
+  }
+
+  function clearDraft() { App.local.del(DRAFT_KEY); }
+
+  function restoreDraftVisuals() {
+    currentExercises.forEach(ex => {
+      const card = document.querySelector(`.exercise-card[data-exercise-id="${ex.id}"]`);
+      if (!card) return;
+      Object.entries(completedSets[ex.id] || {}).forEach(([idx, done]) => {
+        const items = [...card.querySelectorAll('.set-item, .set-item-unilateral')];
+        const item = items[parseInt(idx)];
+        if (!item) return;
+        if (done === true) {
+          item.classList.add('done');
+          item.querySelector('.set-check-btn')?.classList.add('done');
+        } else if (done && typeof done === 'object') {
+          if (done.left) {
+            item.querySelector('.unilateral-btn[data-side="left"]')?.classList.add('done');
+            item.querySelector('.uni-side-row[data-side="left"]')?.classList.add('done');
+          }
+          if (done.right) {
+            item.querySelector('.unilateral-btn[data-side="right"]')?.classList.add('done');
+            item.querySelector('.uni-side-row[data-side="right"]')?.classList.add('done');
+          }
+          if (done.left && done.right) item.classList.add('done');
+        }
+      });
+      checkCardCompletion(ex.id);
+    });
+  }
+
   /* ─── Carte quotidienne (pas + défis personnels) ────── */
   function dailyStorageKey() {
     return 'daily_' + new Date().toISOString().split('T')[0];
@@ -664,6 +718,7 @@ window.Today = (() => {
     // Affiche le bouton "Terminer" si tous les exercices sont faits
     const finishBtn = document.getElementById('btn-finish-session');
     if (finishBtn) finishBtn.classList.toggle('hidden', done < total || total === 0);
+    saveDraft();
   }
 
   /* ─── Fiche exercice (modal) ─────────────────────────── */
@@ -785,6 +840,7 @@ window.Today = (() => {
     currentExercises = [];
     completedSets    = {};
     sessionStartTime = null;
+    clearDraft();
 
     // Sauvegarde Supabase
     if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
@@ -810,6 +866,12 @@ window.Today = (() => {
     }
 
     Timer.hideWidget();
+
+    // Met à jour les défis de groupe automatiquement
+    if (window.Groups) {
+      Groups.autoUpdateChallengeProgress('sessions', 1);
+      if (totalVolume > 0) Groups.autoUpdateChallengeProgress('volume', Math.round(totalVolume));
+    }
 
     // Vérifie les badges
     const newBadges = await Badges.check(App.state.user?.id);
@@ -856,6 +918,60 @@ window.Today = (() => {
     // Si une séance est en cours, ne pas re-rendre les exercices
     // (évite de perdre les valeurs saisies en changeant d'onglet)
     if (currentExercises.length > 0) return;
+
+    // Restaure un brouillon de séance sauvegardé (si même journée)
+    const _today = new Date().toISOString().split('T')[0];
+    const _draft = App.local.get(DRAFT_KEY);
+    if (_draft?.date === _today && Array.isArray(_draft.exercises) && _draft.exercises.length > 0) {
+      sessionType      = _draft.sessionType;
+      currentExercises = _draft.exercises;
+      completedSets    = _draft.completedSets || {};
+      sessionStartTime = _draft.startTime     || Date.now();
+
+      document.getElementById('rest-day-card')?.classList.add('hidden');
+      document.getElementById('session-container')?.classList.remove('hidden');
+      const _nameEl = document.getElementById('session-type-name');
+      if (_nameEl) _nameEl.textContent = Programs.SESSION_NAMES[sessionType] || sessionType;
+
+      const _list = document.getElementById('exercise-list');
+      _list.innerHTML = '';
+      currentExercises.forEach((ex, i) => _list.appendChild(renderExerciseCard(ex, i)));
+
+      // Restaure les valeurs saisies
+      const _inp = _draft.inputs || {};
+      currentExercises.forEach(ex => {
+        const card = document.querySelector(`.exercise-card[data-exercise-id="${ex.id}"]`);
+        if (!card) return;
+        const items = [...card.querySelectorAll('.set-item, .set-item-unilateral')];
+        (_inp[ex.id] || []).forEach((d, i) => {
+          const item = items[i]; if (!item) return;
+          const fill = (sel, val) => { const el = item.querySelector(sel); if (el && val) el.value = val; };
+          fill('.set-reps-input',   d.reps);
+          fill('.set-weight-input', d.weight);
+          fill('.uni-reps-left',    d.repsL);
+          fill('.uni-weight-left',  d.weightL);
+          fill('.uni-reps-right',   d.repsR);
+          fill('.uni-weight-right', d.weightR);
+        });
+      });
+      restoreDraftVisuals();
+
+      const _addBtn = document.createElement('button');
+      _addBtn.className = 'add-exercise-btn'; _addBtn.id = 'btn-add-exercise-today';
+      _addBtn.textContent = window.I18n ? I18n.t('today.add_exercise') : '+ Ajouter un exercice';
+      _addBtn.addEventListener('click', openExercisePicker);
+      _list.appendChild(_addBtn);
+      const _libBtn = document.createElement('button');
+      _libBtn.className = 'add-exercise-btn';
+      _libBtn.style.background = 'var(--bg-card-2)'; _libBtn.style.color = 'var(--text-2)';
+      _libBtn.innerHTML = `${Icons.s('book-open', 16)} ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
+      _libBtn.addEventListener('click', openWorkoutLib);
+      _list.appendChild(_libBtn);
+
+      updateEstimatedTime(currentExercises);
+      updateProgress();
+      return;
+    }
 
     sessionType = Programs.getTodayType(profile);
     const isRest = sessionType === 'rest';
@@ -1200,6 +1316,7 @@ window.Today = (() => {
           <div class="workout-lib-name">${t.name}</div>
           <div class="workout-lib-meta">${t.exercises.length} exercice${t.exercises.length > 1 ? 's' : ''}</div>
         </div>
+        <button class="workout-lib-share" data-share-id="${t.id}" title="${tl('today.share_workout')}">${Icons.s('share', 14)}</button>
         <button class="workout-lib-edit" data-edit-id="${t.id}" title="Modifier">✎</button>
         <button class="workout-lib-load" data-lib-id="${t.id}">${tl('today.load_btn')}</button>
         <button class="workout-lib-del" data-del-id="${t.id}">✕</button>
@@ -1230,6 +1347,33 @@ window.Today = (() => {
       btn.addEventListener('click', () => {
         const t = getWorkoutLib().find(t => t.id == btn.dataset.delId);
         if (confirm(`Supprimer la séance "${t?.name || ''}" ?`)) deleteWorkoutFromLib(parseInt(btn.dataset.delId));
+      });
+    });
+    list.querySelectorAll('.workout-lib-share').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!App.supabase || !App.state.user?.id) {
+          alert(window.I18n ? I18n.t('today.share_login_required') : 'Connecte-toi pour partager des séances.');
+          return;
+        }
+        const workout = getWorkoutLib().find(t => t.id == btn.dataset.shareId);
+        if (!workout) return;
+        btn.disabled = true;
+        const prev = btn.innerHTML;
+        btn.innerHTML = '...';
+        // Check if already shared under same name
+        const { data: existing } = await App.supabase
+          .from('shared_workouts')
+          .select('id')
+          .eq('user_id', App.state.user.id)
+          .eq('name', workout.name)
+          .maybeSingle();
+        const payload = { user_id: App.state.user.id, name: workout.name, exercises: workout.exercises };
+        const { error } = existing
+          ? await App.supabase.from('shared_workouts').update({ exercises: workout.exercises }).eq('id', existing.id)
+          : await App.supabase.from('shared_workouts').insert(payload);
+        btn.disabled = false;
+        btn.innerHTML = prev;
+        if (!error) alert(window.I18n ? I18n.t('today.workout_shared') : 'Séance partagée sur ton profil !');
       });
     });
   }
@@ -1594,6 +1738,9 @@ window.Today = (() => {
     document.getElementById('modal-celebration')?.addEventListener('click', function(e) {
       if (e.target === this) this.classList.add('hidden');
     });
+
+    // Sauvegarde le brouillon quand l'utilisateur modifie un poids ou des reps
+    document.getElementById('exercise-list')?.addEventListener('input', saveDraft);
 
     initSessionTypeChange();
     initDailyCard();

@@ -15,20 +15,22 @@ window.Nutrition = (() => {
   let dishEditorItems = [];
   let editingDishId   = null;
 
+  const MEAL_ICON_MAP = { breakfast: 'sunrise', lunch: 'sun', dinner: 'moon', snacks: 'apple' };
+
   function getMealTypes() {
     const t = window.I18n ? I18n.t.bind(I18n) : k => k;
     return [
-      { key: 'breakfast', label: t('meal.type.breakfast'), icon: '🌅' },
-      { key: 'lunch',     label: t('meal.type.lunch'),     icon: '☀️' },
-      { key: 'dinner',    label: t('meal.type.dinner'),    icon: '🌙' },
-      { key: 'snacks',    label: t('meal.type.snacks'),    icon: '🍎' },
+      { key: 'breakfast', label: t('meal.type.breakfast'), icon: Icons.s('sunrise', 18) },
+      { key: 'lunch',     label: t('meal.type.lunch'),     icon: Icons.s('sun',     18) },
+      { key: 'dinner',    label: t('meal.type.dinner'),    icon: Icons.s('moon',    18) },
+      { key: 'snacks',    label: t('meal.type.snacks'),    icon: Icons.s('apple',   18) },
     ];
   }
   const MEAL_TYPES = [
-    { key: 'breakfast', label: 'Petit déjeuner', icon: '🌅' },
-    { key: 'lunch',     label: 'Déjeuner',       icon: '☀️' },
-    { key: 'dinner',    label: 'Dîner',           icon: '🌙' },
-    { key: 'snacks',    label: 'Collations',      icon: '🍎' },
+    { key: 'breakfast', label: 'Petit déjeuner', icon: Icons.s('sunrise', 18) },
+    { key: 'lunch',     label: 'Déjeuner',       icon: Icons.s('sun',     18) },
+    { key: 'dinner',    label: 'Dîner',           icon: Icons.s('moon',    18) },
+    { key: 'snacks',    label: 'Collations',      icon: Icons.s('apple',   18) },
   ];
 
   /* ─── Clés localStorage ──────────────────────────────────── */
@@ -365,7 +367,8 @@ window.Nutrition = (() => {
     d.water = (d.water || 0) + amount;
     saveData(d);
     renderWater(d);
-    if (window.Today) Today.renderWaterChallenge();
+    if (window.Today)  Today.renderWaterChallenge();
+    if (window.Groups) Groups.autoUpdateChallengeProgress('hydration', amount);
     if (input) input.value = '';
   }
 
@@ -452,7 +455,14 @@ window.Nutrition = (() => {
     currentMealType = mealType;
     const typeInfo = getMealTypes().find(t => t.key === mealType);
     const addFoodsLabel = window.I18n ? I18n.t('nutr.add_foods') : 'Ajouter des aliments';
-    setText('food-search-title', (typeInfo ? `${typeInfo.icon} ${typeInfo.label}` : addFoodsLabel));
+    const titleEl = document.getElementById('food-search-title');
+    if (titleEl) {
+      if (typeInfo) {
+        titleEl.innerHTML = `<span class="nutr-meal-card-title"><span class="nutr-meal-card-icon">${Icons.s(MEAL_ICON_MAP[typeInfo.key] || 'apple', 20)}</span>${typeInfo.label}</span>`;
+      } else {
+        titleEl.textContent = addFoodsLabel;
+      }
+    }
 
     // Réinitialise l'état
     const input = document.getElementById('food-search-input');
@@ -611,6 +621,7 @@ window.Nutrition = (() => {
     const d = getData();
     d.meals.push(meal);
     saveData(d);
+    if (window.Groups && meal.calories > 0) Groups.autoUpdateChallengeProgress('calories', Math.round(meal.calories));
     closeFoodSearch();
     render();
   }
@@ -983,6 +994,7 @@ window.Nutrition = (() => {
       const d = getData();
       d.meals.push(meal);
       saveData(d);
+      if (window.Groups && meal.calories > 0) Groups.autoUpdateChallengeProgress('calories', Math.round(meal.calories));
       closeFoodSearch();
       render();
     });

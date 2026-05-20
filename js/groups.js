@@ -119,7 +119,7 @@ window.Groups = (() => {
     // Membres actifs
     const { data: members } = await App.supabase
       .from('group_members')
-      .select('id, user_id, role, status, joined_at')
+      .select('id, user_id, role, status, joined_at, can_invite')
       .eq('group_id', groupId)
       .eq('status', 'active');
 
@@ -312,13 +312,10 @@ window.Groups = (() => {
                 </div>
                 <span class="grp-rank-value">${val} / ${activeChallenge.target_value} ${unitStr} (${pct}%)</span>
               </div>
-              ${isMe ? `<button class="grp-rank-add-btn" data-cid="${activeChallenge.id}">+</button>` : ''}
             </div>`;
         }).join('')}
       </div>`;
 
-    container.querySelectorAll('.grp-rank-add-btn').forEach(btn =>
-      btn.addEventListener('click', () => openProgressModal(btn.dataset.cid)));
   }
 
   /* ─── Onglet Défis ───────────────────────────────────── */
@@ -348,11 +345,11 @@ window.Groups = (() => {
               <span class="grp-ch-title">${c.title}</span>
               <span class="grp-ch-meta">${isActive ? t('group.ends') : t('group.ended')} ${end} · ${c.target_value} ${u}</span>
             </div>
+            ${isOwner ? `<button class="grp-ch-del-btn" data-cid="${c.id}" title="${t('group.delete_challenge')}">✕</button>` : ''}
           </div>
           <div class="grp-ch-bar-wrap"><div class="grp-ch-bar" style="width:${pct}%"></div></div>
           <div class="grp-ch-progress-row">
             <span class="grp-ch-progress-val">${t('group.my_progress')} : ${val} / ${c.target_value} ${u}</span>
-            ${isActive ? `<button class="grp-ch-add-btn" data-cid="${c.id}">+ ${t('group.add_progress')}</button>` : ''}
           </div>
         </div>`;
     };
@@ -363,8 +360,8 @@ window.Groups = (() => {
 
     container.innerHTML = html;
     document.getElementById('btn-challenges-create')?.addEventListener('click', openCreateChallenge);
-    container.querySelectorAll('.grp-ch-add-btn').forEach(btn =>
-      btn.addEventListener('click', () => openProgressModal(btn.dataset.cid)));
+    container.querySelectorAll('.grp-ch-del-btn').forEach(btn =>
+      btn.addEventListener('click', () => deleteChallenge(btn.dataset.cid)));
   }
 
   /* ─── Onglet Membres ─────────────────────────────────── */
@@ -372,15 +369,20 @@ window.Groups = (() => {
     const container = document.getElementById('grp-tab-members');
     if (!container) return;
 
-    const isOwner = currentGroup.created_by === uid() || currentGroup.role === 'owner';
+    const isOwner  = currentGroup.created_by === uid() || currentGroup.role === 'owner';
+    const myMember = currentMembers.find(m => m.user_id === uid());
+    const canInvite = isOwner || myMember?.can_invite;
 
     container.innerHTML = `
-      <button id="btn-grp-invite" class="btn-full btn-secondary" style="margin-bottom:16px">${t('group.invite_friend')}</button>
+      ${canInvite ? `<button id="btn-grp-invite" class="btn-full btn-secondary" style="margin-bottom:16px">${t('group.invite_friend')}</button>` : ''}
       <div class="grp-members-list">
         ${currentMembers.map(m => {
           const p    = m.profile;
           const isMe = m.user_id === uid();
           const role = m.role === 'owner' ? `<span class="grp-role-icon grp-role-owner">${Icons.s('crown', 14)}</span> ` : m.role === 'admin' ? `<span class="grp-role-icon grp-role-admin">${Icons.s('star', 14)}</span> ` : '';
+          const invBtn = isOwner && !isMe && m.role !== 'owner'
+            ? `<button class="grp-member-inv-toggle${m.can_invite ? ' active' : ''}" data-mid="${m.id}" title="${t(m.can_invite ? 'group.revoke_invite_perm' : 'group.grant_invite_perm')}">${Icons.s('user-plus', 14)}</button>`
+            : '';
           return `
             <div class="grp-member-item">
               ${avatarDiv(p.avatar_url, p.username, 'grp-member-avatar')}
@@ -388,12 +390,22 @@ window.Groups = (() => {
                 <span class="grp-member-name">${role}${p.username}${isMe ? ' <span class="grp-rank-me-label">toi</span>' : ''}</span>
                 ${p.best_performance?.value ? `<span class="grp-member-perf">${p.best_performance.icon || Icons.s('trophy', 12)} ${p.best_performance.value}</span>` : ''}
               </div>
+              ${invBtn}
               ${isOwner && !isMe ? `<button class="grp-member-kick" data-mid="${m.id}" title="${t('group.remove_member')}">✕</button>` : ''}
             </div>`;
         }).join('')}
       </div>`;
 
-    document.getElementById('btn-grp-invite')?.addEventListener('click', openInviteFriends);
+    if (canInvite) document.getElementById('btn-grp-invite')?.addEventListener('click', openInviteFriends);
+
+    container.querySelectorAll('.grp-member-inv-toggle').forEach(btn =>
+      btn.addEventListener('click', async () => {
+        const newVal = !btn.classList.contains('active');
+        await App.supabase.from('group_members').update({ can_invite: newVal }).eq('id', btn.dataset.mid);
+        await loadGroupDetails(currentGroup.id);
+        renderGroupPage();
+      }));
+
     container.querySelectorAll('.grp-member-kick').forEach(btn =>
       btn.addEventListener('click', async () => {
         if (!confirm(t('group.confirm_remove_member'))) return;
@@ -449,8 +461,10 @@ window.Groups = (() => {
     const isMe  = msg.user_id === uid();
     const p     = msg.profile || {};
     const letter = (p.username || '?').charAt(0).toUpperCase();
-    const av = p.avatar_url
-      ? `<img src="${p.avatar_url}" class="chat-avatar" alt="${letter}">`
+    const ownAvatarUrl = App.state.profile?.avatar_url || App.local.get('avatar_url');
+    const avatarUrl = isMe ? (ownAvatarUrl || p.avatar_url) : p.avatar_url;
+    const av = avatarUrl
+      ? `<img src="${avatarUrl}" class="chat-avatar" alt="${letter}">`
       : `<div class="chat-avatar chat-avatar-letter">${letter}</div>`;
     const time = new Date(msg.created_at).toLocaleTimeString(
       lang() === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
@@ -1031,6 +1045,51 @@ window.Groups = (() => {
     renderGroupPage();
   }
 
+  /* ─── Supprimer un défi (owner uniquement) ──────────── */
+  async function deleteChallenge(challengeId) {
+    if (!confirm(t('group.confirm_delete_challenge'))) return;
+    await App.supabase.from('group_challenges').delete().eq('id', challengeId);
+    await loadGroupDetails(currentGroup.id);
+    renderGroupPage();
+  }
+
+  /* ─── Mettre à jour ma progression automatiquement ─── */
+  async function autoUpdateChallengeProgress(type, addValue) {
+    if (!App.supabase || !App.state.user?.id || !addValue || addValue <= 0) return;
+    const today  = new Date().toISOString().split('T')[0];
+    const userId = App.state.user.id;
+
+    const { data: challenges } = await App.supabase
+      .from('group_challenges')
+      .select('id, group_id')
+      .eq('type', type)
+      .gte('end_date', today);
+    if (!challenges?.length) return;
+
+    const { data: memberships } = await App.supabase
+      .from('group_members')
+      .select('group_id')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+    const myGroupIds = new Set((memberships || []).map(m => m.group_id));
+    const myChallenges = challenges.filter(c => myGroupIds.has(c.group_id));
+    if (!myChallenges.length) return;
+
+    for (const challenge of myChallenges) {
+      const { data: cur } = await App.supabase
+        .from('group_challenge_progress')
+        .select('value')
+        .eq('challenge_id', challenge.id)
+        .eq('user_id', userId)
+        .maybeSingle();
+      await App.supabase.from('group_challenge_progress').upsert({
+        challenge_id: challenge.id, user_id: userId,
+        value: (cur?.value || 0) + addValue,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'challenge_id,user_id' });
+    }
+  }
+
   /* ─── Mettre à jour ma progression ──────────────────── */
   function openProgressModal(challengeId) {
     const c   = currentChallenges.find(c => c.id === challengeId);
@@ -1275,6 +1334,6 @@ window.Groups = (() => {
     renderGroupsList();
   }
 
-  return { init, render };
+  return { init, render, autoUpdateChallengeProgress };
 
 })();
