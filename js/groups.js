@@ -185,9 +185,11 @@ window.Groups = (() => {
     if (!App.supabase || !currentGroup) return;
     const el = document.getElementById('grp-banner-avatar');
     if (el) { el.style.opacity = '0.5'; }
-    const path = `${currentGroup.id}/cover.jpg`;
+    const webpBlob = await fileToWebPBlob(file, 1200, 0.85);
+    if (!webpBlob) { if (el) el.style.opacity = ''; return; }
+    const path = `${currentGroup.id}/cover.webp`;
     const { error: upErr } = await App.supabase.storage
-      .from('groups').upload(path, file, { upsert: true, contentType: file.type });
+      .from('groups').upload(path, webpBlob, { upsert: true, contentType: 'image/webp' });
     if (el) { el.style.opacity = ''; }
     if (upErr) {
       alert('Erreur upload : ' + upErr.message);
@@ -628,6 +630,27 @@ window.Groups = (() => {
   }
 
   /* ─── Compresse une image en base64 (canvas) ───────────── */
+  function fileToWebPBlob(file, maxWidth, quality) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
+        };
+        img.onerror = () => resolve(null);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
+
   function compressImage(file, maxWidth, quality) {
     return new Promise(resolve => {
       const reader = new FileReader();
@@ -639,7 +662,7 @@ window.Groups = (() => {
           const canvas = document.createElement('canvas');
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', quality));
+          resolve(canvas.toDataURL('image/webp', quality));
         };
         img.onerror = () => resolve(null);
         img.src = e.target.result;
@@ -671,9 +694,9 @@ window.Groups = (() => {
     // Tentative upload Storage
     try {
       const blob = await (await fetch(imageData)).blob();
-      const path = `chat/${currentGroup.id}/${Date.now()}_${uid()}.jpg`;
+      const path = `chat/${currentGroup.id}/${Date.now()}_${uid()}.webp`;
       const { error: upErr } = await App.supabase.storage
-        .from('groups').upload(path, blob, { contentType: 'image/jpeg' });
+        .from('groups').upload(path, blob, { contentType: 'image/webp' });
 
       if (upErr) throw upErr;
 
