@@ -1147,6 +1147,28 @@ window.Groups = (() => {
     }
   }
 
+  /* ─── Définir la progression exacte (ex: eau = total du jour) ── */
+  async function setChallengeProgress(type, exactValue) {
+    if (!App.supabase || !App.state.user?.id) return;
+    const today  = new Date().toISOString().split('T')[0];
+    const userId = App.state.user.id;
+    const { data: challenges } = await App.supabase
+      .from('group_challenges').select('id, group_id')
+      .eq('type', type).gte('end_date', today);
+    if (!challenges?.length) return;
+    const { data: memberships } = await App.supabase
+      .from('group_members').select('group_id')
+      .eq('user_id', userId).eq('status', 'active');
+    const myGroupIds = new Set((memberships || []).map(m => m.group_id));
+    for (const c of challenges.filter(ch => myGroupIds.has(ch.group_id))) {
+      await App.supabase.from('group_challenge_progress').upsert({
+        challenge_id: c.id, user_id: userId,
+        value: Math.max(0, exactValue),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'challenge_id,user_id' });
+    }
+  }
+
   /* ─── Mettre à jour ma progression ──────────────────── */
   function openProgressModal(challengeId) {
     const c   = currentChallenges.find(c => c.id === challengeId);
@@ -1391,6 +1413,6 @@ window.Groups = (() => {
     renderGroupsList();
   }
 
-  return { init, render, autoUpdateChallengeProgress };
+  return { init, render, autoUpdateChallengeProgress, setChallengeProgress };
 
 })();

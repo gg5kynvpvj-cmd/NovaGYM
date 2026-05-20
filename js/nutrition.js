@@ -368,7 +368,7 @@ window.Nutrition = (() => {
     saveData(d);
     renderWater(d);
     if (window.Today)  Today.renderWaterChallenge();
-    if (window.Groups) Groups.autoUpdateChallengeProgress('hydration', parseFloat((amount / 1000).toFixed(3)));
+    if (window.Groups) Groups.setChallengeProgress('hydration', parseFloat((d.water / 1000).toFixed(3)));
     if (input) input.value = '';
   }
 
@@ -385,6 +385,7 @@ window.Nutrition = (() => {
       saveData(d);
       renderWater(d);
       if (window.Today) Today.renderWaterChallenge();
+      if (window.Groups) Groups.setChallengeProgress('hydration', 0);
     });
 
     // Modifier l'objectif en cliquant sur le label
