@@ -128,7 +128,7 @@ window.DM = (() => {
           const canvas = document.createElement('canvas');
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', quality));
+          resolve(canvas.toDataURL('image/webp', quality));
         };
         img.onerror = () => resolve(null);
         img.src = e.target.result;
@@ -149,9 +149,9 @@ window.DM = (() => {
 
     try {
       const blob = await (await fetch(b64)).blob();
-      const path = `dm/${currentConvId}/${Date.now()}_${me}.jpg`;
+      const path = `dm/${currentConvId}/${Date.now()}_${me}.webp`;
       const { error: upErr } = await App.supabase.storage
-        .from('groups').upload(path, blob, { contentType: 'image/jpeg' });
+        .from('groups').upload(path, blob, { contentType: 'image/webp' });
       if (upErr) throw upErr;
 
       const { data: urlData } = App.supabase.storage.from('groups').getPublicUrl(path);

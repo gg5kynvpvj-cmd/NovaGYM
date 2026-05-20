@@ -142,8 +142,27 @@ window.Settings = (() => {
       // Upload vers Supabase Storage si disponible
       if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
         try {
-          // Toujours le même nom → écrase l'ancienne photo automatiquement
-          const filePath = `${App.state.user.id}/avatar.jpg`;
+          // Compresse et convertit en WebP avant upload
+          const webpBlob = await new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = ev => {
+              const img = new Image();
+              img.onload = () => {
+                const MAX = 400;
+                let w = img.width, h = img.height;
+                if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                canvas.toBlob(blob => resolve(blob), 'image/webp', 0.88);
+              };
+              img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          });
+          if (!webpBlob) throw new Error('WebP conversion failed');
+
+          const filePath = `${App.state.user.id}/avatar.webp`;
 
           // Supprime l'ancienne version si elle existe (autre extension)
           const { data: existing } = await App.supabase.storage
@@ -153,8 +172,8 @@ window.Settings = (() => {
             await App.supabase.storage.from('avatars').remove(oldPaths);
           }
 
-          await App.supabase.storage.from('avatars').upload(filePath, file, {
-            upsert: true, contentType: file.type
+          await App.supabase.storage.from('avatars').upload(filePath, webpBlob, {
+            upsert: true, contentType: 'image/webp'
           });
           const { data: urlData } = App.supabase.storage.from('avatars').getPublicUrl(filePath);
           // Cache-buster pour forcer le rechargement de l'image
