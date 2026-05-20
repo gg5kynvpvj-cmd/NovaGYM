@@ -460,7 +460,7 @@ window.Groups = (() => {
       .from('group_messages')
       .select('*')
       .eq('group_id', groupId)
-      .neq('message_type', 'image') // images éphémères — pas de persistance
+      .neq('message_type', 'ephemeral_image')
       .order('created_at', { ascending: true })
       .limit(100);
 
@@ -649,47 +649,68 @@ window.Groups = (() => {
     });
   }
 
-  /* ─── Envoi image éphémère via Realtime (pas de stockage) ── */
+  /* ─── Envoi image — stockage persistant via Supabase Storage ── */
   async function handleImageUpload(file) {
-    if (!file || !currentGroup || !chatChannel) return;
+    if (!file || !currentGroup || !App.supabase) return;
 
     const btnImg = document.getElementById('btn-chat-image');
     if (btnImg) { btnImg.disabled = true; btnImg.textContent = '...'; }
 
-    const imageData = await compressImage(file, 700, 0.72);
+    const imageData = await compressImage(file, 900, 0.78);
     if (!imageData) {
       if (btnImg) { btnImg.disabled = false; btnImg.textContent = '🖼'; }
       return;
     }
 
-    const msgId   = 'eph_' + Date.now();
     const profile = {
       username:   App.state.profile?.username  || '?',
       avatar_url: App.state.profile?.avatar_url || App.local.get('avatar_url') || null,
     };
 
-    // Ajout local immédiat
-    chatMessages.push({
-      id: msgId, user_id: uid(),
-      message_type: 'ephemeral_image',
-      image_data: imageData,
-      created_at: new Date().toISOString(),
-      profile,
-    });
-    renderChatMessages();
+    // Tentative upload Storage
+    try {
+      const blob = await (await fetch(imageData)).blob();
+      const path = `chat/${currentGroup.id}/${Date.now()}_${uid()}.jpg`;
+      const { error: upErr } = await App.supabase.storage
+        .from('groups').upload(path, blob, { contentType: 'image/jpeg' });
 
-    // Broadcast aux autres membres (non stocké en DB)
-    chatChannel.send({
-      type:    'broadcast',
-      event:   'ephemeral_image',
-      payload: {
+      if (upErr) throw upErr;
+
+      const { data: urlData } = App.supabase.storage.from('groups').getPublicUrl(path);
+      const imageUrl = urlData?.publicUrl;
+
+      // Insert en DB → visible dans l'historique pour tous les membres
+      await App.supabase.from('group_messages').insert({
+        group_id: currentGroup.id,
+        user_id:  uid(),
+        message_type: 'image',
+        image_url: imageUrl,
+        content: '',
+      });
+
+    } catch (err) {
+      console.warn('Image upload failed, fallback éphémère:', err?.message || err);
+      // Fallback : broadcast éphémère si Storage indisponible
+      const msgId = 'eph_' + Date.now();
+      chatMessages.push({
         id: msgId, user_id: uid(),
+        message_type: 'ephemeral_image',
         image_data: imageData,
         created_at: new Date().toISOString(),
-        username:   profile.username,
-        avatar_url: profile.avatar_url,
-      },
-    });
+        profile,
+      });
+      renderChatMessages();
+      if (chatChannel) {
+        chatChannel.send({
+          type: 'broadcast', event: 'ephemeral_image',
+          payload: {
+            id: msgId, user_id: uid(), image_data: imageData,
+            created_at: new Date().toISOString(),
+            username: profile.username, avatar_url: profile.avatar_url,
+          },
+        });
+      }
+    }
 
     if (btnImg) { btnImg.disabled = false; btnImg.textContent = '🖼'; }
   }
