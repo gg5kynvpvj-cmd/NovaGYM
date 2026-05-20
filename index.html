@@ -1037,6 +1037,22 @@
       <button id="btn-grp-settings" class="grp-settings-btn hidden">⋯</button>
     </div>
 
+    <!-- Tabs toujours visibles (hors zone scrollable) -->
+    <div class="grp-tabs">
+      <button class="grp-tab active" data-tab="ranking">
+        <span class="grp-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4"/><path d="M18 9h2a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4"/><line x1="7" y1="21" x2="17" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></span><span data-i18n="group.tab_ranking">Classement</span>
+      </button>
+      <button class="grp-tab" data-tab="challenges">
+        <span class="grp-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span data-i18n="group.tab_challenges">Défis</span>
+      </button>
+      <button class="grp-tab" data-tab="members">
+        <span class="grp-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span data-i18n="group.tab_members">Membres</span>
+      </button>
+      <button class="grp-tab" data-tab="chat">
+        <span class="grp-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span data-i18n="group.tab_chat">Chat</span>
+      </button>
+    </div>
+
     <div class="grp-body">
       <!-- Bannière groupe -->
       <input id="grp-cover-file" type="file" accept="image/*" class="hidden">
@@ -1044,22 +1060,6 @@
         <div id="grp-banner-avatar" class="grp-banner-avatar">G</div>
         <h2 id="grp-banner-name" class="grp-banner-name"></h2>
         <p id="grp-banner-desc" class="grp-banner-desc"></p>
-      </div>
-
-      <!-- Tabs -->
-      <div class="grp-tabs">
-        <button class="grp-tab active" data-tab="ranking">
-          <span class="grp-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4"/><path d="M18 9h2a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4"/><line x1="7" y1="21" x2="17" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></span><span data-i18n="group.tab_ranking">Classement</span>
-        </button>
-        <button class="grp-tab" data-tab="challenges">
-          <span class="grp-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span data-i18n="group.tab_challenges">Défis</span>
-        </button>
-        <button class="grp-tab" data-tab="members">
-          <span class="grp-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span data-i18n="group.tab_members">Membres</span>
-        </button>
-        <button class="grp-tab" data-tab="chat">
-          <span class="grp-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span data-i18n="group.tab_chat">Chat</span>
-        </button>
       </div>
 
       <!-- Contenu tabs -->
@@ -1377,7 +1377,10 @@
           <input id="food-search-input" type="text" class="food-search-input" placeholder="Tape le nom d'un aliment..." data-i18n-ph="food.search_ph" autocomplete="off">
         </div>
 
-        <button id="btn-toggle-barcode" class="btn-toggle-barcode" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span data-i18n="food.toggle_barcode">Taper un code-barres</span></button>
+        <div class="food-action-row">
+          <button id="btn-toggle-barcode" class="btn-toggle-barcode" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span data-i18n="food.toggle_barcode">Taper un code-barres</span></button>
+          <button id="btn-add-food-manual" class="btn-toggle-barcode" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span data-i18n="nutr.create_manual">Créer manuellement</span></button>
+        </div>
         <div id="food-barcode-section" class="food-barcode-section hidden">
           <div class="food-barcode-row">
             <input id="food-barcode-input" type="text" class="food-barcode-input" placeholder="Code-barres (EAN-13…)" data-i18n-ph="meal.barcode_ph" inputmode="numeric">

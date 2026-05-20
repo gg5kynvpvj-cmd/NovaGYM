@@ -529,10 +529,8 @@ window.Nutrition = (() => {
     const valid = products.filter(p => p.product_name);
 
     if (!valid.length) {
-      const noResult   = window.I18n ? I18n.t('nutr.no_result')     : 'Aucun résultat.';
-      const createLbl  = window.I18n ? I18n.t('nutr.create_manual') : 'Créer manuellement →';
-      list.innerHTML = `<p class="food-search-hint">${noResult} <button class="btn-link" id="btn-no-result-manual" type="button">${createLbl}</button></p>`;
-      document.getElementById('btn-no-result-manual')?.addEventListener('click', () => showStep(3));
+      const noResult = window.I18n ? I18n.t('nutr.no_result') : 'Aucun résultat.';
+      list.innerHTML = `<p class="food-search-hint">${noResult}</p>`;
       return;
     }
 
@@ -896,6 +894,9 @@ window.Nutrition = (() => {
         btn.innerHTML = `${Icons.s('camera', 15)}<span>${label}</span>`;
       }
     });
+
+    // Bouton créer manuellement (toujours visible)
+    document.getElementById('btn-add-food-manual')?.addEventListener('click', () => showStep(3));
 
     // Valider code-barres saisi manuellement
     document.getElementById('btn-barcode-validate')?.addEventListener('click', async () => {
