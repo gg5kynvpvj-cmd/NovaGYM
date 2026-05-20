@@ -3011,6 +3011,22 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 }
 .workout-lib-share:hover { border-color: var(--primary); color: var(--primary); }
 
+.pe-workouts-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.pe-workout-toggle-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 14px;
+}
+.pe-workout-toggle-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.pe-workout-toggle-name { font-size: 14px; font-weight: 600; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pe-workout-toggle-meta { font-size: 12px; color: var(--text-3); }
+.pe-workout-share-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-3);
+  border-radius: 8px; padding: 6px 10px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; gap: 4px; transition: all 0.15s;
+}
+.pe-workout-share-btn.active { background: rgba(182,255,0,0.12); border-color: var(--primary); color: var(--primary); }
+
 /* Badge zoom overlay */
 .badge-zoom-overlay {
   position: fixed; inset: 0;

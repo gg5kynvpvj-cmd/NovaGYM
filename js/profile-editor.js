@@ -10,6 +10,8 @@ window.ProfileEditor = (() => {
   let tempPerf       = null;
   let tempVisibility = 'private';
   let tempBio        = '';
+  let tempSharedWorkoutIds = new Set();
+  let _loadedSharedNames   = new Set();
 
   /* ─── Types de performance ──────────────────────────── */
   const PERF_TYPES = [
@@ -189,7 +191,7 @@ window.ProfileEditor = (() => {
       </div>
     `;
 
-    const badgeDefs = (Badges.ALL_BADGES || []).filter(b => tempBadges.includes(b.id));
+    const badgeDefs = tempBadges.filter(Boolean).map(id => (Badges.ALL_BADGES || []).find(b => b.id === id)).filter(Boolean);
     if (badgeDefs.length > 0) {
       html += `
         <div class="fp-section">
@@ -309,6 +311,41 @@ window.ProfileEditor = (() => {
     }
   }
 
+  /* ─── Liste séances à partager ──────────────────────── */
+  function renderWorkoutsList() {
+    const container = document.getElementById('pe-workouts-list');
+    if (!container) return;
+    const lib = App.local.get('workout_library') || [];
+    const tl = window.I18n ? I18n.t.bind(I18n) : k => k;
+    if (!lib.length) {
+      container.innerHTML = `<p class="social-empty" style="font-size:13px;padding:8px 0">${tl('profile.no_workouts')}</p>`;
+      return;
+    }
+    container.innerHTML = lib.map(w => `
+      <div class="pe-workout-toggle-row">
+        <div class="pe-workout-toggle-info">
+          <span class="pe-workout-toggle-name">${w.name}</span>
+          <span class="pe-workout-toggle-meta">${(w.exercises||[]).length} ex.</span>
+        </div>
+        <button class="pe-workout-share-btn${tempSharedWorkoutIds.has(w.id) ? ' active' : ''}" data-wid="${w.id}">${tempSharedWorkoutIds.has(w.id) ? Icons.s('check', 14) : Icons.s('share', 14)}</button>
+      </div>
+    `).join('');
+    container.querySelectorAll('.pe-workout-share-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.wid) || btn.dataset.wid;
+        if (tempSharedWorkoutIds.has(id)) {
+          tempSharedWorkoutIds.delete(id);
+          btn.classList.remove('active');
+          btn.innerHTML = Icons.s('share', 14);
+        } else {
+          tempSharedWorkoutIds.add(id);
+          btn.classList.add('active');
+          btn.innerHTML = Icons.s('check', 14);
+        }
+      });
+    });
+  }
+
   /* ─── Badge picker ──────────────────────────────────── */
   function openBadgePicker(slotIndex) {
     selectedSlot = slotIndex;
@@ -418,6 +455,29 @@ window.ProfileEditor = (() => {
       const btns = [document.getElementById('btn-pe-save'), document.getElementById('btn-pe-save-bottom')];
       btns.forEach(b => { if (b) { b.textContent = '✓'; b.disabled = true; } });
 
+      // Sync séances partagées
+      if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
+        const lib = App.local.get('workout_library') || [];
+        const selected = lib.filter(w => tempSharedWorkoutIds.has(w.id));
+        const selectedNames = new Set(selected.map(w => w.name));
+        // Supprime celles retirées
+        const toDelete = [..._loadedSharedNames].filter(n => !selectedNames.has(n));
+        if (toDelete.length > 0) {
+          await App.supabase.from('shared_workouts').delete()
+            .eq('user_id', App.state.user.id).in('name', toDelete);
+        }
+        // Upsert les nouvelles/modifiées
+        if (selected.length > 0) {
+          for (const w of selected) {
+            await App.supabase.from('shared_workouts').upsert(
+              { user_id: App.state.user.id, name: w.name, exercises: w.exercises },
+              { onConflict: 'user_id,name' }
+            );
+          }
+        }
+        _loadedSharedNames = new Set(selected.map(w => w.name));
+      }
+
       if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
         await App.supabase.from('profiles').upsert(updated, { onConflict: 'id' });
       }
@@ -454,6 +514,19 @@ window.ProfileEditor = (() => {
     updatePreviewBio();
     renderPerfOptions();
     updatePerfCard();
+    tempSharedWorkoutIds = new Set();
+    _loadedSharedNames   = new Set();
+    renderWorkoutsList();
+    if (App.supabase && App.state.user?.id && !App.state.user.id.startsWith('local_')) {
+      App.supabase.from('shared_workouts').select('name').eq('user_id', App.state.user.id)
+        .then(({ data }) => {
+          if (!data) return;
+          _loadedSharedNames = new Set(data.map(w => w.name));
+          const lib = App.local.get('workout_library') || [];
+          lib.forEach(w => { if (_loadedSharedNames.has(w.name)) tempSharedWorkoutIds.add(w.id); });
+          renderWorkoutsList();
+        });
+    }
 
     // Scroll to top
     const body = document.querySelector('.pe-body');
