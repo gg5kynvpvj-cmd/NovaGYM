@@ -3444,13 +3444,13 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 }
 .grp-member-inv-toggle:hover { border-color: var(--primary); }
 .grp-member-inv-toggle.active {
-  background: var(--primary); border-color: var(--primary);
+  background: rgba(182,255,0,0.12); border-color: var(--primary);
 }
 .grp-inv-check {
   font-size: 15px; font-weight: 700; line-height: 1;
   color: transparent; transition: color 0.15s;
 }
-.grp-member-inv-toggle.active .grp-inv-check { color: #000; }
+.grp-member-inv-toggle.active .grp-inv-check { color: var(--primary); }
 
 /* Membres */
 .grp-members-list { display: flex; flex-direction: column; gap: 8px; }

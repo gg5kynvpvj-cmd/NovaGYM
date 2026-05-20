@@ -483,22 +483,19 @@ window.ProfileEditor = (() => {
       // Sync séances partagées
       if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
         const lib = App.local.get('workout_library') || [];
-        const selected = lib.filter(w => tempSharedWorkoutIds.has(w.id));
-        const selectedNames = new Set(selected.map(w => w.name));
-        // Supprime celles retirées
-        const toDelete = [..._loadedSharedNames].filter(n => !selectedNames.has(n));
-        if (toDelete.length > 0) {
-          await App.supabase.from('shared_workouts').delete()
-            .eq('user_id', App.state.user.id).in('name', toDelete);
-        }
-        // Upsert les nouvelles/modifiées
+        const selected = lib.filter(w => {
+          const numId = typeof w.id === 'string' ? parseInt(w.id) : w.id;
+          return tempSharedWorkoutIds.has(numId) || tempSharedWorkoutIds.has(String(w.id));
+        });
+        // Supprime tout pour cet utilisateur puis réinsère les séances choisies
+        const { error: delErr } = await App.supabase.from('shared_workouts')
+          .delete().eq('user_id', App.state.user.id);
+        if (delErr) console.warn('shared_workouts delete:', delErr.message);
         if (selected.length > 0) {
-          for (const w of selected) {
-            await App.supabase.from('shared_workouts').upsert(
-              { user_id: App.state.user.id, name: w.name, exercises: w.exercises },
-              { onConflict: 'user_id,name' }
-            );
-          }
+          const { error: insErr } = await App.supabase.from('shared_workouts').insert(
+            selected.map(w => ({ user_id: App.state.user.id, name: w.name, exercises: w.exercises || [] }))
+          );
+          if (insErr) console.warn('shared_workouts insert:', insErr.message);
         }
         _loadedSharedNames = new Set(selected.map(w => w.name));
       }
