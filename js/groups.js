@@ -401,9 +401,20 @@ window.Groups = (() => {
     container.querySelectorAll('.grp-member-inv-toggle').forEach(btn =>
       btn.addEventListener('click', async () => {
         const newVal = !btn.classList.contains('active');
-        await App.supabase.from('group_members').update({ can_invite: newVal }).eq('id', btn.dataset.mid);
-        await loadGroupDetails(currentGroup.id);
-        renderGroupPage();
+        const member = currentMembers.find(m => m.id === btn.dataset.mid);
+        if (member) member.can_invite = newVal;
+        btn.classList.toggle('active', newVal);
+        btn.title = t(newVal ? 'group.revoke_invite_perm' : 'group.grant_invite_perm');
+        if (App.supabase) {
+          const { error } = await App.supabase
+            .from('group_members').update({ can_invite: newVal }).eq('id', btn.dataset.mid);
+          if (error) {
+            console.warn('Toggle invite perm:', error.message);
+            if (member) member.can_invite = !newVal;
+            btn.classList.toggle('active', !newVal);
+            btn.title = t(!newVal ? 'group.revoke_invite_perm' : 'group.grant_invite_perm');
+          }
+        }
       }));
 
     container.querySelectorAll('.grp-member-kick').forEach(btn =>

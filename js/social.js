@@ -284,7 +284,7 @@ window.Social = (() => {
       html += `<p class="fp-private">${I18n.t('profile.private_msg')}</p>`;
     } else {
       const displayedIds = Array.isArray(p.displayed_badges) ? p.displayed_badges : [];
-      const badgeDefs    = (Badges.ALL_BADGES || []).filter(b => displayedIds.includes(b.id));
+      const badgeDefs    = displayedIds.filter(Boolean).map(id => (Badges.ALL_BADGES || []).find(b => b.id === id)).filter(Boolean);
       const bestPerf     = p.best_performance || null;
       const bio          = p.bio || '';
 

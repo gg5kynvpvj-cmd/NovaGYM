@@ -368,7 +368,7 @@ window.Nutrition = (() => {
     saveData(d);
     renderWater(d);
     if (window.Today)  Today.renderWaterChallenge();
-    if (window.Groups) Groups.autoUpdateChallengeProgress('hydration', amount);
+    if (window.Groups) Groups.autoUpdateChallengeProgress('hydration', parseFloat((amount / 1000).toFixed(3)));
     if (input) input.value = '';
   }
 
