@@ -55,7 +55,11 @@ window.History = (() => {
 
   /* ─── Render une carte de séance ─────────────────────── */
   function renderSessionCard(session) {
-    const typeName = I18n.t('session.' + session.type) || session.type || I18n.t('history.session_fallback');
+    const displayName = session.workout_name
+      || I18n.t('session.' + session.type)
+      || session.type
+      || I18n.t('history.session_fallback');
+    const typeName = displayName;
     const locale   = I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
     const dateStr  = new Date(session.date || session.created_at)
       .toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'short' });
@@ -101,7 +105,7 @@ window.History = (() => {
         <div class="history-card-main">
           <div class="history-card-left">
             <span class="history-date">${dateCapitalized}</span>
-            <span class="history-type">${typeName}</span>
+            <span class="history-type">${session.workout_color ? `<span class="workout-color-dot" style="background:${session.workout_color}"></span>` : ''}${typeName}</span>
             ${statsStr ? `<span class="history-stats">${statsStr}</span>` : ''}
           </div>
           <div class="history-card-right">

@@ -221,6 +221,8 @@ window.Stats = (() => {
     const autoSched   = profile ? Programs.buildSchedule(profile.program_type, profile.training_days || []) : {};
     const customSched = App.local.get('custom_schedule') || {};
     const schedule    = { ...autoSched, ...customSched };
+    const workoutPlan = Programs.getWorkoutPlan();
+    const lib         = App.local.get('workout_library') || [];
 
     const sessionDates = new Set(sessions
       .filter(s => s.completed)
@@ -237,9 +239,12 @@ window.Stats = (() => {
       const dayKey  = DAYS_ORDER[i];
       const isToday = dateStr === todayStr;
       const hasDone = sessionDates.has(dateStr);
-      const sessType = schedule[dayKey] || 'rest';
-      const color    = Programs.SESSION_COLORS[sessType] || '#555555';
-      const isRest   = sessType === 'rest';
+
+      const planWorkout  = workoutPlan[dayKey] ? lib.find(w => w.id === workoutPlan[dayKey]) : null;
+      const sessType     = schedule[dayKey] || 'rest';
+      const isRest       = !planWorkout && sessType === 'rest';
+      const label        = planWorkout ? planWorkout.name : getSessionShort(sessType);
+      const color        = planWorkout ? (planWorkout.color || '#B6FF00') : (Programs.SESSION_COLORS[sessType] || '#555555');
 
       const cell = document.createElement('div');
       cell.className = 'week-day' + (isToday ? ' today' : '');
@@ -249,19 +254,20 @@ window.Stats = (() => {
       cell.innerHTML = `
         <span class="week-day-name">${I18n.t(dayKeys[i])}</span>
         <span class="week-day-num">${day.getDate()}</span>
-        <span class="week-day-session${isRest ? ' rest' : ''}" style="${isRest ? '' : `color:${color}`}">${getSessionShort(sessType)}</span>
+        <span class="week-day-session${isRest ? ' rest' : ''}${planWorkout ? ' plan-workout' : ''}" style="${isRest ? '' : `color:${color}`}" title="${label}">${label}</span>
         <span class="week-day-dot${hasDone ? ' has-session' : ''}"></span>
       `;
-      cell.addEventListener('click', () => openDayEditor(dayKey, sessType));
+      cell.addEventListener('click', () => openDayEditor(dayKey, sessType, planWorkout));
       container.appendChild(cell);
     }
   }
 
   /* ─── Éditeur de journée du planning ────────────────── */
-  function openDayEditor(dayKey, currentType) {
+  function openDayEditor(dayKey, currentType, currentPlanWorkout) {
     const titleEl = document.getElementById('modal-day-session-title');
     if (titleEl) titleEl.textContent = I18n.t('dayFull.' + dayKey) || dayKey;
 
+    // Onglet type de séance
     const optList = document.getElementById('day-session-options');
     if (!optList) return;
 
@@ -271,7 +277,7 @@ window.Stats = (() => {
     });
     optList.innerHTML = Object.entries(allTypes).map(([k, v]) => {
       const color  = Programs.SESSION_COLORS[k] || '#555555';
-      const active = k === currentType ? 'border-color:' + color + ';background:' + color + '20' : '';
+      const active = !currentPlanWorkout && k === currentType ? 'border-color:' + color + ';background:' + color + '20' : '';
       return `
         <button class="picker-ex-btn" data-type="${k}" style="${active}">
           <span class="picker-ex-name" style="color:${color}">${v}</span>
@@ -284,18 +290,78 @@ window.Stats = (() => {
         const selected = btn.dataset.type;
         const custom   = App.local.get('custom_schedule') || {};
         const profile  = App.state.profile;
-        // If same as auto schedule, remove override (keep schedule clean)
         const auto = profile ? Programs.buildSchedule(profile.program_type, profile.training_days || []) : {};
-        if (auto[dayKey] === selected) {
-          delete custom[dayKey];
-        } else {
-          custom[dayKey] = selected;
-        }
+        if (auto[dayKey] === selected) delete custom[dayKey];
+        else custom[dayKey] = selected;
         App.local.set('custom_schedule', custom);
+        // Remove any plan workout for this day if setting type
+        Programs.setDayPlanWorkout(dayKey, null);
         document.getElementById('modal-day-session')?.classList.add('hidden');
         renderWeeklyCalendar();
       });
     });
+
+    // Onglet bibliothèque
+    const planList = document.getElementById('day-plan-options');
+    if (planList) {
+      const lib = App.local.get('workout_library') || [];
+      if (lib.length === 0) {
+        planList.innerHTML = `<p class="food-search-hint" style="padding:16px 0">Aucune séance dans la bibliothèque.<br>Crée-en une depuis l'onglet Aujourd'hui.</p>`;
+      } else {
+        planList.innerHTML = lib.map(w => {
+          const color   = w.color || '#B6FF00';
+          const isActive = currentPlanWorkout && currentPlanWorkout.id === w.id;
+          return `
+            <div class="day-plan-item${isActive ? ' active' : ''}" data-plan-id="${w.id}" style="${isActive ? `border-color:${color};background:${color}18` : ''}">
+              <span class="workout-color-dot" style="background:${color}"></span>
+              <div class="day-plan-item-info">
+                <span class="day-plan-item-name" style="color:${color}">${w.name}</span>
+                <span class="day-plan-item-meta">${w.exercises.length} exercice${w.exercises.length !== 1 ? 's' : ''}</span>
+              </div>
+              ${isActive ? `<button class="day-plan-remove" data-plan-id="${w.id}" title="Retirer du planning">✕</button>` : ''}
+            </div>`;
+        }).join('');
+
+        planList.querySelectorAll('.day-plan-item').forEach(item => {
+          item.addEventListener('click', e => {
+            if (e.target.closest('.day-plan-remove')) return;
+            const wid = parseInt(item.dataset.planId);
+            Programs.setDayPlanWorkout(dayKey, wid);
+            // Remove custom_schedule override since we have a plan workout now
+            const custom = App.local.get('custom_schedule') || {};
+            delete custom[dayKey];
+            App.local.set('custom_schedule', custom);
+            document.getElementById('modal-day-session')?.classList.add('hidden');
+            renderWeeklyCalendar();
+          });
+        });
+        planList.querySelectorAll('.day-plan-remove').forEach(btn => {
+          btn.addEventListener('click', () => {
+            Programs.setDayPlanWorkout(dayKey, null);
+            document.getElementById('modal-day-session')?.classList.add('hidden');
+            renderWeeklyCalendar();
+          });
+        });
+      }
+    }
+
+    // Gestion des onglets
+    const tabs = document.querySelectorAll('.day-editor-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        optList.classList.toggle('hidden', target !== 'types');
+        if (planList) planList.classList.toggle('hidden', target !== 'workouts');
+      });
+    });
+
+    // Active l'onglet correct selon le contexte
+    const defaultTab = currentPlanWorkout ? 'workouts' : 'types';
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === defaultTab));
+    optList.classList.toggle('hidden', defaultTab !== 'types');
+    if (planList) planList.classList.toggle('hidden', defaultTab !== 'workouts');
 
     document.getElementById('modal-day-session')?.classList.remove('hidden');
   }

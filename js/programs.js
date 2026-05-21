@@ -200,6 +200,30 @@ window.Programs = (() => {
     };
   }
 
+  /* ─── Planning par séances de bibliothèque ──────────── */
+  function getWorkoutPlan() {
+    return (typeof App !== 'undefined' ? App.local.get('workout_plan') : null) || {};
+  }
+
+  function setDayPlanWorkout(dayKey, workoutId) {
+    const plan = getWorkoutPlan();
+    if (workoutId) {
+      plan[dayKey] = workoutId;
+    } else {
+      delete plan[dayKey];
+    }
+    if (typeof App !== 'undefined') App.local.set('workout_plan', plan);
+  }
+
+  function getTodayPlanWorkout() {
+    const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const todayName = dayNames[new Date().getDay()];
+    const workoutId = getWorkoutPlan()[todayName];
+    if (!workoutId) return null;
+    const lib = (typeof App !== 'undefined' ? App.local.get('workout_library') : null) || [];
+    return lib.find(w => w.id === workoutId) || null;
+  }
+
   /* Traduit un nom de séance selon la langue courante */
   function getSessionName(type) {
     return (window.I18n ? I18n.t('session.' + type) : null) || SESSION_NAMES[type] || type;
@@ -224,6 +248,9 @@ window.Programs = (() => {
     getSessionName,
     getDayShort,
     getDayFull,
+    getWorkoutPlan,
+    setDayPlanWorkout,
+    getTodayPlanWorkout,
     SESSION_NAMES,
     SESSION_COLORS,
     DAYS_FR,

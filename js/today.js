@@ -7,10 +7,26 @@
 window.Today = (() => {
 
   // État local de la séance en cours
-  let currentExercises = [];
-  let sessionType      = 'rest';
-  let completedSets    = {};  // { exerciseId: { setIndex: done } }
-  let sessionStartTime = null;
+  let currentExercises  = [];
+  let sessionType       = 'rest';
+  let completedSets     = {};  // { exerciseId: { setIndex: done } }
+  let sessionStartTime  = null;
+  let planWorkoutId     = null;
+  let planWorkoutName   = null;
+  let planWorkoutColor  = null;
+
+  const WORKOUT_COLORS = ['#FF6B6B','#FF9F43','#FECA57','#1DD1A1','#54A0FF','#B6FF00','#DDA0DD','#FD79A8'];
+
+  function applyPlanWorkoutStyle(name, color) {
+    const nameEl  = document.getElementById('session-type-name');
+    const badge   = document.getElementById('session-type-badge');
+    if (nameEl) nameEl.textContent = name;
+    if (badge) {
+      badge.style.borderColor = color || '';
+      badge.style.color       = color || '';
+      badge.style.background  = color ? color + '18' : '';
+    }
+  }
 
   /* ─── Auto-save séance en cours ─────────────────────── */
   const DRAFT_KEY = 'session_draft';
@@ -34,6 +50,7 @@ window.Today = (() => {
     App.local.set(DRAFT_KEY, {
       date: today, sessionType, exercises: currentExercises,
       completedSets, startTime: sessionStartTime, inputs,
+      planWorkoutId, planWorkoutName, planWorkoutColor,
     });
   }
 
@@ -808,14 +825,16 @@ window.Today = (() => {
     });
 
     const session = {
-      id:         'session_' + Date.now(),
-      user_id:    App.state.user?.id,
-      date:       new Date().toISOString().split('T')[0],
-      type:       sessionType,
+      id:            'session_' + Date.now(),
+      user_id:       App.state.user?.id,
+      date:          new Date().toISOString().split('T')[0],
+      type:          sessionType,
+      workout_name:  planWorkoutName  || null,
+      workout_color: planWorkoutColor || null,
       duration,
-      completed:  true,
-      volume:     totalVolume,
-      exercises:  exercisesData,
+      completed:     true,
+      volume:        totalVolume,
+      exercises:     exercisesData,
     };
 
     // Sauvegarde locale
@@ -840,6 +859,9 @@ window.Today = (() => {
     currentExercises = [];
     completedSets    = {};
     sessionStartTime = null;
+    planWorkoutId    = null;
+    planWorkoutName  = null;
+    planWorkoutColor = null;
     clearDraft();
 
     // Sauvegarde Supabase
@@ -927,11 +949,18 @@ window.Today = (() => {
       currentExercises = _draft.exercises;
       completedSets    = _draft.completedSets || {};
       sessionStartTime = _draft.startTime     || Date.now();
+      planWorkoutId    = _draft.planWorkoutId  || null;
+      planWorkoutName  = _draft.planWorkoutName || null;
+      planWorkoutColor = _draft.planWorkoutColor || null;
 
       document.getElementById('rest-day-card')?.classList.add('hidden');
       document.getElementById('session-container')?.classList.remove('hidden');
-      const _nameEl = document.getElementById('session-type-name');
-      if (_nameEl) _nameEl.textContent = Programs.SESSION_NAMES[sessionType] || sessionType;
+      if (planWorkoutName) {
+        applyPlanWorkoutStyle(planWorkoutName, planWorkoutColor);
+      } else {
+        const _nameEl = document.getElementById('session-type-name');
+        if (_nameEl) _nameEl.textContent = Programs.SESSION_NAMES[sessionType] || sessionType;
+      }
 
       const _list = document.getElementById('exercise-list');
       _list.innerHTML = '';
@@ -974,23 +1003,35 @@ window.Today = (() => {
     }
 
     sessionType = Programs.getTodayType(profile);
-    const isRest = sessionType === 'rest';
+
+    // Vérifie si une séance de la bibliothèque est planifiée aujourd'hui
+    const todayPlan = Programs.getTodayPlanWorkout();
+    const isRest = sessionType === 'rest' && !todayPlan;
 
     document.getElementById('rest-day-card')?.classList.toggle('hidden', !isRest);
     document.getElementById('session-container')?.classList.toggle('hidden', isRest);
 
     if (isRest) {
       Timer.hideWidget();
+      planWorkoutId = null; planWorkoutName = null; planWorkoutColor = null;
       return;
     }
 
-    // Badge du type de séance
-    const typeName = Programs.SESSION_NAMES[sessionType] || sessionType;
-    const nameEl = document.getElementById('session-type-name');
-    if (nameEl) nameEl.textContent = typeName;
-
-    // Charge les exercices
-    currentExercises = Programs.getExercisesForType(sessionType, profile.program_type, profile.level, profile.location);
+    if (todayPlan) {
+      // Séance planifiée depuis la bibliothèque
+      planWorkoutId   = todayPlan.id;
+      planWorkoutName = todayPlan.name;
+      planWorkoutColor = todayPlan.color || null;
+      applyPlanWorkoutStyle(todayPlan.name, todayPlan.color);
+      currentExercises = todayPlan.exercises.map(e => ({ ...e }));
+    } else {
+      // Séance auto (type)
+      planWorkoutId = null; planWorkoutName = null; planWorkoutColor = null;
+      const typeName = Programs.SESSION_NAMES[sessionType] || sessionType;
+      const nameEl = document.getElementById('session-type-name');
+      if (nameEl) nameEl.textContent = typeName;
+      currentExercises = Programs.getExercisesForType(sessionType, profile.program_type, profile.level, profile.location);
+    }
     updateEstimatedTime(currentExercises);
     completedSets    = {};
     sessionStartTime = Date.now();
@@ -1290,9 +1331,9 @@ window.Today = (() => {
     return App.local.get('workout_library') || [];
   }
 
-  function saveWorkoutToLib(name, exercises) {
+  function saveWorkoutToLib(name, exercises, color) {
     const lib = getWorkoutLib();
-    lib.push({ id: Date.now(), name, exercises: exercises.map(e => ({ id: e.id, name: e.name, muscles: e.muscles, defaultSets: e.defaultSets, defaultReps: e.defaultReps, isUnilateral: e.isUnilateral })) });
+    lib.push({ id: Date.now(), name, color: color || null, exercises: exercises.map(e => ({ id: e.id, name: e.name, muscles: e.muscles, defaultSets: e.defaultSets, defaultReps: e.defaultReps, isUnilateral: e.isUnilateral })) });
     App.local.set('workout_library', lib);
   }
 
@@ -1310,10 +1351,23 @@ window.Today = (() => {
       list.innerHTML = `<div class="workout-lib-empty">${tl('today.lib_empty').replace(/\n/g, '<br>')}</div>`;
       return;
     }
-    list.innerHTML = lib.map(t => `
+    const plan = Programs.getWorkoutPlan();
+    const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const todayKey = dayNames[new Date().getDay()];
+
+    list.innerHTML = lib.map(t => {
+      const colorDot = t.color
+        ? `<span class="workout-color-dot" style="background:${t.color}"></span>`
+        : `<span class="workout-color-dot workout-color-dot-empty"></span>`;
+      const plannedDays = Object.entries(plan).filter(([,id]) => id === t.id).map(([d]) => Programs.getDayShort(d));
+      const planBadge   = plannedDays.length
+        ? `<span class="workout-plan-badge">${plannedDays.join(', ')}</span>`
+        : '';
+      return `
       <div class="workout-lib-item">
+        ${colorDot}
         <div class="workout-lib-info">
-          <div class="workout-lib-name">${t.name}</div>
+          <div class="workout-lib-name" style="${t.color ? `color:${t.color}` : ''}">${t.name}${planBadge}</div>
           <div class="workout-lib-meta">${t.exercises.length} exercice${t.exercises.length > 1 ? 's' : ''}</div>
         </div>
         <button class="workout-lib-share" data-share-id="${t.id}" title="${tl('today.share_workout')}">${Icons.s('share', 14)}</button>
@@ -1321,7 +1375,7 @@ window.Today = (() => {
         <button class="workout-lib-load" data-lib-id="${t.id}">${tl('today.load_btn')}</button>
         <button class="workout-lib-del" data-del-id="${t.id}">✕</button>
       </div>
-    `).join('');
+    `}).join('');
     list.querySelectorAll('.workout-lib-edit').forEach(btn => {
       btn.addEventListener('click', () => openWorkoutEditor(parseInt(btn.dataset.editId)));
     });
@@ -1426,12 +1480,30 @@ window.Today = (() => {
     }
 
     renderEditorExercises();
+
+    // Rendu du color picker
+    let selectedColor = workout.color || null;
+    const cpContainer = document.getElementById('ew-color-picker');
+    if (cpContainer) {
+      cpContainer.innerHTML = WORKOUT_COLORS.map(c => `
+        <button class="color-swatch${c === selectedColor ? ' active' : ''}" data-color="${c}" style="background:${c}" title="${c}"></button>
+      `).join('') + `<button class="color-swatch color-swatch-none${!selectedColor ? ' active' : ''}" data-color="" title="Aucune couleur">✕</button>`;
+      cpContainer.querySelectorAll('.color-swatch').forEach(btn => {
+        btn.addEventListener('click', () => {
+          cpContainer.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedColor = btn.dataset.color || null;
+        });
+      });
+    }
+
     document.getElementById('modal-edit-workout')?.classList.remove('hidden');
 
     document.getElementById('btn-ew-save').onclick = () => {
       const newName = document.getElementById('ew-name').value.trim();
       if (!newName) return;
       workout.name      = newName;
+      workout.color     = selectedColor;
       workout.exercises = editingExercises;
       App.local.set('workout_library', lib);
       closeModal('modal-edit-workout');
