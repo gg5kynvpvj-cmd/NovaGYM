@@ -1215,6 +1215,9 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .history-type {
   font-size: 15px;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .history-stats { font-size: 12px; color: var(--text-2); }
 .history-badge-col {
@@ -1913,10 +1916,138 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   display: flex;
   align-items: center;
   gap: 10px;
+  border: 1.5px solid transparent;
+  transition: border-color 0.2s;
 }
-.workout-lib-info { flex: 1; }
-.workout-lib-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.workout-lib-info { flex: 1; min-width: 0; }
+.workout-lib-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .workout-lib-meta { font-size: 12px; color: var(--text-2); }
+
+/* Pastille couleur */
+.workout-color-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.workout-color-dot-empty {
+  background: var(--border) !important;
+}
+
+/* Badge jours planifiés */
+.workout-plan-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(182,255,0,0.12);
+  color: var(--primary);
+  border-radius: var(--radius-pill);
+  padding: 1px 6px;
+}
+
+/* Color picker */
+.color-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+}
+.color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.4);
+  transform: scale(1.15);
+}
+.color-swatch-none {
+  background: var(--bg-card) !important;
+  color: var(--text-3);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Day editor tabs */
+.day-editor-tabs {
+  display: flex;
+  gap: 0;
+  margin: 0 20px 12px;
+  background: var(--bg-card-2);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+.day-editor-tab {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  border-radius: calc(var(--radius-md) - 2px);
+  transition: background 0.15s, color 0.15s;
+}
+.day-editor-tab.active {
+  background: var(--bg-card);
+  color: var(--text-1);
+}
+
+/* Plan workout list in day editor */
+.day-plan-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.day-plan-item {
+  background: var(--bg-card-2);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.2s;
+}
+.day-plan-item:active { opacity: 0.75; }
+.day-plan-item.active .day-plan-item-name { font-weight: 700; }
+.day-plan-item-info { flex: 1; min-width: 0; }
+.day-plan-item-name { font-size: 14px; font-weight: 600; display: block; }
+.day-plan-item-meta { font-size: 12px; color: var(--text-2); }
+.day-plan-remove {
+  color: var(--text-3);
+  font-size: 16px;
+  padding: 4px 6px;
+  flex-shrink: 0;
+}
+.day-plan-remove:active { color: var(--danger); }
+
+/* Week day — plan workout label */
+.week-day-session.plan-workout {
+  font-weight: 700;
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
 .workout-lib-load {
   background: var(--accent);
   color: #000;

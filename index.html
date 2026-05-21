@@ -1343,7 +1343,12 @@
         <h2 class="modal-title" id="modal-day-session-title">Modifier la séance</h2>
         <button id="btn-close-day-session" class="modal-close">✕</button>
       </div>
+      <div class="day-editor-tabs">
+        <button class="day-editor-tab active" data-tab="types">Type</button>
+        <button class="day-editor-tab" data-tab="workouts">Mes séances</button>
+      </div>
       <div id="day-session-options" class="session-type-list" style="padding:0 20px 24px"></div>
+      <div id="day-plan-options" class="day-plan-options hidden" style="padding:0 20px 24px"></div>
     </div>
   </div>
 
@@ -1359,6 +1364,10 @@
         <div class="input-group">
           <label class="input-label" data-i18n="ew.name_lbl">Nom</label>
           <input id="ew-name" type="text" class="input-field">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Couleur</label>
+          <div id="ew-color-picker" class="color-picker-row"></div>
         </div>
         <div class="input-group">
           <label class="input-label" data-i18n="ew.exercises_lbl">Exercices</label>
