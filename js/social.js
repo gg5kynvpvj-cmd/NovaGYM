@@ -202,15 +202,17 @@ window.Social = (() => {
   function renderCreators(profiles) {
     const list = document.getElementById('social-creators-list');
     if (!list) return;
-    list.innerHTML = profiles.map(p => `
-      <div class="social-creator-card" data-creator-id="${p.id}">
-        ${avatarEl(p.avatar_url, p.username)}
-        <div class="social-creator-info">
+    list.innerHTML = profiles.map(p => {
+      const av = p.avatar_url
+        ? `<img src="${p.avatar_url}" class="social-creator-avatar" alt="${p.username}">`
+        : `<div class="social-creator-avatar-letter">${(p.username || '?').charAt(0).toUpperCase()}</div>`;
+      return `
+        <div class="social-creator-card" data-creator-id="${p.id}">
+          ${av}
           <span class="social-creator-name">${p.username || ''}</span>
         </div>
-        <span class="social-creator-badge">Creator</span>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     list.querySelectorAll('.social-creator-card').forEach(card => {
       const profile = profiles.find(p => p.id === card.dataset.creatorId);

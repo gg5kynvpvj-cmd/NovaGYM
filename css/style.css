@@ -3102,22 +3102,38 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .social-card-actions { display: flex; gap: 8px; margin-left: auto; }
 
 /* Section créateurs */
-.social-creators-section { margin-bottom: 4px; }
-.social-creators-list { display: flex; flex-direction: column; gap: 8px; }
+.social-creators-section { margin-bottom: 8px; }
+.social-creators-list {
+  display: flex; flex-direction: row; gap: 16px;
+  overflow-x: auto; padding: 4px 2px 8px;
+  scrollbar-width: none;
+}
+.social-creators-list::-webkit-scrollbar { display: none; }
 .social-creator-card {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--bg-card); border-radius: var(--radius-md);
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 7px; cursor: pointer; flex-shrink: 0; width: 72px;
 }
 .social-creator-card:active { opacity: .7; }
-.social-creator-info { flex: 1; min-width: 0; }
-.social-creator-name { font-size: 15px; font-weight: 700; color: var(--text); }
-.social-creator-badge {
-  font-size: 11px; font-weight: 700; letter-spacing: .4px;
+.social-creator-avatar {
+  width: 64px; height: 64px; border-radius: 14px;
+  object-fit: cover; border: 2px solid var(--accent);
+}
+.social-creator-avatar-letter {
+  width: 64px; height: 64px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
   background: var(--accent); color: #000;
-  border-radius: 20px; padding: 2px 8px;
+  font-size: 24px; font-weight: 800;
+  border: 2px solid var(--accent); flex-shrink: 0;
+}
+.social-creator-name {
+  font-size: 12px; font-weight: 600; color: var(--text);
+  text-align: center; width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.social-creator-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: .3px;
+  background: var(--accent); color: #000;
+  border-radius: 20px; padding: 1px 6px;
 }
 
 /* Cartes amis */
@@ -4498,8 +4514,8 @@ img.dm-convo-av { background: none; }
 
 .dm-convo-name {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--text-1);
+  font-weight: 400;
+  color: var(--text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4531,12 +4547,14 @@ img.dm-convo-av { background: none; }
   background: var(--primary);
   flex-shrink: 0;
 }
-.dm-convo-last-received {
-  color: var(--primary);
-  font-weight: 600;
-}
+.dm-convo-last-received { /* read state — no special styling */ }
 .dm-convo-unread .dm-convo-name {
   font-weight: 700;
+  color: var(--text);
+}
+.dm-convo-unread .dm-convo-last {
+  color: var(--primary);
+  font-weight: 600;
 }
 
 /* ─── Bouton Envoyer un message ──────────────────────────── */
