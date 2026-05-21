@@ -66,11 +66,18 @@ window.Nutrition = (() => {
 
   function fmtDayLabel(date) {
     const now = new Date();
-    if (isSameDay(date, now)) return window.I18n ? I18n.t('nutr.today') : "Aujourd'hui";
+    if (isSameDay(date, now)) {
+      return window.I18n ? I18n.t('nutr.today') : "Aujourd'hui";
+    }
+    const isEN = window.I18n && I18n.t('nutr.today') === 'Today';
     const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
-    if (isSameDay(date, tomorrow)) return window.I18n ? I18n.t('nutr.tomorrow') : 'Demain';
+    if (isSameDay(date, tomorrow)) {
+      return isEN ? 'Tomorrow' : 'Demain';
+    }
     const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-    if (isSameDay(date, yesterday)) return window.I18n ? I18n.t('nutr.yesterday') : 'Hier';
+    if (isSameDay(date, yesterday)) {
+      return isEN ? 'Yesterday' : 'Hier';
+    }
     return date.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
