@@ -321,16 +321,16 @@ window.Nutrition = (() => {
   /* ─── Cartes repas par type ──────────────────────────────── */
   function renderMealCards(meals, activeKey) {
     const key = activeKey || todayKey();
-    getMealTypes().forEach(({ key }) => {
-      const typeMeals = meals.filter(m => (m.mealType || 'breakfast') === key);
+    getMealTypes().forEach(({ key: mealType }) => {
+      const typeMeals = meals.filter(m => (m.mealType || 'breakfast') === mealType);
       const totals = typeMeals.reduce(
         (acc, m) => ({ calories: acc.calories + (m.calories || 0), protein: acc.protein + (m.protein || 0), carbs: acc.carbs + (m.carbs || 0), fat: acc.fat + (m.fat || 0) }),
         { calories: 0, protein: 0, carbs: 0, fat: 0 }
       );
 
-      setText(`nutr-kcal-${key}`, `${totals.calories} kcal`);
+      setText(`nutr-kcal-${mealType}`, `${totals.calories} kcal`);
 
-      const macrosEl = document.getElementById(`nutr-macros-${key}`);
+      const macrosEl = document.getElementById(`nutr-macros-${mealType}`);
       if (macrosEl) {
         macrosEl.innerHTML = `
           <span class="nutr-macro-chip nutr-macro-c">G ${Math.round(totals.carbs)}g</span>
@@ -339,7 +339,7 @@ window.Nutrition = (() => {
         `;
       }
 
-      const itemsEl = document.getElementById(`nutr-items-${key}`);
+      const itemsEl = document.getElementById(`nutr-items-${mealType}`);
       if (!itemsEl) return;
 
       if (!typeMeals.length) { itemsEl.innerHTML = ''; return; }

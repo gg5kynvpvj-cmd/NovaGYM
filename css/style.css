@@ -3101,6 +3101,25 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 }
 .social-card-actions { display: flex; gap: 8px; margin-left: auto; }
 
+/* Section créateurs */
+.social-creators-section { margin-bottom: 4px; }
+.social-creators-list { display: flex; flex-direction: column; gap: 8px; }
+.social-creator-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border-radius: var(--radius-md);
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.social-creator-card:active { opacity: .7; }
+.social-creator-info { flex: 1; min-width: 0; }
+.social-creator-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.social-creator-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: .4px;
+  background: var(--accent); color: #000;
+  border-radius: 20px; padding: 2px 8px;
+}
+
 /* Cartes amis */
 .social-friend-card {
   display: flex; align-items: center; gap: 12px;

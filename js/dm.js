@@ -400,8 +400,10 @@ window.DM = (() => {
       const lastText   = c.last_message_text
         ? `${isLastMe ? t('dm.you_prefix') : ''}${esc(c.last_message_text)}`
         : t('dm.start');
-      const lastReadAt = App.local.get('dm_last_read_' + c.id) || '0';
-      const isUnread   = !isLastMe && c.last_message_at && c.last_message_at > lastReadAt;
+      const lastReadAt = App.local.get('dm_last_read_' + c.id);
+      const msgTime    = c.last_message_at ? new Date(c.last_message_at).getTime() : 0;
+      const readTime   = lastReadAt ? new Date(lastReadAt).getTime() : 0;
+      const isUnread   = !isLastMe && msgTime > 0 && msgTime > readTime;
       if (isUnread) anyUnread = true;
       const lastClass  = isLastMe ? '' : 'dm-convo-last-received';
       return `<div class="dm-convo-item${isUnread ? ' dm-convo-unread' : ''}" data-cid="${c.id}" data-uid="${c.other.id}">
@@ -463,6 +465,7 @@ window.DM = (() => {
   function closeDM() {
     unsubscribe();
     App.navigate('app');
+    renderConversationsList();
     loadConversations();
   }
 
