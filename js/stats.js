@@ -298,6 +298,7 @@ window.Stats = (() => {
         Programs.setDayPlanWorkout(dayKey, null);
         document.getElementById('modal-day-session')?.classList.add('hidden');
         renderWeeklyCalendar();
+        if (typeof Today !== 'undefined') Today.render();
       });
     });
 
@@ -333,6 +334,7 @@ window.Stats = (() => {
             App.local.set('custom_schedule', custom);
             document.getElementById('modal-day-session')?.classList.add('hidden');
             renderWeeklyCalendar();
+            if (typeof Today !== 'undefined') Today.render();
           });
         });
         planList.querySelectorAll('.day-plan-remove').forEach(btn => {
@@ -340,6 +342,7 @@ window.Stats = (() => {
             Programs.setDayPlanWorkout(dayKey, null);
             document.getElementById('modal-day-session')?.classList.add('hidden');
             renderWeeklyCalendar();
+            if (typeof Today !== 'undefined') Today.render();
           });
         });
       }
@@ -479,6 +482,7 @@ window.Stats = (() => {
       if (confirm(I18n.t('stats.reset_schedule'))) {
         App.local.set('custom_schedule', {});
         renderWeeklyCalendar();
+        if (typeof Today !== 'undefined') Today.render();
       }
     });
 
