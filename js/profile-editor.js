@@ -12,6 +12,13 @@ window.ProfileEditor = (() => {
   let tempBio        = '';
   let tempSharedWorkoutIds = new Set();
   let _loadedSharedNames   = new Set();
+  let _sharedWorkoutsMap   = new Map();   // localId → supabase row id
+
+  // Fingerprint d'une liste d'exercices (pour matcher malgré un renommage)
+  function _fp(exercises) {
+    const items = (exercises || []).map(e => e.id || e.name).filter(Boolean).sort();
+    return items.length ? items.join('|') : '';
+  }
 
   /* ─── Types de performance ──────────────────────────── */
   const PERF_TYPES = [
@@ -356,17 +363,49 @@ window.ProfileEditor = (() => {
       </div>
     `).join('');
     container.querySelectorAll('.pe-workout-share-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = parseInt(btn.dataset.wid) || btn.dataset.wid;
+        const w  = lib.find(lw => lw.id === id || String(lw.id) === btn.dataset.wid);
+        if (!w) return;
+        btn.disabled = true;
+        const canSync = App.supabase && App.state.user?.id && !App.state.user.id.startsWith('local_');
+
         if (tempSharedWorkoutIds.has(id)) {
+          // ── Retirer du partage ──
+          if (canSync) {
+            const rowId = _sharedWorkoutsMap.get(id);
+            if (rowId) {
+              await App.supabase.from('shared_workouts').delete().eq('id', rowId);
+            } else {
+              await App.supabase.from('shared_workouts')
+                .delete().eq('user_id', App.state.user.id).eq('name', w.name);
+            }
+          }
           tempSharedWorkoutIds.delete(id);
+          _sharedWorkoutsMap.delete(id);
           btn.classList.remove('active');
           btn.innerHTML = Icons.s('share', 14);
         } else {
+          // ── Ajouter au partage ──
+          if (canSync) {
+            const { data: existing } = await App.supabase.from('shared_workouts')
+              .select('id').eq('user_id', App.state.user.id).eq('name', w.name).maybeSingle();
+            if (existing) {
+              await App.supabase.from('shared_workouts')
+                .update({ name: w.name, exercises: w.exercises || [] }).eq('id', existing.id);
+              _sharedWorkoutsMap.set(id, existing.id);
+            } else {
+              const { data: ins } = await App.supabase.from('shared_workouts')
+                .insert({ user_id: App.state.user.id, name: w.name, exercises: w.exercises || [] })
+                .select('id').single();
+              if (ins?.id) _sharedWorkoutsMap.set(id, ins.id);
+            }
+          }
           tempSharedWorkoutIds.add(id);
           btn.classList.add('active');
           btn.innerHTML = Icons.s('check', 14);
         }
+        btn.disabled = false;
       });
     });
   }
@@ -480,26 +519,6 @@ window.ProfileEditor = (() => {
       const btns = [document.getElementById('btn-pe-save'), document.getElementById('btn-pe-save-bottom')];
       btns.forEach(b => { if (b) { b.textContent = '✓'; b.disabled = true; } });
 
-      // Sync séances partagées
-      if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
-        const lib = App.local.get('workout_library') || [];
-        const selected = lib.filter(w => {
-          const numId = typeof w.id === 'string' ? parseInt(w.id) : w.id;
-          return tempSharedWorkoutIds.has(numId) || tempSharedWorkoutIds.has(String(w.id));
-        });
-        // Supprime tout pour cet utilisateur puis réinsère les séances choisies
-        const { error: delErr } = await App.supabase.from('shared_workouts')
-          .delete().eq('user_id', App.state.user.id);
-        if (delErr) console.warn('shared_workouts delete:', delErr.message);
-        if (selected.length > 0) {
-          const { error: insErr } = await App.supabase.from('shared_workouts').insert(
-            selected.map(w => ({ user_id: App.state.user.id, name: w.name, exercises: w.exercises || [] }))
-          );
-          if (insErr) console.warn('shared_workouts insert:', insErr.message);
-        }
-        _loadedSharedNames = new Set(selected.map(w => w.name));
-      }
-
       if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
         await App.supabase.from('profiles').upsert(updated, { onConflict: 'id' });
       }
@@ -538,14 +557,30 @@ window.ProfileEditor = (() => {
     updatePerfCard();
     tempSharedWorkoutIds = new Set();
     _loadedSharedNames   = new Set();
+    _sharedWorkoutsMap   = new Map();
     renderWorkoutsList();
     if (App.supabase && App.state.user?.id && !App.state.user.id.startsWith('local_')) {
-      App.supabase.from('shared_workouts').select('name').eq('user_id', App.state.user.id)
+      App.supabase.from('shared_workouts').select('id, name, exercises').eq('user_id', App.state.user.id)
         .then(({ data }) => {
           if (!data) return;
-          _loadedSharedNames = new Set(data.map(w => w.name));
           const lib = App.local.get('workout_library') || [];
-          lib.forEach(w => { if (_loadedSharedNames.has(w.name)) tempSharedWorkoutIds.add(w.id); });
+          data.forEach(sw => {
+            // Match par nom exact d'abord, puis par fingerprint (séance renommée)
+            let match = lib.find(w => w.name === sw.name);
+            if (!match) {
+              const swFp = _fp(sw.exercises);
+              if (swFp) match = lib.find(w => _fp(w.exercises) === swFp);
+            }
+            if (!match) return;
+            _sharedWorkoutsMap.set(match.id, sw.id);
+            tempSharedWorkoutIds.add(match.id);
+            // Sync automatique si le nom a changé localement
+            if (sw.name !== match.name) {
+              App.supabase.from('shared_workouts')
+                .update({ name: match.name, exercises: match.exercises || [] })
+                .eq('id', sw.id).then(() => {});
+            }
+          });
           renderWorkoutsList();
         });
     }
