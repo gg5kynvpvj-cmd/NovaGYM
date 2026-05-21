@@ -937,16 +937,14 @@ window.Today = (() => {
     refreshHeader();
     renderDailyCard();
 
-    // Si une séance est en cours, ne pas re-rendre les exercices
-    // (évite de perdre les valeurs saisies en changeant d'onglet)
+    // La configuration du jour prime sur tout état en cache.
+    // Si aujourd'hui est repos, vider immédiatement exercices et brouillon périmés.
+    const _nowType = Programs.getTodayType(profile);
+    const _nowPlan = Programs.getTodayPlanWorkout();
+    const _isRestNow = _nowType === 'rest' && !_nowPlan;
+
     if (currentExercises.length > 0) {
-      const _dt = new Date().toISOString().split('T')[0];
-      const _dd = App.local.get(DRAFT_KEY);
-      if (_dd?.date === _dt) return;  // Brouillon actif aujourd'hui → on préserve
-      // Pas de brouillon aujourd'hui. Si c'est un jour de repos, vider les exos périmés.
-      const _todayType = Programs.getTodayType(App.state.profile);
-      const _todayPlan = Programs.getTodayPlanWorkout();
-      if (_todayType !== 'rest' || _todayPlan) return;  // Jour d'entraînement → préserver
+      if (!_isRestNow) return;  // Jour d'entraînement → préserver
       currentExercises = []; completedSets = {}; sessionStartTime = null;
       planWorkoutId = null; planWorkoutName = null; planWorkoutColor = null;
     }
@@ -955,6 +953,9 @@ window.Today = (() => {
     const _today = new Date().toISOString().split('T')[0];
     const _draft = App.local.get(DRAFT_KEY);
     if (_draft?.date === _today && Array.isArray(_draft.exercises) && _draft.exercises.length > 0) {
+      // Le planning a peut-être changé depuis la sauvegarde : vérifier que ce n'est plus repos
+      if (_isRestNow) { clearDraft(); /* fall through vers l'affichage repos */ }
+      else {
       sessionType      = _draft.sessionType;
       currentExercises = _draft.exercises;
       completedSets    = _draft.completedSets || {};
@@ -1010,13 +1011,13 @@ window.Today = (() => {
       updateEstimatedTime(currentExercises);
       updateProgress();
       return;
+      } // end else (not rest day)
     }
 
-    sessionType = Programs.getTodayType(profile);
-
-    // Vérifie si une séance de la bibliothèque est planifiée aujourd'hui
-    const todayPlan = Programs.getTodayPlanWorkout();
-    const isRest = sessionType === 'rest' && !todayPlan;
+    // Réutilise les valeurs déjà calculées en tête de render()
+    sessionType = _nowType;
+    const todayPlan = _nowPlan;
+    const isRest = _isRestNow;
 
     document.getElementById('rest-day-card')?.classList.toggle('hidden', !isRest);
     document.getElementById('session-container')?.classList.toggle('hidden', isRest);
