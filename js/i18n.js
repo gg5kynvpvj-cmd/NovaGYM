@@ -446,6 +446,9 @@ window.I18n = (() => {
       'today.water': 'EAU QUOTIDIENNE',
       'today.rest_day': 'Jour de repos',
       'today.rest_day_desc': 'Récupère bien — tu reviens plus fort demain.',
+      'today.create_session': 'Créer une séance',
+      'today.override_notice': 'Séance exceptionnelle',
+      'today.cancel_override': 'Annuler',
       'today.btn_finish': 'Terminer la séance',
       'water.add': 'Ajouter',
       // Auth validation
@@ -1025,6 +1028,9 @@ window.I18n = (() => {
       'today.water': 'DAILY WATER',
       'today.rest_day': 'Rest day',
       'today.rest_day_desc': 'Recover well — you come back stronger tomorrow.',
+      'today.create_session': 'Create a session',
+      'today.override_notice': 'Exceptional session',
+      'today.cancel_override': 'Cancel',
       'today.btn_finish': 'Finish workout',
       'water.add': 'Add',
       // Auth validation

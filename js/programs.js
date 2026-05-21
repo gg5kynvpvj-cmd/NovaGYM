@@ -96,6 +96,21 @@ window.Programs = (() => {
     return schedule;
   }
 
+  /* ─── Override exceptionnel (séance sur jour de repos) ── */
+  function _todayDateStr() {
+    return new Date().toISOString().split('T')[0];
+  }
+  function getTodayOverride() {
+    if (typeof App === 'undefined') return null;
+    return App.local.get('session_override_' + _todayDateStr()) || null;
+  }
+  function setTodayOverride(obj) {
+    if (typeof App === 'undefined') return;
+    const key = 'session_override_' + _todayDateStr();
+    if (obj) App.local.set(key, obj);
+    else App.local.del(key);
+  }
+
   /**
    * Retourne le type de séance d'aujourd'hui
    */
@@ -103,6 +118,9 @@ window.Programs = (() => {
     if (!profile) return null;
     const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
     const todayName = dayNames[new Date().getDay()];
+    // Override exceptionnel (séance manuelle sur jour de repos) — priorité maximale
+    const override = getTodayOverride();
+    if (override?.type) return override.type;
     // Custom override wins over auto schedule
     const custom = (typeof App !== 'undefined' ? App.local.get('custom_schedule') : null) || {};
     if (custom[todayName]) return custom[todayName];
@@ -216,6 +234,13 @@ window.Programs = (() => {
   }
 
   function getTodayPlanWorkout() {
+    // Override exceptionnel (séance bibliothèque sur jour de repos)
+    const override = getTodayOverride();
+    if (override?.workoutId != null) {
+      const lib = (typeof App !== 'undefined' ? App.local.get('workout_library') : null) || [];
+      return lib.find(w => w.id === override.workoutId) || null;
+    }
+    // Planning hebdomadaire normal
     const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
     const todayName = dayNames[new Date().getDay()];
     const workoutId = getWorkoutPlan()[todayName];
@@ -251,6 +276,8 @@ window.Programs = (() => {
     getWorkoutPlan,
     setDayPlanWorkout,
     getTodayPlanWorkout,
+    getTodayOverride,
+    setTodayOverride,
     SESSION_NAMES,
     SESSION_COLORS,
     DAYS_FR,

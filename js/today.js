@@ -14,6 +14,7 @@ window.Today = (() => {
   let planWorkoutId     = null;
   let planWorkoutName   = null;
   let planWorkoutColor  = null;
+  let _fromRestDay      = false;  // flag : ouverture picker depuis un jour de repos
 
   const WORKOUT_COLORS = ['#FF6B6B','#FF9F43','#FECA57','#1DD1A1','#54A0FF','#B6FF00','#DDA0DD','#FD79A8'];
 
@@ -863,6 +864,7 @@ window.Today = (() => {
     planWorkoutName  = null;
     planWorkoutColor = null;
     clearDraft();
+    Programs.setTodayOverride(null);
 
     // Sauvegarde Supabase
     if (App.supabase && App.state.user && !App.state.user.id.startsWith('local_')) {
@@ -1010,6 +1012,8 @@ window.Today = (() => {
 
       updateEstimatedTime(currentExercises);
       updateProgress();
+      // Bandeau override si séance exceptionnelle
+      document.getElementById('override-notice')?.classList.toggle('hidden', !Programs.getTodayOverride());
       return;
       } // end else (not rest day)
     }
@@ -1027,6 +1031,10 @@ window.Today = (() => {
       planWorkoutId = null; planWorkoutName = null; planWorkoutColor = null;
       return;
     }
+
+    // Bandeau "séance exceptionnelle" quand l'override est actif
+    const _overrideActive = !!Programs.getTodayOverride();
+    document.getElementById('override-notice')?.classList.toggle('hidden', !_overrideActive);
 
     if (todayPlan) {
       // Séance planifiée depuis la bibliothèque
@@ -1259,67 +1267,87 @@ window.Today = (() => {
   }
 
   /* ─── Changement de type de séance ───────────────────── */
-  function initSessionTypeChange() {
-    function openSessionTypeModal() {
-      const modal    = document.getElementById('modal-session-type');
-      const typeList = document.getElementById('session-type-list');
-      if (!modal || !typeList) return;
+  function openSessionTypePicker() {
+    const modal    = document.getElementById('modal-session-type');
+    const typeList = document.getElementById('session-type-list');
+    if (!modal || !typeList) return;
 
-      typeList.innerHTML = Object.entries(Programs.SESSION_NAMES)
-        .filter(([k]) => k !== 'rest')
-        .map(([k, v]) => `
-          <button class="picker-ex-btn" data-type="${k}">
-            <span class="picker-ex-name">${v}</span>
+    const tl = window.I18n ? I18n.t.bind(I18n) : k => k;
+    typeList.innerHTML = Object.entries(Programs.SESSION_NAMES)
+      .filter(([k]) => k !== 'rest')
+      .map(([k, v]) => {
+        const color = Programs.SESSION_COLORS[k] || '#B6FF00';
+        return `
+          <button class="picker-ex-btn" data-type="${k}" style="border-color:${color}20">
+            <span class="picker-ex-name" style="color:${color}">${tl('session.' + k) || v}</span>
           </button>
-        `).join('');
+        `;
+      }).join('');
 
-      typeList.querySelectorAll('[data-type]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          sessionType = btn.dataset.type;
-          const nameEl = document.getElementById('session-type-name');
-          if (nameEl) nameEl.textContent = Programs.SESSION_NAMES[sessionType] || sessionType;
+    typeList.querySelectorAll('[data-type]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedType = btn.dataset.type;
+        closeModal('modal-session-type');
 
-          const profile = App.state.profile;
-          currentExercises = Programs.getExercisesForType(
-            sessionType, profile?.program_type, profile?.level, profile?.location
-          );
-          completedSets    = {};
-          sessionStartTime = Date.now();
+        // Séance exceptionnelle sur jour de repos
+        if (_fromRestDay) {
+          _fromRestDay = false;
+          Programs.setTodayOverride({ type: selectedType });
+          document.getElementById('rest-day-card')?.classList.add('hidden');
+          document.getElementById('session-container')?.classList.remove('hidden');
+          currentExercises = []; completedSets = {}; sessionStartTime = null;
+          planWorkoutId = null; planWorkoutName = null; planWorkoutColor = null;
+          render();
+          return;
+        }
 
-          const list = document.getElementById('exercise-list');
-          list.innerHTML = '';
-          currentExercises.forEach((ex, i) => list.appendChild(renderExerciseCard(ex, i)));
+        // Changement de type en cours de séance
+        sessionType = selectedType;
+        planWorkoutId = null; planWorkoutName = null; planWorkoutColor = null;
+        const nameEl = document.getElementById('session-type-name');
+        if (nameEl) nameEl.textContent = tl('session.' + selectedType) || Programs.SESSION_NAMES[selectedType] || selectedType;
 
-          const addBtn = document.createElement('button');
-          addBtn.className = 'add-exercise-btn';
-          addBtn.id = 'btn-add-exercise-today';
-          addBtn.textContent = window.I18n ? I18n.t('today.add_exercise') : '+ Ajouter un exercice';
-          addBtn.addEventListener('click', openExercisePicker);
-          list.appendChild(addBtn);
+        const profile = App.state.profile;
+        currentExercises = Programs.getExercisesForType(
+          sessionType, profile?.program_type, profile?.level, profile?.location
+        );
+        completedSets    = {};
+        sessionStartTime = Date.now();
 
-          const libBtn2 = document.createElement('button');
-          libBtn2.className = 'add-exercise-btn';
-          libBtn2.style.background = 'var(--bg-card-2)';
-          libBtn2.style.color = 'var(--text-2)';
-          libBtn2.innerHTML = `${Icons.s('book-open', 16)} ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
-          libBtn2.addEventListener('click', openWorkoutLib);
-          list.appendChild(libBtn2);
+        const list = document.getElementById('exercise-list');
+        list.innerHTML = '';
+        currentExercises.forEach((ex, i) => list.appendChild(renderExerciseCard(ex, i)));
 
-          updateProgress();
-          updateEstimatedTime(currentExercises);
-          closeModal('modal-session-type');
-        });
+        const addBtn = document.createElement('button');
+        addBtn.className = 'add-exercise-btn';
+        addBtn.id = 'btn-add-exercise-today';
+        addBtn.textContent = window.I18n ? I18n.t('today.add_exercise') : '+ Ajouter un exercice';
+        addBtn.addEventListener('click', openExercisePicker);
+        list.appendChild(addBtn);
+
+        const libBtn2 = document.createElement('button');
+        libBtn2.className = 'add-exercise-btn';
+        libBtn2.style.background = 'var(--bg-card-2)';
+        libBtn2.style.color = 'var(--text-2)';
+        libBtn2.innerHTML = `${Icons.s('book-open', 16)} ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
+        libBtn2.addEventListener('click', openWorkoutLib);
+        list.appendChild(libBtn2);
+
+        updateProgress();
+        updateEstimatedTime(currentExercises);
       });
+    });
 
-      modal.classList.remove('hidden');
-    }
+    modal.classList.remove('hidden');
+  }
 
-    document.getElementById('session-type-badge')?.addEventListener('click', openSessionTypeModal);
-
+  function initSessionTypeChange() {
+    document.getElementById('session-type-badge')?.addEventListener('click', openSessionTypePicker);
     document.getElementById('modal-session-type')?.addEventListener('click', function(e) {
       if (e.target === this) this.classList.add('hidden');
     });
     document.getElementById('btn-close-session-type')?.addEventListener('click', () => {
+      _fromRestDay = false;
       closeModal('modal-session-type');
     });
   }
@@ -1411,6 +1439,8 @@ window.Today = (() => {
             sessionType = 'custom';
             planWorkoutId = t.id; planWorkoutName = t.name; planWorkoutColor = t.color || null;
             applyPlanWorkoutStyle(t.name, t.color);
+            Programs.setTodayOverride({ workoutId: t.id });
+            document.getElementById('override-notice')?.classList.remove('hidden');
             if (list2) {
               list2.innerHTML = '';
               const _aBtn = document.createElement('button');
@@ -1849,6 +1879,18 @@ window.Today = (() => {
     document.getElementById('exercise-list')?.addEventListener('input', saveDraft);
 
     document.getElementById('btn-rest-lib')?.addEventListener('click', openWorkoutLib);
+    document.getElementById('btn-rest-create')?.addEventListener('click', () => {
+      _fromRestDay = true;
+      openSessionTypePicker();
+    });
+    document.getElementById('btn-cancel-override')?.addEventListener('click', () => {
+      Programs.setTodayOverride(null);
+      clearDraft();
+      currentExercises = []; completedSets = {}; sessionStartTime = null;
+      planWorkoutId = null; planWorkoutName = null; planWorkoutColor = null;
+      document.getElementById('override-notice')?.classList.add('hidden');
+      render();
+    });
 
     initSessionTypeChange();
     initDailyCard();
