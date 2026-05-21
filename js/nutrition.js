@@ -6,6 +6,7 @@
 window.Nutrition = (() => {
 
   let currentPeriod   = 'today';
+  let selectedDate    = new Date();
   let currentMealType = 'breakfast';
   let selectedProduct = null; // { name, cal100, protein100, carbs100, fat100 }
   let baseNutrition   = null; // même objet, pour recalcFromQty
@@ -43,6 +44,49 @@ window.Nutrition = (() => {
   }
 
   function todayKey() { return dayKey(new Date()); }
+
+  function isSameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth()    === b.getMonth()    &&
+           a.getDate()     === b.getDate();
+  }
+
+  function isToday(date) { return isSameDay(date, new Date()); }
+
+  function getCarryOver(date) {
+    const prev = new Date(date);
+    prev.setDate(prev.getDate() - 1);
+    const prevData = getData(dayKey(prev));
+    if (!prevData.meals?.length) return 0;
+    const { goalCal } = getGoals();
+    if (!goalCal) return 0;
+    const prevConsumed = prevData.meals.reduce((s, m) => s + (m.calories || 0), 0);
+    return prevConsumed - goalCal;
+  }
+
+  function fmtDayLabel(date) {
+    const now = new Date();
+    if (isSameDay(date, now)) return window.I18n ? I18n.t('nutr.today') : "Aujourd'hui";
+    const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
+    if (isSameDay(date, tomorrow)) return window.I18n ? I18n.t('nutr.tomorrow') : 'Demain';
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    if (isSameDay(date, yesterday)) return window.I18n ? I18n.t('nutr.yesterday') : 'Hier';
+    return date.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  function updateDayNav() {
+    const nav   = document.getElementById('nutr-day-nav');
+    const label = document.getElementById('nutr-day-label');
+    const next  = document.getElementById('btn-nutr-next-day');
+    if (!nav) return;
+    const isDay = currentPeriod === 'today';
+    nav.classList.toggle('hidden', !isDay);
+    if (!isDay) return;
+    if (label) label.textContent = fmtDayLabel(selectedDate);
+    const now = new Date();
+    const maxFuture = new Date(now); maxFuture.setDate(now.getDate() + 6);
+    if (next) next.disabled = selectedDate >= maxFuture;
+  }
 
   function getData(key) {
     const raw = App.local.get(key || todayKey());
@@ -144,6 +188,7 @@ window.Nutrition = (() => {
 
   /* ─── Render principal ───────────────────────────────────── */
   function render() {
+    updateDayNav();
     if (currentPeriod === 'today') {
       renderToday();
     } else {
@@ -152,7 +197,7 @@ window.Nutrition = (() => {
   }
 
   function renderToday() {
-    const data  = getData();
+    const data  = getData(dayKey(selectedDate));
     const meals = data.meals || [];
 
     const totals = meals.reduce((acc, m) => {
@@ -164,8 +209,9 @@ window.Nutrition = (() => {
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
     const { goalCal, goalP, goalC, goalF } = getGoals();
-    const stepsBurned   = getStepsBurned();
-    const effectiveGoal = goalCal + stepsBurned;
+    const stepsBurned   = isToday(selectedDate) ? getStepsBurned() : 0;
+    const carryOver     = getCarryOver(selectedDate);
+    const effectiveGoal = Math.max(0, goalCal + stepsBurned - carryOver);
 
     drawRing(totals.calories, effectiveGoal);
     setText('nutr-consumed', totals.calories);
@@ -179,8 +225,12 @@ window.Nutrition = (() => {
 
     const stepsEl = document.getElementById('nutr-steps-burned');
     if (stepsEl) {
-      if (stepsBurned > 0) {
-        stepsEl.textContent = `👟 +${stepsBurned} kcal (marche)`;
+      const parts = [];
+      if (stepsBurned > 0) parts.push(`👟 +${stepsBurned} kcal`);
+      if (carryOver > 0)   parts.push(`↩ -${carryOver} kcal (surplus J-1)`);
+      else if (carryOver < 0) parts.push(`↩ +${Math.abs(carryOver)} kcal (déficit J-1)`);
+      if (parts.length) {
+        stepsEl.textContent = parts.join('  ');
         stepsEl.classList.remove('hidden');
       } else {
         stepsEl.classList.add('hidden');
@@ -194,8 +244,8 @@ window.Nutrition = (() => {
     setBar('nutr-c-bar', totals.carbs,   goalC);
     setBar('nutr-f-bar', totals.fat,     goalF);
 
-    renderWater(data);
-    renderMealCards(meals);
+    renderWater(data, dayKey(selectedDate));
+    renderMealCards(meals, dayKey(selectedDate));
 
     showEl('nutr-meals-section', true);
     showEl('nutr-period-section', false);
@@ -262,7 +312,8 @@ window.Nutrition = (() => {
   }
 
   /* ─── Cartes repas par type ──────────────────────────────── */
-  function renderMealCards(meals) {
+  function renderMealCards(meals, activeKey) {
+    const key = activeKey || todayKey();
     getMealTypes().forEach(({ key }) => {
       const typeMeals = meals.filter(m => (m.mealType || 'breakfast') === key);
       const totals = typeMeals.reduce(
@@ -302,7 +353,7 @@ window.Nutrition = (() => {
 
       itemsEl.querySelectorAll('.nutr-meal-item-edit').forEach(btn => {
         btn.addEventListener('click', () => {
-          const d    = getData();
+          const d    = getData(key);
           const meal = d.meals.find(m => String(m.id) === btn.dataset.id);
           if (!meal) return;
           const label = window.I18n ? I18n.t('nutr.qty_prompt').replace('%s', meal.name) : `Quantité pour "${meal.name}" (g) :`;
@@ -323,7 +374,7 @@ window.Nutrition = (() => {
             meal.fat      = Math.round(meal.fat      * ratio * 10) / 10;
           }
           meal.quantity = newQty;
-          saveData(d);
+          saveData(d, key);
           render();
         });
       });
@@ -331,9 +382,9 @@ window.Nutrition = (() => {
       itemsEl.querySelectorAll('.nutr-meal-item-del').forEach(btn => {
         btn.addEventListener('click', () => {
           if (!confirm(window.I18n ? I18n.t('nutr.delete_confirm') : 'Supprimer cet aliment ?')) return;
-          const d = getData();
+          const d = getData(key);
           d.meals = d.meals.filter(m => String(m.id) !== btn.dataset.id);
-          saveData(d);
+          saveData(d, key);
           render();
         });
       });
@@ -345,8 +396,8 @@ window.Nutrition = (() => {
     return parseInt(App.local.get('water_goal')) || 2000;
   }
 
-  function renderWater(data) {
-    const d        = data || getData();
+  function renderWater(data, activeKey) {
+    const d        = data || getData(activeKey || todayKey());
     const consumed = d.water || 0;
     const goal     = getWaterGoal();
     const pct      = Math.min(100, goal > 0 ? Math.round((consumed / goal) * 100) : 0);
@@ -363,12 +414,15 @@ window.Nutrition = (() => {
     const input  = document.getElementById('water-amount-input');
     const amount = parseInt(input?.value);
     if (!amount || amount <= 0) return;
-    const d = getData();
+    const key = dayKey(selectedDate);
+    const d = getData(key);
     d.water = (d.water || 0) + amount;
-    saveData(d);
-    renderWater(d);
-    if (window.Today)  Today.renderWaterChallenge();
-    if (window.Groups) Groups.setChallengeProgress('hydration', parseFloat((d.water / 1000).toFixed(3)));
+    saveData(d, key);
+    renderWater(d, key);
+    if (isToday(selectedDate)) {
+      if (window.Today)  Today.renderWaterChallenge();
+      if (window.Groups) Groups.setChallengeProgress('hydration', parseFloat((d.water / 1000).toFixed(3)));
+    }
     if (input) input.value = '';
   }
 
@@ -380,12 +434,15 @@ window.Nutrition = (() => {
     });
 
     document.getElementById('btn-water-reset')?.addEventListener('click', () => {
-      const d = getData();
+      const key = dayKey(selectedDate);
+      const d = getData(key);
       d.water = 0;
-      saveData(d);
-      renderWater(d);
-      if (window.Today) Today.renderWaterChallenge();
-      if (window.Groups) Groups.setChallengeProgress('hydration', 0);
+      saveData(d, key);
+      renderWater(d, key);
+      if (isToday(selectedDate)) {
+        if (window.Today) Today.renderWaterChallenge();
+        if (window.Groups) Groups.setChallengeProgress('hydration', 0);
+      }
     });
 
     // Modifier l'objectif en cliquant sur le label
@@ -617,10 +674,11 @@ window.Nutrition = (() => {
 
     if (document.getElementById('food-save-fav')?.checked) saveMealToLib(meal);
 
-    const d = getData();
+    const key = dayKey(selectedDate);
+    const d = getData(key);
     d.meals.push(meal);
-    saveData(d);
-    if (window.Groups && meal.calories > 0) Groups.autoUpdateChallengeProgress('calories', Math.round(meal.calories));
+    saveData(d, key);
+    if (isToday(selectedDate) && window.Groups && meal.calories > 0) Groups.autoUpdateChallengeProgress('calories', Math.round(meal.calories));
     closeFoodSearch();
     render();
   }
@@ -727,11 +785,12 @@ window.Nutrition = (() => {
   function addDishToMeal(dishId) {
     const dish = getCustomDishes().find(d => d.id === dishId);
     if (!dish) return;
-    const d = getData();
+    const key = dayKey(selectedDate);
+    const d = getData(key);
     dish.items.forEach(item => {
       d.meals.push({ ...item, id: Date.now() + Math.random(), mealType: currentMealType });
     });
-    saveData(d);
+    saveData(d, key);
     closeFoodSearch();
     render();
   }
@@ -861,6 +920,22 @@ window.Nutrition = (() => {
     // Sélecteur de période
     document.getElementById('nutr-period')?.addEventListener('change', e => {
       currentPeriod = e.target.value;
+      if (currentPeriod === 'today') selectedDate = new Date();
+      render();
+    });
+
+    // Navigation jour
+    document.getElementById('btn-nutr-prev-day')?.addEventListener('click', () => {
+      selectedDate = new Date(selectedDate);
+      selectedDate.setDate(selectedDate.getDate() - 1);
+      render();
+    });
+    document.getElementById('btn-nutr-next-day')?.addEventListener('click', () => {
+      const now = new Date();
+      const maxFuture = new Date(now); maxFuture.setDate(now.getDate() + 6);
+      if (selectedDate >= maxFuture) return;
+      selectedDate = new Date(selectedDate);
+      selectedDate.setDate(selectedDate.getDate() + 1);
       render();
     });
 
