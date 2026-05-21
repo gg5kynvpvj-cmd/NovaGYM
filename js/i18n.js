@@ -20,6 +20,7 @@ window.I18n = (() => {
       // Social
       'social.search_ph': 'Rechercher par pseudonyme...',
       'social.no_results': 'Aucun utilisateur trouvé',
+      'social.creators_label': 'CRÉATEURS',
       'social.pending_title': 'Demandes reçues',
       'social.sent_title': 'Demandes envoyées',
       'social.friends_title': 'Mes amis',
@@ -616,6 +617,7 @@ window.I18n = (() => {
       // Social
       'social.search_ph': 'Search by username...',
       'social.no_results': 'No users found',
+      'social.creators_label': 'CREATORS',
       'social.pending_title': 'Friend Requests',
       'social.sent_title': 'Sent Requests',
       'social.friends_title': 'My Friends',

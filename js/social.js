@@ -5,6 +5,8 @@
 
 window.Social = (() => {
 
+  const CREATOR_USERNAMES = ['Julien_c2', 'LeGuinon', 'N0 C4P'];
+
   let friends         = [];
   let pendingReceived = [];
   let pendingSent     = [];
@@ -174,6 +176,193 @@ window.Social = (() => {
     renderFriends();
   }
 
+  /* ─── Créateurs NovaGYM ──────────────────────────── */
+  async function loadCreators() {
+    const section = document.getElementById('social-creators-section');
+    if (!section) return;
+    if (!App.supabase) return;
+
+    try {
+      const { data } = await App.supabase
+        .from('profiles')
+        .select('id, username, avatar_url, bio, visibility, displayed_badges, best_performance')
+        .in('username', CREATOR_USERNAMES);
+      if (!data || data.length === 0) return;
+
+      // Sort by CREATOR_USERNAMES order
+      const sorted = CREATOR_USERNAMES
+        .map(u => data.find(p => p.username === u))
+        .filter(Boolean);
+
+      renderCreators(sorted);
+      section.classList.remove('hidden');
+    } catch { /* silently ignore */ }
+  }
+
+  function renderCreators(profiles) {
+    const list = document.getElementById('social-creators-list');
+    if (!list) return;
+    list.innerHTML = profiles.map(p => {
+      const av = p.avatar_url
+        ? `<img src="${p.avatar_url}" class="social-creator-avatar" alt="${p.username}">`
+        : `<div class="social-creator-avatar-letter">${(p.username || '?').charAt(0).toUpperCase()}</div>`;
+      return `
+        <div class="social-creator-card" data-creator-id="${p.id}">
+          ${av}
+          <span class="social-creator-name">${p.username || ''}</span>
+        </div>
+      `;
+    }).join('');
+
+    list.querySelectorAll('.social-creator-card').forEach(card => {
+      const profile = profiles.find(p => p.id === card.dataset.creatorId);
+      if (profile) card.addEventListener('click', () => openPublicProfile(profile));
+    });
+  }
+
+  async function openPublicProfile(profile) {
+    const content = document.getElementById('friend-profile-content');
+    if (!content) return;
+
+    const avatarHtml = profile.avatar_url
+      ? `<div class="fp-avatar"><img src="${profile.avatar_url}" alt="${profile.username}"></div>`
+      : `<div class="fp-avatar">${(profile.username || '?').charAt(0).toUpperCase()}</div>`;
+
+    let html = `
+      <div class="fp-header">
+        ${avatarHtml}
+        <p class="fp-username">${profile.username || ''}</p>
+      </div>
+    `;
+
+    const vis = profile.visibility || 'private';
+    if (vis === 'private') {
+      html += `<p class="fp-private">${I18n.t('profile.private_msg')}</p>`;
+    } else {
+      const displayedIds = Array.isArray(profile.displayed_badges) ? profile.displayed_badges : [];
+      const badgeDefs    = displayedIds.filter(Boolean).map(id => (Badges.ALL_BADGES || []).find(b => b.id === id)).filter(Boolean);
+      const bestPerf     = profile.best_performance || null;
+      const bio          = profile.bio || '';
+
+      if (badgeDefs.length > 0) {
+        html += `
+          <div class="fp-section">
+            <p class="fp-section-title">${I18n.t('profile.badges_section')}</p>
+            <div class="fp-badges-row">
+              ${badgeDefs.map(b => {
+                const bName = window.I18n ? I18n.t('badge.' + b.id + '.name') : b.id;
+                return `<div class="fp-badge-item" data-badge-id="${b.id}" title="${bName}">
+                  <img class="fp-badge-img" src="${Badges.img(b.id)}" alt="${bName}" onerror="this.style.display='none'">
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+      if (bio) {
+        html += `
+          <div class="fp-section">
+            <p class="fp-bio">${bio.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+          </div>
+        `;
+      }
+      if (bestPerf && bestPerf.value) {
+        const locale = window.I18n && I18n.lang === 'fr' ? 'fr-FR' : 'en-US';
+        const lang   = window.I18n ? I18n.lang : 'fr';
+        const label  = lang === 'fr' ? (bestPerf.label_fr || bestPerf.type) : (bestPerf.label_en || bestPerf.type);
+        const dateStr = bestPerf.date ? new Date(bestPerf.date).toLocaleDateString(locale) : '';
+        html += `
+          <div class="fp-section">
+            <p class="fp-section-title">${I18n.t('profile.perf_section')}</p>
+            <div class="friend-perf-card">
+              <span class="friend-perf-icon">${bestPerf.icon || '🏆'}</span>
+              <div class="friend-perf-info">
+                <span class="friend-perf-label">${label}</span>
+                <span class="friend-perf-value">${bestPerf.value}${dateStr ? ' · ' + dateStr : ''}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      if (badgeDefs.length === 0 && !bestPerf && !bio) {
+        html += `<p class="social-empty" style="margin-top:16px">${I18n.t('profile.nothing_shared')}</p>`;
+      }
+      html += `<div id="fp-shared-workouts-section"></div>`;
+    }
+
+    content.innerHTML = html;
+
+    content.querySelectorAll('.fp-badge-item').forEach(el => {
+      el.addEventListener('click', () => showBadgeZoom(el.dataset.badgeId));
+    });
+
+    // Remove friend button: show only if already friends
+    const isFriend      = friends.some(f => friendProfile(f).id === profile.id);
+    const removeFriendBtn = document.getElementById('btn-remove-friend');
+    if (removeFriendBtn) {
+      if (isFriend) {
+        const f = friends.find(f => friendProfile(f).id === profile.id);
+        removeFriendBtn.dataset.id = f?.id || '';
+        removeFriendBtn.classList.remove('hidden');
+      } else {
+        removeFriendBtn.classList.add('hidden');
+      }
+    }
+
+    const dmBtn = document.getElementById('btn-send-dm');
+    if (dmBtn) {
+      dmBtn.dataset.uid      = profile.id;
+      dmBtn.dataset.username = profile.username || '?';
+      dmBtn.dataset.avatar   = profile.avatar_url || '';
+    }
+
+    document.getElementById('modal-friend-profile')?.classList.remove('hidden');
+
+    // Load shared workouts async
+    if (vis !== 'private' && App.supabase && profile.id) {
+      const section = document.getElementById('fp-shared-workouts-section');
+      if (section) {
+        const tStr = k => (window.I18n ? I18n.t(k) : k);
+        const { data: sharedWorkouts } = await App.supabase
+          .from('shared_workouts')
+          .select('id, name, exercises')
+          .eq('user_id', profile.id)
+          .order('created_at', { ascending: false })
+          .limit(8);
+        if (sharedWorkouts?.length > 0) {
+          section.innerHTML = `
+            <div class="fp-section">
+              <p class="fp-section-title">${tStr('profile.shared_workouts')}</p>
+              ${sharedWorkouts.map(w => `
+                <div class="fp-workout-card" data-wid="${w.id}">
+                  <div class="fp-workout-info">
+                    <span class="fp-workout-name">${w.name}</span>
+                    <span class="fp-workout-meta">${(w.exercises || []).length} ex.</span>
+                  </div>
+                  <button class="fp-workout-copy" data-wid="${w.id}" data-wname="${(w.name || '').replace(/"/g, '&quot;')}">${tStr('profile.copy_workout')}</button>
+                </div>
+              `).join('')}
+            </div>`;
+          section.querySelectorAll('.fp-workout-copy').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const wname = btn.dataset.wname || 'Séance';
+              const wid   = btn.dataset.wid;
+              const { data: w } = await App.supabase
+                .from('shared_workouts').select('exercises').eq('id', wid).single();
+              if (!w) return;
+              const newName = prompt(tStr('profile.copy_name_prompt'), wname);
+              if (!newName?.trim()) return;
+              const lib = App.local.get('workout_library') || [];
+              lib.unshift({ id: Date.now(), name: newName.trim(), exercises: w.exercises || [] });
+              App.local.set('workout_library', lib);
+              alert(tStr('profile.workout_copied'));
+            });
+          });
+        }
+      }
+    }
+  }
+
   /* ─── Recherche ───────────────────────────────────── */
   function initSearch() {
     const input   = document.getElementById('social-search-input');
@@ -259,7 +448,11 @@ window.Social = (() => {
 
   /* ─── Modal profil ami ────────────────────────────── */
   async function openProfile(friendshipId) {
-    document.getElementById('btn-remove-friend').dataset.id = friendshipId;
+    const removeFriendBtn = document.getElementById('btn-remove-friend');
+    if (removeFriendBtn) {
+      removeFriendBtn.dataset.id = friendshipId;
+      removeFriendBtn.classList.remove('hidden');
+    }
 
     const f = friends.find(f => f.id === friendshipId);
     const p = f ? friendProfile(f) : null;
@@ -442,6 +635,7 @@ window.Social = (() => {
     if (!App.state.user) return;
     await loadFriendships();
     renderAll();
+    loadCreators();
   }
 
   return { init, render };
