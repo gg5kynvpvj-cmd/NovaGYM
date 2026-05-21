@@ -939,7 +939,17 @@ window.Today = (() => {
 
     // Si une séance est en cours, ne pas re-rendre les exercices
     // (évite de perdre les valeurs saisies en changeant d'onglet)
-    if (currentExercises.length > 0) return;
+    if (currentExercises.length > 0) {
+      const _dt = new Date().toISOString().split('T')[0];
+      const _dd = App.local.get(DRAFT_KEY);
+      if (_dd?.date === _dt) return;  // Brouillon actif aujourd'hui → on préserve
+      // Pas de brouillon aujourd'hui. Si c'est un jour de repos, vider les exos périmés.
+      const _todayType = Programs.getTodayType(App.state.profile);
+      const _todayPlan = Programs.getTodayPlanWorkout();
+      if (_todayType !== 'rest' || _todayPlan) return;  // Jour d'entraînement → préserver
+      currentExercises = []; completedSets = {}; sessionStartTime = null;
+      planWorkoutId = null; planWorkoutName = null; planWorkoutColor = null;
+    }
 
     // Restaure un brouillon de séance sauvegardé (si même journée)
     const _today = new Date().toISOString().split('T')[0];
@@ -1392,6 +1402,29 @@ window.Today = (() => {
           if (list2 && addBtn2) {
             while (list2.firstChild && list2.firstChild !== addBtn2) list2.removeChild(list2.firstChild);
           }
+          // Si on est en jour de repos : afficher session-container, créer boutons manquants
+          const _restCard = document.getElementById('rest-day-card');
+          if (_restCard && !_restCard.classList.contains('hidden')) {
+            _restCard.classList.add('hidden');
+            document.getElementById('session-container')?.classList.remove('hidden');
+            sessionType = 'custom';
+            planWorkoutId = t.id; planWorkoutName = t.name; planWorkoutColor = t.color || null;
+            applyPlanWorkoutStyle(t.name, t.color);
+            if (list2) {
+              list2.innerHTML = '';
+              const _aBtn = document.createElement('button');
+              _aBtn.className = 'add-exercise-btn'; _aBtn.id = 'btn-add-exercise-today';
+              _aBtn.textContent = window.I18n ? I18n.t('today.add_exercise') : '+ Ajouter un exercice';
+              _aBtn.addEventListener('click', openExercisePicker);
+              list2.appendChild(_aBtn);
+              const _lBtn = document.createElement('button');
+              _lBtn.className = 'add-exercise-btn';
+              _lBtn.style.background = 'var(--bg-card-2)'; _lBtn.style.color = 'var(--text-2)';
+              _lBtn.innerHTML = `${Icons.s('book-open', 16)} ${window.I18n ? I18n.t('modal.workout_lib') : 'Mes séances'}`;
+              _lBtn.addEventListener('click', openWorkoutLib);
+              list2.appendChild(_lBtn);
+            }
+          }
           t.exercises.forEach(ex => addPickedExercise({ ...ex }));
           closeModal('modal-workout-lib');
         }
@@ -1813,6 +1846,8 @@ window.Today = (() => {
 
     // Sauvegarde le brouillon quand l'utilisateur modifie un poids ou des reps
     document.getElementById('exercise-list')?.addEventListener('input', saveDraft);
+
+    document.getElementById('btn-rest-lib')?.addEventListener('click', openWorkoutLib);
 
     initSessionTypeChange();
     initDailyCard();
