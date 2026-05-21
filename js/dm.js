@@ -227,6 +227,7 @@ window.DM = (() => {
         const { data: profile } = await App.supabase
           .from('profiles').select('id, username, avatar_url').eq('id', msg.sender_id).maybeSingle();
         dmMessages.push({ ...msg, sender: profile });
+        App.local.set('dm_last_read_' + convId, new Date().toISOString());
         renderMessages();
         scrollToBottom();
       })
@@ -393,20 +394,31 @@ window.DM = (() => {
     section.classList.remove('hidden');
 
     const me = myId();
+    let anyUnread = false;
     list.innerHTML = conversations.map(c => {
-      const isLastMe = c.last_message_sender_id === me;
-      const lastText = c.last_message_text
+      const isLastMe   = c.last_message_sender_id === me;
+      const lastText   = c.last_message_text
         ? `${isLastMe ? t('dm.you_prefix') : ''}${esc(c.last_message_text)}`
         : t('dm.start');
-      return `<div class="dm-convo-item" data-cid="${c.id}" data-uid="${c.other.id}">
+      const lastReadAt = App.local.get('dm_last_read_' + c.id) || '0';
+      const isUnread   = !isLastMe && c.last_message_at && c.last_message_at > lastReadAt;
+      if (isUnread) anyUnread = true;
+      const lastClass  = isLastMe ? '' : 'dm-convo-last-received';
+      return `<div class="dm-convo-item${isUnread ? ' dm-convo-unread' : ''}" data-cid="${c.id}" data-uid="${c.other.id}">
         ${avatarEl(c.other.avatar_url, c.other.username, 'dm-convo-av')}
         <div class="dm-convo-info">
           <span class="dm-convo-name">${esc(c.other.username || '?')}</span>
-          <span class="dm-convo-last">${lastText}</span>
+          <span class="dm-convo-last ${lastClass}">${lastText}</span>
         </div>
-        <span class="dm-convo-time">${fmtShort(c.last_message_at)}</span>
+        <div class="dm-convo-right">
+          <span class="dm-convo-time">${fmtShort(c.last_message_at)}</span>
+          ${isUnread ? '<span class="dm-unread-dot"></span>' : ''}
+        </div>
       </div>`;
     }).join('');
+
+    const badge = document.getElementById('nav-social-badge');
+    if (badge) badge.classList.toggle('hidden', !anyUnread);
 
     list.querySelectorAll('.dm-convo-item').forEach(item => {
       item.addEventListener('click', () => {
@@ -419,6 +431,7 @@ window.DM = (() => {
   async function openDMFromConv(conv) {
     currentOther  = conv.other;
     currentConvId = conv.id;
+    App.local.set('dm_last_read_' + conv.id, new Date().toISOString());
     openPage();
     await loadMessages(conv.id);
     subscribeToMessages(conv.id);
@@ -432,6 +445,7 @@ window.DM = (() => {
     const convId = await getOrCreateConversation(otherId);
     if (!convId) { closeDM(); return; }
     currentConvId = convId;
+    App.local.set('dm_last_read_' + convId, new Date().toISOString());
 
     await loadMessages(convId);
     subscribeToMessages(convId);

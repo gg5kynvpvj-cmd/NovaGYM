@@ -1365,6 +1365,17 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .nav-item:active { background: var(--bg-card); }
 .nav-icon { display: flex; align-items: center; }
 .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2px; }
+.nav-icon-badge-wrap { position: relative; }
+.nav-badge {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 1.5px solid var(--bg-nav);
+}
 
 /* ── MODALS ─────────────────────────────────────────────── */
 .modal-overlay {
@@ -3774,6 +3785,40 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .nutr-period-select:focus { border-color: var(--accent); }
 :root.light .nutr-period-select { color: #0B0B0B; }
 
+/* ─── Nutrition — navigateur jour ────────────────────────── */
+.nutr-day-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  margin-bottom: 14px;
+}
+.nutr-day-btn {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.nutr-day-btn:not(:disabled):hover { background: rgba(182,255,0,0.1); color: var(--primary); }
+.nutr-day-btn:disabled { opacity: 0.3; cursor: default; }
+.nutr-day-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-1);
+  text-align: center;
+  flex: 1;
+}
+
 /* ─── Nutrition — résumé période ─────────────────────────── */
 .nutr-period-summary {
   background: var(--bg-card);
@@ -4282,10 +4327,30 @@ img.dm-convo-av { background: none; }
   text-overflow: ellipsis;
 }
 
+.dm-convo-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
 .dm-convo-time {
   font-size: 11px;
   color: var(--text-3);
+}
+.dm-unread-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--primary);
   flex-shrink: 0;
+}
+.dm-convo-last-received {
+  color: var(--primary);
+  font-weight: 600;
+}
+.dm-convo-unread .dm-convo-name {
+  font-weight: 700;
 }
 
 /* ─── Bouton Envoyer un message ──────────────────────────── */

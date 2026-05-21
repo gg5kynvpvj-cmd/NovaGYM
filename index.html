@@ -514,6 +514,12 @@
         </select>
       </div>
 
+      <div id="nutr-day-nav" class="nutr-day-nav">
+        <button id="btn-nutr-prev-day" class="nutr-day-btn">&#8592;</button>
+        <span id="nutr-day-label" class="nutr-day-label">Aujourd'hui</span>
+        <button id="btn-nutr-next-day" class="nutr-day-btn">&#8594;</button>
+      </div>
+
       <div class="nutrition-ring-card">
         <div class="nutrition-ring-wrap">
           <canvas id="nutrition-ring" width="140" height="140"></canvas>
@@ -899,13 +905,14 @@
         <span class="nav-label" data-i18n="nav.nutrition">Nutrition</span>
       </button>
       <button class="nav-item" data-tab="social">
-        <span class="nav-icon">
+        <span class="nav-icon nav-icon-badge-wrap">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
             <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
             <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             <path d="M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             <path d="M21 21v-2a4 4 0 00-3-3.87" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
+          <span id="nav-social-badge" class="nav-badge hidden"></span>
         </span>
         <span class="nav-label" data-i18n="nav.social">Communauté</span>
       </button>
