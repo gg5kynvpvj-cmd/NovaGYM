@@ -20,10 +20,13 @@ window.Today = (() => {
   /* ─── Helpers GIF unifiés ─────────────────────────────── */
   function getExerciseGifSrc(exercise) {
     if (!exercise) return null;
-    if (exercise.gif) return exercise.gif;
+    // Exercice custom : GIF uploadé par l'utilisateur
+    if (exercise.isCustom) return exercise.gif || null;
+    // Override manuel (URL définie par l'utilisateur)
     const overrides = App.local.get('exercise_gifs') || {};
     if (overrides[exercise.id]) return overrides[exercise.id];
-    if (!exercise.isCustom) return `/assets/exercises/${exercise.id}.gif`;
+    // Visuel SVG généré automatiquement
+    if (window.ExerciseVisuals) return ExerciseVisuals.getVisualSrc(exercise);
     return null;
   }
 
