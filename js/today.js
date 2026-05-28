@@ -391,18 +391,6 @@ window.Today = (() => {
     downBtn.addEventListener('click', (e) => { e.stopPropagation(); moveExercise(exercise.id, 1); });
     headerRight.appendChild(downBtn);
 
-    // Bouton GIF (si disponible)
-    const gifSrcCard = getExerciseGifSrc(exercise);
-    const gifBtn = document.createElement('button');
-    gifBtn.className = 'exercise-info-btn exercise-gif-btn';
-    gifBtn.title = gifSrcCard ? 'Voir l\'animation' : 'Ajouter un GIF';
-    gifBtn.innerHTML = gifSrcCard
-      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 3-6 3V9z" fill="currentColor"/></svg>`
-      : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 3-6 3V9z" stroke="currentColor" stroke-width="1.5"/></svg>`;
-    if (gifSrcCard) gifBtn.style.color = 'var(--accent)';
-    gifBtn.addEventListener('click', (e) => { e.stopPropagation(); openExerciseDetail(exercise); });
-    headerRight.appendChild(gifBtn);
-
     // Info (tous les utilisateurs)
     const infoBtn = document.createElement('button');
     infoBtn.className = 'exercise-info-btn';
