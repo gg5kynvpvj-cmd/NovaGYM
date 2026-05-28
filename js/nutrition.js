@@ -54,14 +54,26 @@ window.Nutrition = (() => {
   function isToday(date) { return isSameDay(date, new Date()); }
 
   function getCarryOver(date) {
-    const prev = new Date(date);
-    prev.setDate(prev.getDate() - 1);
-    const prevData = getData(dayKey(prev));
-    if (!prevData.meals?.length) return 0;
     const { goalCal } = getGoals();
     if (!goalCal) return 0;
-    const prevConsumed = prevData.meals.reduce((s, m) => s + (m.calories || 0), 0);
-    return prevConsumed - goalCal;
+
+    let cumulative = 0;
+    let daysWithData = 0;
+    const MAX_LOOKBACK = 90;
+
+    for (let i = 1; i <= MAX_LOOKBACK; i++) {
+      const d = new Date(date);
+      d.setDate(d.getDate() - i);
+      const dayData = getData(dayKey(d));
+      if (!dayData.meals?.length) continue;
+      const consumed = dayData.meals.reduce((s, m) => s + (m.calories || 0), 0);
+      cumulative += consumed - goalCal;
+      daysWithData++;
+    }
+
+    if (daysWithData === 0) return 0;
+    // Étale l'ajustement sur 7 jours pour éviter une compensation trop brutale
+    return Math.round(cumulative / 7);
   }
 
   function fmtDayLabel(date) {
@@ -234,8 +246,8 @@ window.Nutrition = (() => {
     if (stepsEl) {
       const parts = [];
       if (stepsBurned > 0) parts.push(`👟 +${stepsBurned} kcal`);
-      if (carryOver > 0)   parts.push(`↩ -${carryOver} kcal (surplus J-1)`);
-      else if (carryOver < 0) parts.push(`↩ +${Math.abs(carryOver)} kcal (déficit J-1)`);
+      if (carryOver > 0)   parts.push(`↩ -${carryOver} kcal (surplus accumulé)`);
+      else if (carryOver < 0) parts.push(`↩ +${Math.abs(carryOver)} kcal (déficit accumulé)`);
       if (parts.length) {
         stepsEl.textContent = parts.join('  ');
         stepsEl.classList.remove('hidden');

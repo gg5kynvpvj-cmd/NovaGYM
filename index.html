@@ -1613,6 +1613,18 @@
           <input id="ce-rest" type="number" value="90" min="0" max="600" step="15" class="input-field" inputmode="numeric">
         </div>
         <div class="input-group">
+          <label class="input-label">GIF (optionnel)</label>
+          <div class="ce-gif-zone" id="ce-gif-zone">
+            <img id="ce-gif-preview" class="ce-gif-preview hidden" alt="aperçu GIF">
+            <label class="ce-gif-label" id="ce-gif-label">
+              <span class="ce-gif-icon">＋</span>
+              <span>Importer un GIF</span>
+              <input id="ce-gif-file" type="file" accept="image/gif,image/webp" class="hidden">
+            </label>
+            <button id="ce-gif-remove" class="ce-gif-remove hidden" type="button">✕</button>
+          </div>
+        </div>
+        <div class="input-group">
           <label class="input-label" data-i18n="ce.options_lbl">Options</label>
           <label class="toggle-row">
             <input id="ce-unilateral" type="checkbox">

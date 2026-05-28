@@ -61,6 +61,16 @@
 
   App.switchTab = switchTab;
 
+  /* ─── Enregistre la connexion du jour ───────────────── */
+  function trackDailyLogin() {
+    const today  = new Date().toISOString().slice(0, 10);
+    const logins = App.local.get('daily_logins') || [];
+    if (!logins.includes(today)) {
+      logins.push(today);
+      App.local.set('daily_logins', logins);
+    }
+  }
+
   /* ─── Refresh général de l'app ───────────────────────── */
   App.refreshApp = async function() {
     const profile = App.state.profile;
@@ -125,6 +135,7 @@
     App.navigate(destination);
 
     if (destination === 'app') {
+      trackDailyLogin();
       try { await App.refreshApp(); } catch(e) { console.warn(e); }
       if (window.Tutorial) Tutorial.maybeShow();
     }
