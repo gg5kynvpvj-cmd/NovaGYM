@@ -1,10 +1,65 @@
 /* ═══════════════════════════════════════════════════════════
-   NovaGYM — Diagrammes anatomiques des exercices
-   Fond transparent, corps sombre, muscles ciblés en rouge
-   Deux vues : avant / arrière
+   NovaGYM — Visuels des exercices
+   PNG custom (assets/exercises/) en priorité
+   Fallback : diagramme anatomique SVG généré
    ═══════════════════════════════════════════════════════════ */
 
 window.ExerciseVisuals = (() => {
+
+  /* ─── Mapping exercice ID → fichier PNG ──────────────── */
+  const IMGS = {
+    // Pec · Épaule · Triceps
+    bench_press:             '/assets/exercises/01_developpe_couche.png',
+    incline_press:           '/assets/exercises/02_developpe_incline.png',
+    ohp:                     '/assets/exercises/03_developpe_militaire.png',
+    lateral_raise:           '/assets/exercises/04_elevations_laterales.png',
+    front_raise:             '/assets/exercises/05_elevation_frontale.png',
+    tricep_pushdown:         '/assets/exercises/06_extensions_triceps_poulie.png',
+    dips:                    '/assets/exercises/07_dips_triceps.png',
+    pushup:                  '/assets/exercises/08_pompes.png',
+    dumbbell_bench_press:    '/assets/exercises/09_developpe_couche_halteres.png',
+    cable_fly:               '/assets/exercises/10_ecartes_poulie_halteres.png',
+    skull_crusher:           '/assets/exercises/11_barre_au_front.png',
+    overhead_tricep:         '/assets/exercises/12_extension_nuque_haltere.png',
+    dumbbell_shoulder_press: '/assets/exercises/13_developpe_halteres_epaules.png',
+
+    // Dos · Biceps
+    pullup:                  '/assets/exercises/01_tractions.png',
+    barbell_row:             '/assets/exercises/02_rowing_barre.png',
+    lat_pulldown:            '/assets/exercises/03_tirage_vertical.png',
+    face_pull:               '/assets/exercises/04_face_pull.png',
+    bicep_curl:              '/assets/exercises/05_curl_biceps.png',
+    hammer_curl:             '/assets/exercises/06_curl_marteau.png',
+    concentration_curl:      '/assets/exercises/07_curl_concentre.png',
+    australian_pullup:       '/assets/exercises/08_tractions_australiennes.png',
+    cable_row:               '/assets/exercises/09_tirage_horizontal_poulie.png',
+    dumbbell_row:            '/assets/exercises/10_rowing_haltere.png',
+    rear_delt_fly:           '/assets/exercises/11_oiseau_halteres.png',
+    barbell_curl:            '/assets/exercises/12_curl_barre.png',
+    preacher_curl:           '/assets/exercises/13_curl_pupitre.png',
+
+    // Jambes · Fessiers · Mollets
+    squat:                   '/assets/exercises/01_squat.png',
+    leg_press:               '/assets/exercises/02_presse_a_cuisses.png',
+    rdl:                     '/assets/exercises/03_souleve_terre_roumain.png',
+    leg_curl:                '/assets/exercises/04_curl_ischio_jambiers.png',
+    lunge:                   '/assets/exercises/05_fentes.png',
+    calf_raise:              '/assets/exercises/06_elevations_mollets.png',
+    bodyweight_squat:        '/assets/exercises/07_squat_poids_du_corps.png',
+    glute_bridge:            '/assets/exercises/08_hip_thrust.png',
+    deadlift:                '/assets/exercises/09_souleve_de_terre.png',
+    leg_extension:           '/assets/exercises/10_leg_extension.png',
+    stiff_leg_dl:            '/assets/exercises/11_souleve_terre_jambes_tendues.png',
+    bulgarian_split_squat:   '/assets/exercises/12_fentes_bulgares.png',
+    seated_calf_raise:       '/assets/exercises/13_mollets_assis.png',
+
+    // Abdos · Core
+    crunch:                  '/assets/exercises/01_crunch_v1.png',
+    leg_raise:               '/assets/exercises/02_releves_jambes_v1.png',
+    plank:                   '/assets/exercises/03_planche_v1.png',
+    russian_twist:           '/assets/exercises/04_russian_twist_v1.png',
+    side_plank:              '/assets/exercises/05_gainage_lateral_v1.png',
+  };
 
   const RED    = '#FF3B30';
   const RED_DIM = '#CC2E26';
@@ -248,6 +303,9 @@ window.ExerciseVisuals = (() => {
   /* ─── Retourne un data URI SVG ────────────────────────── */
   function getVisualSrc(exercise) {
     if (!exercise || exercise.isCustom) return null;
+    // PNG en priorité
+    if (IMGS[exercise.id]) return IMGS[exercise.id];
+    // Fallback SVG pour les exercices sans image
     const svg = buildSVG(exercise);
     if (!svg) return null;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
