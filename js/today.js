@@ -773,30 +773,13 @@ window.Today = (() => {
       </div>
     `).join('');
 
-    const gifSrc = getExerciseGifSrc(exercise);
+    const visualSrc = getExerciseGifSrc(exercise);
+    const visualHtml = visualSrc
+      ? `<div class="exercise-visual-wrap"><img src="${visualSrc}" alt="${exercise.name}" class="exercise-visual" draggable="false"></div>`
+      : '';
 
     content.innerHTML = `
-      <div class="exercise-gif-zone" id="ex-gif-zone">
-        ${gifSrc ? `
-          <img id="ex-gif-img" src="${gifSrc}" alt="${exercise.name}" class="exercise-gif"
-               onerror="document.getElementById('ex-gif-img').style.display='none';document.getElementById('ex-gif-placeholder').style.display='flex'">
-          <button class="ex-gif-edit-btn" id="btn-ex-gif-edit">✎ Modifier le GIF</button>
-        ` : `
-          <div class="ex-gif-placeholder" id="ex-gif-placeholder">
-            <span class="ex-gif-placeholder-icon">🎬</span>
-            <span>Aucune animation</span>
-            <button class="btn-primary btn-sm" id="btn-ex-gif-add">+ Ajouter un GIF</button>
-          </div>
-        `}
-        <div class="ex-gif-url-form hidden" id="ex-gif-url-form">
-          <input type="url" id="ex-gif-url-input" class="input-field" placeholder="https://example.com/exercice.gif">
-          <div class="ex-gif-url-actions">
-            <button class="btn-primary btn-sm" id="btn-ex-gif-save">Enregistrer</button>
-            <button class="btn-secondary btn-sm" id="btn-ex-gif-cancel">Annuler</button>
-          </div>
-        </div>
-      </div>
-
+      ${visualHtml}
       <h2 class="exercise-detail-name">${exercise.name}</h2>
       <p class="exercise-detail-muscles">${(exercise.muscles || []).join(' · ')}</p>
 
@@ -816,34 +799,6 @@ window.Today = (() => {
         <div class="tips-list">${tipItems}</div>
       </div>` : ''}
     `;
-
-    // Handlers boutons GIF
-    const showUrlForm = () => {
-      document.getElementById('ex-gif-url-form')?.classList.remove('hidden');
-      const currentUrl = getExerciseGifSrc(exercise);
-      const urlInput = document.getElementById('ex-gif-url-input');
-      if (urlInput) urlInput.value = (currentUrl && !currentUrl.startsWith('data:') && !currentUrl.startsWith('/assets/')) ? currentUrl : '';
-    };
-    document.getElementById('btn-ex-gif-add')?.addEventListener('click', showUrlForm);
-    document.getElementById('btn-ex-gif-edit')?.addEventListener('click', showUrlForm);
-    document.getElementById('btn-ex-gif-cancel')?.addEventListener('click', () => {
-      document.getElementById('ex-gif-url-form')?.classList.add('hidden');
-    });
-    document.getElementById('btn-ex-gif-save')?.addEventListener('click', () => {
-      const url = document.getElementById('ex-gif-url-input')?.value.trim();
-      if (exercise.isCustom) {
-        const customs = getCustomExercises();
-        const idx = customs.findIndex(e => e.id === exercise.id);
-        if (idx >= 0) { customs[idx].gif = url || null; App.local.set('custom_exercises', customs); }
-        exercise.gif = url || null;
-        // Met à jour aussi dans currentExercises si présent
-        const inSession = currentExercises.find(e => e.id === exercise.id);
-        if (inSession) inSession.gif = url || null;
-      } else {
-        setExerciseGifOverride(exercise.id, url || null);
-      }
-      openExerciseDetail(exercise);
-    });
 
     document.getElementById('modal-exercise')?.classList.remove('hidden');
   }
