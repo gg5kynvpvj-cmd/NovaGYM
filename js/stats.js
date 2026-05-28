@@ -64,34 +64,34 @@ window.Stats = (() => {
     });
   }
 
-  /* ─── Nuage de points — Volume ───────────────────────── */
+  /* ─── Graphique Volume (line chart) ─────────────────── */
   function drawScatterChart(sessions, days) {
     days = days || volumeRange;
     const canvas = document.getElementById('scatter-chart');
     if (!canvas) return;
-    const { ctx, W, H } = setupCanvas(canvas, 200);
+    const { ctx, W, H } = setupCanvas(canvas, 180);
     const { bg, grid, lbl, empty } = chartColors();
 
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    const completed = sessions.filter(s => s.completed);
+    const completed = sessions.filter(s => s.completed && (s.volume || 0) > 0);
     if (completed.length === 0) { drawEmpty(ctx, W, H, empty); return; }
 
     const now  = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - (days - 1));
-
     const recent = completed.filter(s => new Date(s.date || s.created_at) >= from);
+    if (recent.length === 0) { drawEmpty(ctx, W, H, empty); return; }
 
-    const pad = { top: 16, right: 20, bottom: 36, left: 44 };
-    const cW  = W - pad.left - pad.right;
-    const cH  = H - pad.top  - pad.bottom;
+    const data = recent.map(s => ({ date: s.date || s.created_at, volume: s.volume || 0 }));
 
-    const toX = d => pad.left + (Math.max(0, (new Date(d) - from) / (1000 * 60 * 60 * 24)) / (days - 1)) * cW;
-    const volumes = recent.map(s => s.volume || 1);
-    const maxVol  = Math.max(...volumes, 1);
-    const toY = v => pad.top + cH - ((v / maxVol) * cH);
+    const pad  = { top: 16, right: 20, bottom: 36, left: 44 };
+    const cW   = W - pad.left - pad.right;
+    const cH   = H - pad.top  - pad.bottom;
+    const maxV = Math.max(...data.map(d => d.volume), 1);
+    const toX  = d => pad.left + (Math.max(0, (new Date(d) - from) / (1000*60*60*24)) / (days-1)) * cW;
+    const toY  = v => pad.top + cH - ((v / maxV) * cH);
 
     drawGrid(ctx, pad, cW, cH, W, H, grid);
     drawXLabels(ctx, from, days, pad, cW, H, lbl);
@@ -100,39 +100,27 @@ window.Stats = (() => {
     ctx.font = '10px -apple-system, sans-serif';
     ctx.textAlign = 'right';
     [0, 0.5, 1].forEach(ratio => {
-      ctx.fillText(Math.round(maxVol * ratio) + 'kg', pad.left - 6, pad.top + cH - ratio * cH + 4);
+      ctx.fillText(Math.round(maxV * ratio) + 'kg', pad.left - 6, pad.top + cH - ratio * cH + 4);
     });
 
-    recent.forEach(session => {
-      const x = toX(session.date || session.created_at);
-      const vol = session.volume || 1;
-      const y = toY(vol);
-      const r = Math.max(5, Math.min(12, 4 + (vol / maxVol) * 8));
-      const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
-      grad.addColorStop(0, 'rgba(182,255,0,0.4)');
-      grad.addColorStop(1, 'rgba(182,255,0,0)');
-      ctx.beginPath(); ctx.arc(x, y, r * 2, 0, Math.PI * 2);
-      ctx.fillStyle = grad; ctx.fill();
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = '#B6FF00'; ctx.fill();
+    // Ligne
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = toX(d.date), y = toY(d.volume);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
+    ctx.strokeStyle = 'rgba(0,197,255,0.6)';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
 
-    if (recent.length > 1) {
-      const xs = recent.map(s => toX(s.date || s.created_at));
-      const ys = recent.map(s => toY(s.volume || 1));
-      const n  = xs.length;
-      const mx = xs.reduce((a,b) => a+b,0)/n, my = ys.reduce((a,b) => a+b,0)/n;
-      const slope = xs.reduce((acc,x,i) => acc+(x-mx)*(ys[i]-my),0) / xs.reduce((acc,x) => acc+(x-mx)**2,0);
-      const inter = my - slope*mx;
+    // Points
+    data.forEach(d => {
       ctx.beginPath();
-      ctx.moveTo(xs[0], slope*xs[0]+inter);
-      ctx.lineTo(xs[n-1], slope*xs[n-1]+inter);
-      ctx.strokeStyle = 'rgba(182,255,0,0.25)';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4,4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
+      ctx.arc(toX(d.date), toY(d.volume), 4, 0, Math.PI*2);
+      ctx.fillStyle = '#00C5FF';
+      ctx.fill();
+    });
   }
 
   /* ─── Graphique Reps ─────────────────────────────────── */

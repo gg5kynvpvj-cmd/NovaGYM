@@ -752,7 +752,15 @@ window.Today = (() => {
       </div>
     `).join('');
 
+    const gifSrc  = exercise.gif || (exercise.isCustom ? null : `/assets/exercises/${exercise.id}.gif`);
+    const gifHtml = gifSrc ? `
+      <div class="exercise-gif-wrap">
+        <img src="${gifSrc}" alt="${exercise.name}" class="exercise-gif"
+             onerror="this.closest('.exercise-gif-wrap').style.display='none'">
+      </div>` : '';
+
     content.innerHTML = `
+      ${gifHtml}
       <h2 class="exercise-detail-name">${exercise.name}</h2>
       <p class="exercise-detail-muscles">${(exercise.muscles || []).join(' · ')}</p>
 
@@ -766,10 +774,11 @@ window.Today = (() => {
         <div class="detail-muscles-list">${muscleTags}</div>
       </div>
 
+      ${tipItems ? `
       <div class="detail-section">
         <p class="detail-section-title">Comment bien l'exécuter</p>
         <div class="tips-list">${tipItems}</div>
-      </div>
+      </div>` : ''}
     `;
 
     document.getElementById('modal-exercise')?.classList.remove('hidden');
@@ -1817,6 +1826,15 @@ window.Today = (() => {
       document.getElementById('ce-timer').checked = false;
       document.getElementById('ce-reps-label').textContent = 'Répétitions';
       document.getElementById('ce-error').textContent = '';
+      // Reset GIF
+      const prevEl = document.getElementById('ce-gif-preview');
+      const lblEl  = document.getElementById('ce-gif-label');
+      const rmEl   = document.getElementById('ce-gif-remove');
+      const fileEl = document.getElementById('ce-gif-file');
+      if (prevEl) { prevEl.src = ''; prevEl.classList.add('hidden'); }
+      if (lblEl)  lblEl.classList.remove('hidden');
+      if (rmEl)   rmEl.classList.add('hidden');
+      if (fileEl) fileEl.value = '';
       document.getElementById('modal-create-exercise')?.classList.remove('hidden');
     });
 
@@ -1828,11 +1846,42 @@ window.Today = (() => {
       if (label) label.textContent = isTimer ? 'Durée (secondes)' : 'Répétitions';
       if (input) { input.value = isTimer ? '30' : '10'; input.max = isTimer ? '3600' : '100'; }
     });
+
+    // GIF upload preview
+    let _ceGifBase64 = null;
+    document.getElementById('ce-gif-file')?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        _ceGifBase64 = ev.target.result;
+        const preview = document.getElementById('ce-gif-preview');
+        const label   = document.getElementById('ce-gif-label');
+        const remove  = document.getElementById('ce-gif-remove');
+        if (preview) { preview.src = _ceGifBase64; preview.classList.remove('hidden'); }
+        if (label)   label.classList.add('hidden');
+        if (remove)  remove.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    });
+    document.getElementById('ce-gif-remove')?.addEventListener('click', () => {
+      _ceGifBase64 = null;
+      const preview = document.getElementById('ce-gif-preview');
+      const label   = document.getElementById('ce-gif-label');
+      const remove  = document.getElementById('ce-gif-remove');
+      const file    = document.getElementById('ce-gif-file');
+      if (preview) { preview.src = ''; preview.classList.add('hidden'); }
+      if (label)   label.classList.remove('hidden');
+      if (remove)  remove.classList.add('hidden');
+      if (file)    file.value = '';
+    });
+
     document.getElementById('btn-close-create-exercise')?.addEventListener('click', () => {
+      _ceGifBase64 = null;
       closeModal('modal-create-exercise');
     });
     document.getElementById('modal-create-exercise')?.addEventListener('click', function(e) {
-      if (e.target === this) closeModal('modal-create-exercise');
+      if (e.target === this) { _ceGifBase64 = null; closeModal('modal-create-exercise'); }
     });
     document.getElementById('btn-save-custom-exercise')?.addEventListener('click', () => {
       const name = document.getElementById('ce-name').value.trim();
@@ -1854,7 +1903,9 @@ window.Today = (() => {
         isUnilateral: uni,
         isTimer,
         isCustom:    true,
+        gif:         _ceGifBase64 || null,
       };
+      _ceGifBase64 = null;
       saveCustomExercise(customEx);
       addPickedExercise(customEx);
       closeModal('modal-create-exercise');

@@ -122,24 +122,27 @@ window.Badges = (() => {
     return await awardBadge(userId, 'early_bird');
   }
 
+  /* ─── Compte les jours de connexion uniques ─────────── */
+  function getDailyLoginCount() {
+    return (App.local.get('daily_logins') || []).length;
+  }
+
   /* ─── Vérifie et attribue les badges gagnés ──────────── */
   async function check(userId) {
-    const profile  = App.state.profile;
     const sessions = App.state.sessions || App.local.get('sessions') || [];
     const earned   = App.state.badges   || App.local.get('badges')   || [];
     const earnedIds = earned.map(b => b.type || b.id);
 
-    const created   = profile?.created_at ? new Date(profile.created_at) : new Date();
-    const daysSince = Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24));
+    const loginDays = getDailyLoginCount();
     const dateCounts = {};
     sessions.filter(s => s.completed).forEach(s => { dateCounts[s.date] = (dateCounts[s.date] || 0) + 1; });
     const totalDone = Object.values(dateCounts).reduce((sum, n) => sum + Math.min(n, 2), 0);
     const streak    = calculateStreak(sessions);
 
     const conditions = {
-      '1_month':       daysSince >= 30,
-      '6_months':      daysSince >= 180,
-      '1_year':        daysSince >= 365,
+      '1_month':       loginDays >= 30,
+      '6_months':      loginDays >= 180,
+      '1_year':        loginDays >= 365,
       'first_session': totalDone >= 1,
       'streak_4w':     streak >= 4,
       'streak_8w':     streak >= 8,

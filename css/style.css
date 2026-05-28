@@ -1483,6 +1483,24 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 
 /* Exercise detail */
 .exercise-detail-content { padding-top: 8px; }
+.exercise-gif-wrap {
+  width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: var(--bg-card-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+}
+.exercise-gif {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--radius);
+}
 .exercise-detail-name {
   font-size: 26px;
   font-weight: 800;
@@ -1513,6 +1531,52 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 .tip-item { display: flex; gap: 10px; align-items: flex-start; }
 .tip-icon { color: var(--accent); font-size: 14px; flex-shrink: 0; margin-top: 2px; }
 .tip-text { font-size: 14px; line-height: 1.5; color: var(--text-2); }
+
+/* GIF upload zone */
+.ce-gif-zone {
+  position: relative;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ce-gif-preview {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+}
+.ce-gif-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px;
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 14px;
+  width: 100%;
+}
+.ce-gif-icon { font-size: 22px; color: var(--accent); }
+.ce-gif-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* Help */
 .help-content { padding-top: 0; }
