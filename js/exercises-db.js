@@ -15,7 +15,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 4, defaultReps: 8, restSeconds: 120,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0025-EIeI8Vf.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0025-EIeI8Vf.gif',
       description: "L'exercice roi de la musculation. Allongé sur un banc horizontal, tu abaisses une barre chargée jusqu'à la poitrine, puis tu la repousses vers le haut. Idéal pour développer la force et l'épaisseur des pectoraux.",
       tips: [
         "Serre les omoplates ensemble avant de saisir la barre",
@@ -32,7 +32,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 10, restSeconds: 90,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0047-3TZduzM.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0047-3TZduzM.gif',
       description: "Variante du développé couché avec le banc incliné à 30-45°. Cible davantage la partie supérieure des pectoraux pour un chest plus complet et bombé.",
       tips: [
         "Règle l'inclinaison à 30-45° maximum",
@@ -48,7 +48,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 4, defaultReps: 8, restSeconds: 120,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1456-wdRZISl.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/1456-wdRZISl.gif',
       description: "Exercice de force debout ou assis. Tu pousses une barre au-dessus de ta tête, les bras tendus. Excellent pour construire des épaules larges et puissantes.",
       tips: [
         "Serre les fessiers et abdos pour protéger le bas du dos",
@@ -64,7 +64,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 15, restSeconds: 60,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0334-DsgkuIt.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0334-DsgkuIt.gif',
       description: "Exercice d'isolation pour élargir les épaules. Tu lèves deux haltères sur les côtés jusqu'à la hauteur des épaules, créant le look 3D si recherché.",
       tips: [
         "Légère flexion des coudes tout au long du mouvement",
@@ -80,7 +80,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 12, restSeconds: 60,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0041-b2Uoz54.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0041-b2Uoz54.gif',
       description: "Exercice d'isolation ciblant le deltoïde antérieur. Tu lèves les haltères devant toi jusqu'à la hauteur des épaules pour sculpter l'avant de l'épaule.",
       tips: [
         "Légère flexion des coudes, paumes vers le bas",
@@ -96,7 +96,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 12, restSeconds: 60,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0201-3ZflifB.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0201-3ZflifB.gif',
       description: "Exercice d'isolation pour les triceps à la poulie haute. Tu tends les bras vers le bas en gardant les coudes fixes contre le corps. Parfait pour finir une séance push.",
       tips: [
         "Coudes collés au corps et immobiles",
@@ -112,7 +112,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 10, restSeconds: 90,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0251-9WTm7dq.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0251-9WTm7dq.gif',
       description: "Exercice au poids du corps sur barres parallèles. Tu te soulèves avec les bras pour monter et descendre ton corps. Un classique pour des triceps massifs.",
       tips: [
         "Garde le buste droit pour cibler les triceps",
@@ -128,7 +128,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 15, restSeconds: 60,
       equipment: 'home',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0662-I4hDWkc.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0662-I4hDWkc.gif',
       description: "L'exercice de base, aucun matériel nécessaire. Le corps forme une planche rigide, tu descends jusqu'à effleurer le sol puis tu remontres. Fondamental et efficace.",
       tips: [
         "Corps gaîné comme une planche — fessiers et abdos contractés",
@@ -238,7 +238,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 4, defaultReps: 6, restSeconds: 120,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0652-lBDjFxJ.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0652-lBDjFxJ.gif',
       description: "Le squat du haut du corps. Tu te suspends à une barre et tu tires ton corps vers le haut jusqu'à ce que ton menton dépasse la barre. Développe un dos large en V.",
       tips: [
         "Prise légèrement plus large que les épaules",
@@ -254,7 +254,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 4, defaultReps: 8, restSeconds: 120,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0027-eZyBC3j.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0027-eZyBC3j.gif',
       description: "Exercice de force pour épaissir le dos. Penché à 45°, tu tires une barre vers le bas de l'abdomen. Un des exercices les plus efficaces pour construire un dos puissant.",
       tips: [
         "Dos plat — ne l'arrondit JAMAIS avec du poids",
@@ -270,7 +270,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 12, restSeconds: 90,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0198-RVwzP10.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0198-RVwzP10.gif',
       description: "Version machine des tractions. Assis, tu tires la barre de la poulie vers ta poitrine. Idéal pour débuter ou progresser vers les vraies tractions.",
       tips: [
         "Légère inclinaison du buste en arrière",
@@ -286,7 +286,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 15, restSeconds: 60,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0233-ZfyAGhK.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0233-ZfyAGhK.gif',
       description: "Exercice essentiel souvent négligé pour la santé des épaules. Tu tires une corde vers ton visage à la poulie. Excellent pour corriger la posture et renforcer les épaules.",
       tips: [
         "Poulie à hauteur du visage ou légèrement plus haute",
@@ -302,7 +302,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 12, restSeconds: 60,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0031-25GPyDY.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0031-25GPyDY.gif',
       description: "L'exercice iconique pour les biceps. Debout, tu fléchis les coudes pour amener les haltères ou la barre jusqu'aux épaules. Simple, efficace, incontournable.",
       tips: [
         "Coudes collés aux flancs — immobiles",
@@ -442,7 +442,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 4, defaultReps: 8, restSeconds: 180,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0043-qXTaZnJ.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0043-qXTaZnJ.gif',
       description: "Le roi de tous les exercices. Barre sur les trapèzes, tu descends jusqu'à ce que tes cuisses soient parallèles au sol, puis tu remontes. Développe l'ensemble du bas du corps.",
       tips: [
         "Pieds légèrement plus larges que les épaules, légèrement ouverts",
@@ -459,7 +459,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 4, defaultReps: 12, restSeconds: 120,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0739-10Z2DXU.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0739-10Z2DXU.gif',
       description: "Machine permettant de charger lourd en sécurité. Assis dans la machine, tu pousses une plateforme lestée avec les pieds. Position des pieds = muscles ciblés différents.",
       tips: [
         "Pieds hauts sur la plateforme = plus de fessiers",
@@ -475,7 +475,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 4, defaultReps: 10, restSeconds: 120,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0085-wQ2c4XD.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0085-wQ2c4XD.gif',
       description: "Glisse la barre le long de tes jambes en maintenant le dos droit et en poussant les hanches vers l'arrière. Développe les ischios et les fessiers en profondeur.",
       tips: [
         "Dos droit toute la durée — c'est la règle absolue",
@@ -507,7 +507,7 @@ window.EXERCISES = {
       isUnilateral: true,
       defaultSets: 3, defaultReps: 12, restSeconds: 90,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0054-t8iSghb.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0054-t8iSghb.gif',
       description: "Exercice unilatéral qui travaille chaque jambe séparément. Tu avances un pied, descends le genou arrière vers le sol, puis tu reviens. Excellent pour corriger les déséquilibres.",
       tips: [
         "Grand pas en avant — genou avant ne dépasse pas le bout du pied",
@@ -568,7 +568,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 4, defaultReps: 5, restSeconds: 180,
       equipment: 'gym',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0032-ila4NZS.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0032-ila4NZS.gif',
       description: "Le mouvement roi de la force. Tu soulèves une barre depuis le sol jusqu'à la position debout en engageant presque tous les muscles du corps. Aucun autre exercice ne développe autant la force globale.",
       tips: [
         "Barre sur le milieu des pieds — à 2-3 cm des tibias",
@@ -649,7 +649,7 @@ window.EXERCISES = {
       isUnilateral: false,
       defaultSets: 3, defaultReps: 20, restSeconds: 45,
       equipment: 'home',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0274-TFqbd8t.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/0274-TFqbd8t.gif',
       description: "L'exercice abdominal de base. Allongé sur le dos, genoux fléchis, tu enroules le haut du tronc vers les genoux. Simple, efficace pour isoler les abdominaux droits.",
       tips: [
         "Ne tire pas sur la nuque avec les mains — juste effleure les tempes",
@@ -680,7 +680,7 @@ window.EXERCISES = {
       isUnilateral: false, isTimer: true,
       defaultSets: 3, defaultReps: 45, restSeconds: 45,
       equipment: 'home',
-      gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2135-VBAWRPG.gif',
+      gif: 'https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/videos/2135-VBAWRPG.gif',
       description: "Exercice isométrique fondamental. Le corps forme une ligne droite des talons à la tête, appuyé sur les avant-bras et les orteils. Renforce le gainage profond de tout le tronc.",
       tips: [
         "Corps en ligne droite — ni les fesses en l'air ni affaissées",
