@@ -15,6 +15,24 @@ window.Today = (() => {
   let planWorkoutName   = null;
   let planWorkoutColor  = null;
   let _fromRestDay      = false;  // flag : ouverture picker depuis un jour de repos
+  let _ceGifBase64      = null;   // GIF temporaire pendant la création d'un exercice custom
+
+  /* ─── Helpers GIF unifiés ─────────────────────────────── */
+  function getExerciseGifSrc(exercise) {
+    if (!exercise) return null;
+    if (exercise.gif) return exercise.gif;
+    const overrides = App.local.get('exercise_gifs') || {};
+    if (overrides[exercise.id]) return overrides[exercise.id];
+    if (!exercise.isCustom) return `/assets/exercises/${exercise.id}.gif`;
+    return null;
+  }
+
+  function setExerciseGifOverride(exerciseId, url) {
+    const overrides = App.local.get('exercise_gifs') || {};
+    if (url) overrides[exerciseId] = url;
+    else delete overrides[exerciseId];
+    App.local.set('exercise_gifs', overrides);
+  }
 
   const WORKOUT_COLORS = ['#FF6B6B','#FF9F43','#FECA57','#1DD1A1','#54A0FF','#B6FF00','#DDA0DD','#FD79A8'];
 
@@ -372,6 +390,18 @@ window.Today = (() => {
     downBtn.title = 'Descendre'; downBtn.textContent = '↓';
     downBtn.addEventListener('click', (e) => { e.stopPropagation(); moveExercise(exercise.id, 1); });
     headerRight.appendChild(downBtn);
+
+    // Bouton GIF (si disponible)
+    const gifSrcCard = getExerciseGifSrc(exercise);
+    const gifBtn = document.createElement('button');
+    gifBtn.className = 'exercise-info-btn exercise-gif-btn';
+    gifBtn.title = gifSrcCard ? 'Voir l\'animation' : 'Ajouter un GIF';
+    gifBtn.innerHTML = gifSrcCard
+      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 3-6 3V9z" fill="currentColor"/></svg>`
+      : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 3-6 3V9z" stroke="currentColor" stroke-width="1.5"/></svg>`;
+    if (gifSrcCard) gifBtn.style.color = 'var(--accent)';
+    gifBtn.addEventListener('click', (e) => { e.stopPropagation(); openExerciseDetail(exercise); });
+    headerRight.appendChild(gifBtn);
 
     // Info (tous les utilisateurs)
     const infoBtn = document.createElement('button');
@@ -752,15 +782,30 @@ window.Today = (() => {
       </div>
     `).join('');
 
-    const gifSrc  = exercise.gif || (exercise.isCustom ? null : `/assets/exercises/${exercise.id}.gif`);
-    const gifHtml = gifSrc ? `
-      <div class="exercise-gif-wrap">
-        <img src="${gifSrc}" alt="${exercise.name}" class="exercise-gif"
-             onerror="this.closest('.exercise-gif-wrap').style.display='none'">
-      </div>` : '';
+    const gifSrc = getExerciseGifSrc(exercise);
 
     content.innerHTML = `
-      ${gifHtml}
+      <div class="exercise-gif-zone" id="ex-gif-zone">
+        ${gifSrc ? `
+          <img id="ex-gif-img" src="${gifSrc}" alt="${exercise.name}" class="exercise-gif"
+               onerror="document.getElementById('ex-gif-img').style.display='none';document.getElementById('ex-gif-placeholder').style.display='flex'">
+          <button class="ex-gif-edit-btn" id="btn-ex-gif-edit">✎ Modifier le GIF</button>
+        ` : `
+          <div class="ex-gif-placeholder" id="ex-gif-placeholder">
+            <span class="ex-gif-placeholder-icon">🎬</span>
+            <span>Aucune animation</span>
+            <button class="btn-primary btn-sm" id="btn-ex-gif-add">+ Ajouter un GIF</button>
+          </div>
+        `}
+        <div class="ex-gif-url-form hidden" id="ex-gif-url-form">
+          <input type="url" id="ex-gif-url-input" class="input-field" placeholder="https://example.com/exercice.gif">
+          <div class="ex-gif-url-actions">
+            <button class="btn-primary btn-sm" id="btn-ex-gif-save">Enregistrer</button>
+            <button class="btn-secondary btn-sm" id="btn-ex-gif-cancel">Annuler</button>
+          </div>
+        </div>
+      </div>
+
       <h2 class="exercise-detail-name">${exercise.name}</h2>
       <p class="exercise-detail-muscles">${(exercise.muscles || []).join(' · ')}</p>
 
@@ -780,6 +825,34 @@ window.Today = (() => {
         <div class="tips-list">${tipItems}</div>
       </div>` : ''}
     `;
+
+    // Handlers boutons GIF
+    const showUrlForm = () => {
+      document.getElementById('ex-gif-url-form')?.classList.remove('hidden');
+      const currentUrl = getExerciseGifSrc(exercise);
+      const urlInput = document.getElementById('ex-gif-url-input');
+      if (urlInput) urlInput.value = (currentUrl && !currentUrl.startsWith('data:') && !currentUrl.startsWith('/assets/')) ? currentUrl : '';
+    };
+    document.getElementById('btn-ex-gif-add')?.addEventListener('click', showUrlForm);
+    document.getElementById('btn-ex-gif-edit')?.addEventListener('click', showUrlForm);
+    document.getElementById('btn-ex-gif-cancel')?.addEventListener('click', () => {
+      document.getElementById('ex-gif-url-form')?.classList.add('hidden');
+    });
+    document.getElementById('btn-ex-gif-save')?.addEventListener('click', () => {
+      const url = document.getElementById('ex-gif-url-input')?.value.trim();
+      if (exercise.isCustom) {
+        const customs = getCustomExercises();
+        const idx = customs.findIndex(e => e.id === exercise.id);
+        if (idx >= 0) { customs[idx].gif = url || null; App.local.set('custom_exercises', customs); }
+        exercise.gif = url || null;
+        // Met à jour aussi dans currentExercises si présent
+        const inSession = currentExercises.find(e => e.id === exercise.id);
+        if (inSession) inSession.gif = url || null;
+      } else {
+        setExerciseGifOverride(exercise.id, url || null);
+      }
+      openExerciseDetail(exercise);
+    });
 
     document.getElementById('modal-exercise')?.classList.remove('hidden');
   }
@@ -1187,11 +1260,14 @@ window.Today = (() => {
         const homeBadge = isHome && !isCustom
           ? `<span class="picker-ex-home-badge">${Icons.s('home', 12)}</span>`
           : '';
+        const gifBadge = getExerciseGifSrc(ex)
+          ? `<span class="picker-ex-gif-badge" title="GIF disponible">▶</span>`
+          : '';
         return `
           <button class="picker-ex-btn${isCustom ? ' picker-ex-custom' : ''}" data-id="${ex.id}" data-cat="${cat}">
             <span class="picker-ex-name">${ex.name}${catLabel ? `<span class="picker-ex-cat"> · ${catLabel}</span>` : ''}</span>
             <span class="picker-ex-muscles">${(ex.muscles || []).slice(0,2).join(', ')}</span>
-            ${homeBadge}${delIcon}
+            ${homeBadge}${gifBadge}${delIcon}
           </button>`;
       }).join('');
 
@@ -1847,8 +1923,7 @@ window.Today = (() => {
       if (input) { input.value = isTimer ? '30' : '10'; input.max = isTimer ? '3600' : '100'; }
     });
 
-    // GIF upload preview
-    let _ceGifBase64 = null;
+    // GIF upload preview (utilise _ceGifBase64 du module)
     document.getElementById('ce-gif-file')?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
       if (!file) return;

@@ -1483,16 +1483,14 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 
 /* Exercise detail */
 .exercise-detail-content { padding-top: 8px; }
-.exercise-gif-wrap {
+.exercise-gif-zone {
   width: 100%;
   border-radius: var(--radius);
   overflow: hidden;
   margin-bottom: 16px;
   background: var(--bg-card-2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 180px;
+  position: relative;
+  min-height: 60px;
 }
 .exercise-gif {
   width: 100%;
@@ -1501,6 +1499,52 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   display: block;
   border-radius: var(--radius);
 }
+.ex-gif-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  color: var(--text-2);
+  font-size: 14px;
+}
+.ex-gif-placeholder-icon { font-size: 28px; }
+.ex-gif-edit-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ex-gif-url-form {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-card-2);
+}
+.ex-gif-url-actions { display: flex; gap: 8px; }
+.btn-sm { padding: 8px 14px !important; font-size: 13px !important; min-height: unset !important; }
+
+/* Badge GIF dans le picker */
+.picker-ex-gif-badge {
+  font-size: 10px;
+  color: var(--accent);
+  background: rgba(182,255,0,0.12);
+  border-radius: var(--radius-pill);
+  padding: 2px 6px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* Bouton GIF sur la carte exercice */
+.exercise-gif-btn { opacity: 0.5; }
+.exercise-gif-btn[style] { opacity: 1; }
 .exercise-detail-name {
   font-size: 26px;
   font-weight: 800;
