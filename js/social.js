@@ -98,8 +98,13 @@ window.Social = (() => {
   }
 
   async function deleteRelation(friendshipId) {
-    if (!App.supabase) return;
-    await App.supabase.from('friendships').delete().eq('id', friendshipId);
+    if (!App.supabase || !friendshipId) return;
+    const { error } = await App.supabase
+      .from('friendships')
+      .delete()
+      .or(`requester_id.eq.${uid()},addressee_id.eq.${uid()}`)
+      .eq('id', friendshipId);
+    if (error) { console.error('deleteRelation:', error.message); return; }
     await loadFriendships();
     renderAll();
   }
