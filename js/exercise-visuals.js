@@ -22,6 +22,7 @@ window.ExerciseVisuals = (() => {
     skull_crusher:           '/assets/exercises/11_barre_au_front.png',
     overhead_tricep:         '/assets/exercises/12_extension_nuque_haltere.png',
     dumbbell_shoulder_press: '/assets/exercises/13_developpe_halteres_epaules.png',
+    pike_pushup:             '/assets/exercises/pike_pushup.png',
 
     // Dos · Biceps
     pullup:                  '/assets/exercises/01_tractions.png',
