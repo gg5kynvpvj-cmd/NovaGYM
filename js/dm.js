@@ -360,6 +360,19 @@ window.DM = (() => {
   /* ─── Liste des conversations ──────────────────────────── */
   async function loadConversations() {
     if (!App.supabase || !myId()) return;
+    if (!navigator.onLine) {
+      const page = document.getElementById('page-social');
+      const section = document.getElementById('dm-conversations-section');
+      if (section && !section.querySelector('.offline-banner')) {
+        const el = document.createElement('div');
+        el.className = 'offline-banner';
+        el.innerHTML = `<span class="offline-banner-icon">📶</span>
+          <span>${I18n?.t?.('offline.social') || 'Connexion requise pour les messages'}</span>`;
+        section.prepend(el);
+      }
+      return;
+    }
+    document.getElementById('dm-conversations-section')?.querySelector('.offline-banner')?.remove();
     const me = myId();
 
     const { data } = await App.supabase

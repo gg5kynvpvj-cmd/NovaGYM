@@ -631,8 +631,25 @@ window.Social = (() => {
     initSearch();
   }
 
+  function showOfflineBanner(pageId) {
+    const page = document.getElementById(pageId);
+    if (!page) return;
+    if (page.querySelector('.offline-banner')) return;
+    const el = document.createElement('div');
+    el.className = 'offline-banner';
+    el.innerHTML = `<span class="offline-banner-icon">📶</span>
+      <span data-i18n="offline.social">${I18n?.t?.('offline.social') || 'Connexion requise pour le social'}</span>`;
+    page.prepend(el);
+  }
+
+  function removeOfflineBanner(pageId) {
+    document.getElementById(pageId)?.querySelector('.offline-banner')?.remove();
+  }
+
   async function render() {
     if (!App.state.user) return;
+    if (!navigator.onLine) { showOfflineBanner('page-social'); return; }
+    removeOfflineBanner('page-social');
     await loadFriendships();
     renderAll();
     loadCreators();

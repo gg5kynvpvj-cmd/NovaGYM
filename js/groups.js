@@ -1432,6 +1432,18 @@ window.Groups = (() => {
 
   async function render() {
     if (!App.state.user) return;
+    const page = document.getElementById('page-groups');
+    if (!navigator.onLine) {
+      if (page && !page.querySelector('.offline-banner')) {
+        const el = document.createElement('div');
+        el.className = 'offline-banner';
+        el.innerHTML = `<span class="offline-banner-icon">📶</span>
+          <span data-i18n="offline.social">${I18n?.t?.('offline.social') || 'Connexion requise pour les groupes'}</span>`;
+        page.prepend(el);
+      }
+      return;
+    }
+    page?.querySelector('.offline-banner')?.remove();
     await loadGroups();
     renderGroupsList();
   }
