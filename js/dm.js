@@ -400,8 +400,12 @@ window.DM = (() => {
 
   async function deleteConversation(convId) {
     if (!App.supabase || !convId) return;
-    await App.supabase.from('messages').delete().eq('conversation_id', convId);
-    await App.supabase.from('private_conversations').delete().eq('id', convId);
+    const { error: errMsg } = await App.supabase
+      .from('private_messages').delete().eq('conversation_id', convId);
+    if (errMsg) console.warn('deleteConversation messages:', errMsg.message);
+    const { error: errConv } = await App.supabase
+      .from('private_conversations').delete().eq('id', convId);
+    if (errConv) { console.warn('deleteConversation conv:', errConv.message); return; }
     conversations = conversations.filter(c => c.id !== convId);
     renderConversationsList();
   }
