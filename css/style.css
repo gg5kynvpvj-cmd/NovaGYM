@@ -4498,8 +4498,13 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   overflow: hidden;
 }
 
-#page-dm .grp-header {
+#page-dm .grp-header,
+#page-group .grp-header {
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
 }
 
 .dm-body {

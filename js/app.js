@@ -169,6 +169,17 @@
   `;
   document.head.appendChild(style);
 
+  /* ─── Plugins iOS (Capacitor) ───────────────────────── */
+  if (window.Capacitor?.isNativePlatform?.()) {
+    const { StatusBar, Keyboard } = window.Capacitor.Plugins;
+    StatusBar?.setStyle?.({ style: 'DARK' });
+    StatusBar?.setBackgroundColor?.({ color: '#000000' });
+    StatusBar?.setOverlaysWebView?.({ overlay: true });
+    /* Empêche le scroll natif quand le clavier s'ouvre */
+    Keyboard?.setResizeMode?.({ mode: 'body' });
+    Keyboard?.setScroll?.({ isDisabled: true });
+  }
+
   /* ─── Lancement ──────────────────────────────────────── */
   initModules();
   initBottomNav();
