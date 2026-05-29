@@ -330,9 +330,13 @@ window.DM = (() => {
     });
   }
 
-  function scrollToBottom() {
+  function scrollToBottom(instant = true) {
     const body = document.getElementById('dm-body');
-    if (body) setTimeout(() => { body.scrollTop = body.scrollHeight; }, 60);
+    if (!body) return;
+    const go = () => { body.scrollTop = body.scrollHeight; };
+    /* Deux passages : après rendu DOM + après animation de page */
+    requestAnimationFrame(go);
+    setTimeout(go, 320);
   }
 
   /* ─── Edition inline ───────────────────────────────────── */
