@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════════
-   NovaGYM — Visuels des exercices
+   NovaGYM — Visuels des exercices v2
    PNG custom (assets/exercises/) en priorité
-   Fallback : diagramme anatomique SVG généré
+   Fallback : diagramme anatomique SVG (bezier + dégradés)
    ═══════════════════════════════════════════════════════════ */
 
 window.ExerciseVisuals = (() => {
 
-  /* ─── Mapping exercice ID → fichier PNG ──────────────── */
+  /* ─── Mapping exercice ID → fichier PNG ──────────────────── */
   const IMGS = {
     // Pec · Épaule · Triceps
     bench_press:             '/assets/exercises/01_developpe_couche.png',
@@ -61,13 +61,7 @@ window.ExerciseVisuals = (() => {
     side_plank:              '/assets/exercises/05_gainage_lateral_v1.png',
   };
 
-  const RED    = '#FF3B30';
-  const RED_DIM = '#CC2E26';
-  const BODY   = '#282828';
-  const BODY_OUTLINE = '#3A3A3A';
-  const INACTIVE = '#1E1E1E';
-
-  /* ─── Mapping muscle → parties du corps ──────────────── */
+  /* ─── Mapping muscle → groupes anatomiques ──────────────── */
   const MUSCLE_MAP = {
     'Pectoraux':              { f: ['pec_l','pec_r'] },
     'Pectoraux supérieurs':   { f: ['pec_l','pec_r'] },
@@ -104,7 +98,7 @@ window.ExerciseVisuals = (() => {
     'Érecteurs du rachis':    { b: ['erect_l','erect_r'] },
   };
 
-  /* ─── Génère les IDs actifs depuis le tableau de muscles ─ */
+  /* ─── Calcule les IDs actifs depuis la liste muscles ────── */
   function getActive(muscles) {
     const f = new Set(), b = new Set();
     (muscles || []).forEach(m => {
@@ -116,196 +110,225 @@ window.ExerciseVisuals = (() => {
     return { front: f, back: b };
   }
 
-  /* ─── Couleur d'un élément ───────────────────────────── */
-  const c = (active) => active ? RED : INACTIVE;
-  const s = (active) => active ? RED_DIM : BODY_OUTLINE;
+  /* ─── Palette ───────────────────────────────────────────── */
+  const C_JOINT = '#B0B0B0';
+  const C_BODY  = '#C4C4C4';
+  const C_LINE  = '#7A7A7A';
+  const C_ACT   = '#CC1800';
 
-  /* ─── Vue avant ─────────────────────────────────────── */
+  /* Attributs SVG selon état actif/inactif */
+  function fa(active) {
+    return active
+      ? `fill="url(#mRed)"  stroke="${C_ACT}" stroke-width="0.8" filter="url(#glow)"`
+      : `fill="url(#mGray)" stroke="${C_LINE}" stroke-width="0.5"`;
+  }
+
+  /* ─── Vue avant ─────────────────────────────────────────── */
   function frontView(act) {
     const a = act.front;
-    const h = (id) => a.has(id);
-    return `
-<g>
+    const h = id => a.has(id);
+    const M = (id, d) => `<path d="${d}" ${fa(h(id))}/>`;
+
+    return `<g>
   <!-- Tête -->
-  <circle cx="45" cy="14" r="12" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <circle cx="45" cy="14" r="12" fill="${C_BODY}" stroke="${C_LINE}" stroke-width="0.8"/>
+  <ellipse cx="33" cy="14" rx="2.5" ry="4" fill="${C_BODY}" stroke="${C_LINE}" stroke-width="0.4"/>
+  <ellipse cx="57" cy="14" rx="2.5" ry="4" fill="${C_BODY}" stroke="${C_LINE}" stroke-width="0.4"/>
   <!-- Cou -->
-  <rect x="40" y="26" width="10" height="10" rx="2" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <path d="M39,26 C38,29 38,33 38,35 L52,35 C52,33 52,29 51,26 Z"
+        fill="${C_BODY}" stroke="${C_LINE}" stroke-width="0.5"/>
 
   <!-- Deltoïde gauche -->
-  <ellipse cx="27" cy="50" rx="12" ry="10" fill="${c(h('delt_l'))}" stroke="${s(h('delt_l'))}" stroke-width="1"/>
+  ${M('delt_l','M16,38 C9,42 5,54 8,65 C10,73 17,75 23,71 C28,67 29,56 27,48 C25,40 20,36 16,38 Z')}
   <!-- Deltoïde droit -->
-  <ellipse cx="63" cy="50" rx="12" ry="10" fill="${c(h('delt_r'))}" stroke="${s(h('delt_r'))}" stroke-width="1"/>
+  ${M('delt_r','M74,38 C81,42 85,54 82,65 C80,73 73,75 67,71 C62,67 61,56 63,48 C65,40 70,36 74,38 Z')}
 
   <!-- Pec gauche -->
-  <ellipse cx="34" cy="64" rx="11" ry="14" fill="${c(h('pec_l'))}" stroke="${s(h('pec_l'))}" stroke-width="1"/>
+  ${M('pec_l','M40,48 C32,48 21,53 16,62 C12,69 13,79 18,85 C23,91 30,92 36,89 C40,87 40,80 40,73 Z')}
   <!-- Pec droit -->
-  <ellipse cx="56" cy="64" rx="11" ry="14" fill="${c(h('pec_r'))}" stroke="${s(h('pec_r'))}" stroke-width="1"/>
+  ${M('pec_r','M50,48 C58,48 69,53 74,62 C78,69 77,79 72,85 C67,91 60,92 54,89 C50,87 50,80 50,73 Z')}
 
   <!-- Bicep gauche -->
-  <ellipse cx="16" cy="76" rx="7.5" ry="16" fill="${c(h('bicep_l'))}" stroke="${s(h('bicep_l'))}" stroke-width="1"/>
+  ${M('bicep_l','M9,64 C3,74 3,89 7,99 C9,105 14,107 19,103 C24,99 24,84 22,72 C20,62 13,58 9,64 Z')}
   <!-- Bicep droit -->
-  <ellipse cx="74" cy="76" rx="7.5" ry="16" fill="${c(h('bicep_r'))}" stroke="${s(h('bicep_r'))}" stroke-width="1"/>
+  ${M('bicep_r','M81,64 C87,74 87,89 83,99 C81,105 76,107 71,103 C66,99 66,84 68,72 C70,62 77,58 81,64 Z')}
 
   <!-- Avant-bras gauche -->
-  <ellipse cx="14" cy="108" rx="6" ry="13" fill="${c(h('farm_l'))}" stroke="${s(h('farm_l'))}" stroke-width="1"/>
+  ${M('farm_l','M7,101 C4,111 4,124 7,130 C9,134 13,134 16,130 C19,126 19,113 17,103 Z')}
   <!-- Avant-bras droit -->
-  <ellipse cx="76" cy="108" rx="6" ry="13" fill="${c(h('farm_r'))}" stroke="${s(h('farm_r'))}" stroke-width="1"/>
+  ${M('farm_r','M83,101 C86,111 86,124 83,130 C81,134 77,134 74,130 C71,126 71,113 73,103 Z')}
 
-  <!-- Abs haut -->
-  <rect x="37" y="78" width="16" height="10" rx="3" fill="${c(h('abs_u'))}" stroke="${s(h('abs_u'))}" stroke-width="1"/>
-  <!-- Abs milieu -->
-  <rect x="37" y="90" width="16" height="10" rx="3" fill="${c(h('abs_m'))}" stroke="${s(h('abs_m'))}" stroke-width="1"/>
-  <!-- Abs bas -->
-  <rect x="37" y="102" width="16" height="10" rx="3" fill="${c(h('abs_l'))}" stroke="${s(h('abs_l'))}" stroke-width="1"/>
+  <!-- Abdos haut -->
+  ${M('abs_u','M37,82 L37,93 Q40.5,95 44,93 L44,82 Q40.5,80 37,82 Z')}
+  <!-- Abdos milieu -->
+  ${M('abs_m','M37,95 L37,106 Q40.5,108 44,106 L44,95 Q40.5,93 37,95 Z')}
+  <!-- Abdos bas -->
+  ${M('abs_l','M37,108 L37,119 Q40.5,121 44,119 L44,108 Q40.5,106 37,108 Z')}
 
   <!-- Oblique gauche -->
-  <ellipse cx="30" cy="100" rx="7" ry="14" fill="${c(h('obl_l'))}" stroke="${s(h('obl_l'))}" stroke-width="1"/>
+  ${M('obl_l','M27,78 C24,88 23,103 26,115 C28,121 33,122 37,118 L37,94 C35,86 31,74 27,78 Z')}
   <!-- Oblique droit -->
-  <ellipse cx="60" cy="100" rx="7" ry="14" fill="${c(h('obl_r'))}" stroke="${s(h('obl_r'))}" stroke-width="1"/>
+  ${M('obl_r','M63,78 C66,88 67,103 64,115 C62,121 57,122 53,118 L53,94 C55,86 59,74 63,78 Z')}
 
-  <!-- Hip gauche -->
-  <ellipse cx="35" cy="128" rx="8" ry="9" fill="${c(h('hip_l'))}" stroke="${s(h('hip_l'))}" stroke-width="1"/>
-  <!-- Hip droit -->
-  <ellipse cx="55" cy="128" rx="8" ry="9" fill="${c(h('hip_r'))}" stroke="${s(h('hip_r'))}" stroke-width="1"/>
+  <!-- Fléchisseurs hanches gauche -->
+  ${M('hip_l','M29,121 C25,128 24,137 27,143 C29,147 34,147 37,143 C39,139 39,131 37,124 Z')}
+  <!-- Fléchisseurs hanches droit -->
+  ${M('hip_r','M61,121 C65,128 66,137 63,143 C61,147 56,147 53,143 C51,139 51,131 53,124 Z')}
 
   <!-- Quad gauche -->
-  <ellipse cx="33" cy="162" rx="11" ry="27" fill="${c(h('quad_l'))}" stroke="${s(h('quad_l'))}" stroke-width="1"/>
+  ${M('quad_l','M26,141 C21,155 20,171 22,184 C24,193 30,195 36,191 C41,187 41,172 40,156 C39,143 34,134 26,141 Z')}
   <!-- Quad droit -->
-  <ellipse cx="57" cy="162" rx="11" ry="27" fill="${c(h('quad_r'))}" stroke="${s(h('quad_r'))}" stroke-width="1"/>
+  ${M('quad_r','M64,141 C69,155 70,171 68,184 C66,193 60,195 54,191 C49,187 49,172 50,156 C51,143 56,134 64,141 Z')}
 
   <!-- Genou gauche -->
-  <ellipse cx="33" cy="192" rx="8" ry="5" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <ellipse cx="32" cy="188" rx="7.5" ry="5" fill="${C_JOINT}" stroke="${C_LINE}" stroke-width="0.5"/>
   <!-- Genou droit -->
-  <ellipse cx="57" cy="192" rx="8" ry="5" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <ellipse cx="58" cy="188" rx="7.5" ry="5" fill="${C_JOINT}" stroke="${C_LINE}" stroke-width="0.5"/>
 
-  <!-- Mollet gauche -->
-  <ellipse cx="32" cy="212" rx="8.5" ry="15" fill="${c(h('calf_l'))}" stroke="${s(h('calf_l'))}" stroke-width="1"/>
-  <!-- Mollet droit -->
-  <ellipse cx="58" cy="212" rx="8.5" ry="15" fill="${c(h('calf_r'))}" stroke="${s(h('calf_r'))}" stroke-width="1"/>
+  <!-- Mollet gauche (avant) -->
+  ${M('calf_l','M24,193 C21,204 21,217 23,223 C25,229 30,230 34,226 C38,222 38,211 36,200 Z')}
+  <!-- Mollet droit (avant) -->
+  ${M('calf_r','M66,193 C69,204 69,217 67,223 C65,229 60,230 56,226 C52,222 52,211 54,200 Z')}
 
   <!-- Pieds -->
-  <ellipse cx="32" cy="228" rx="9" ry="4" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
-  <ellipse cx="58" cy="228" rx="9" ry="4" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <ellipse cx="30" cy="232" rx="10" ry="4" fill="${C_JOINT}" stroke="${C_LINE}" stroke-width="0.5"/>
+  <ellipse cx="60" cy="232" rx="10" ry="4" fill="${C_JOINT}" stroke="${C_LINE}" stroke-width="0.5"/>
 </g>`;
   }
 
-  /* ─── Vue arrière ────────────────────────────────────── */
+  /* ─── Vue arrière ───────────────────────────────────────── */
   function backView(act) {
     const a = act.back;
-    const h = (id) => a.has(id);
-    return `
-<g>
+    const h = id => a.has(id);
+    const M = (id, d) => `<path d="${d}" ${fa(h(id))}/>`;
+
+    return `<g>
   <!-- Tête -->
-  <circle cx="45" cy="14" r="12" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <circle cx="45" cy="14" r="12" fill="${C_BODY}" stroke="${C_LINE}" stroke-width="0.8"/>
+  <ellipse cx="33" cy="14" rx="2.5" ry="4" fill="${C_BODY}" stroke="${C_LINE}" stroke-width="0.4"/>
+  <ellipse cx="57" cy="14" rx="2.5" ry="4" fill="${C_BODY}" stroke="${C_LINE}" stroke-width="0.4"/>
   <!-- Cou -->
-  <rect x="40" y="26" width="10" height="10" rx="2" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <path d="M39,26 C38,29 38,33 38,35 L52,35 C52,33 52,29 51,26 Z"
+        fill="${C_BODY}" stroke="${C_LINE}" stroke-width="0.5"/>
 
-  <!-- Trap gauche -->
-  <ellipse cx="31" cy="46" rx="13" ry="9" fill="${c(h('trap_l'))}" stroke="${s(h('trap_l'))}" stroke-width="1"/>
-  <!-- Trap droit -->
-  <ellipse cx="59" cy="46" rx="13" ry="9" fill="${c(h('trap_r'))}" stroke="${s(h('trap_r'))}" stroke-width="1"/>
-  <!-- Trap milieu -->
-  <ellipse cx="45" cy="60" rx="13" ry="8" fill="${c(h('trap_m'))}" stroke="${s(h('trap_m'))}" stroke-width="1"/>
+  <!-- Trapèze gauche -->
+  ${M('trap_l','M31,34 C24,38 18,48 21,58 C23,66 30,68 36,64 C42,60 43,52 42,44 Z')}
+  <!-- Trapèze droit -->
+  ${M('trap_r','M59,34 C66,38 72,48 69,58 C67,66 60,68 54,64 C48,60 47,52 48,44 Z')}
+  <!-- Trapèze milieu / Rhomboïdes -->
+  ${M('trap_m','M36,62 C39,68 41,73 45,75 C49,73 51,68 54,62 C51,55 48,50 45,50 C42,50 39,55 36,62 Z')}
 
-  <!-- Deltoïde arrière gauche -->
-  <ellipse cx="19" cy="56" rx="10" ry="10" fill="${c(h('rdelt_l'))}" stroke="${s(h('rdelt_l'))}" stroke-width="1"/>
-  <!-- Deltoïde arrière droit -->
-  <ellipse cx="71" cy="56" rx="10" ry="10" fill="${c(h('rdelt_r'))}" stroke="${s(h('rdelt_r'))}" stroke-width="1"/>
+  <!-- Deltoïde postérieur gauche -->
+  ${M('rdelt_l','M16,38 C9,42 5,54 8,65 C10,73 17,75 23,71 C28,67 29,56 27,48 C25,40 20,36 16,38 Z')}
+  <!-- Deltoïde postérieur droit -->
+  ${M('rdelt_r','M74,38 C81,42 85,54 82,65 C80,73 73,75 67,71 C62,67 61,56 63,48 C65,40 70,36 74,38 Z')}
 
   <!-- Tricep gauche -->
-  <ellipse cx="14" cy="78" rx="7.5" ry="18" fill="${c(h('tri_l'))}" stroke="${s(h('tri_l'))}" stroke-width="1"/>
+  ${M('tri_l','M9,64 C3,76 3,93 7,103 C9,109 14,111 19,107 C24,103 24,88 22,76 C20,64 13,58 9,64 Z')}
   <!-- Tricep droit -->
-  <ellipse cx="76" cy="78" rx="7.5" ry="18" fill="${c(h('tri_r'))}" stroke="${s(h('tri_r'))}" stroke-width="1"/>
+  ${M('tri_r','M81,64 C87,76 87,93 83,103 C81,109 76,111 71,107 C66,103 66,88 68,76 C70,64 77,58 81,64 Z')}
 
-  <!-- Lat gauche -->
-  <ellipse cx="27" cy="86" rx="9" ry="22" fill="${c(h('lat_l'))}" stroke="${s(h('lat_l'))}" stroke-width="1"/>
-  <!-- Lat droit -->
-  <ellipse cx="63" cy="86" rx="9" ry="22" fill="${c(h('lat_r'))}" stroke="${s(h('lat_r'))}" stroke-width="1"/>
+  <!-- Grand dorsal gauche -->
+  ${M('lat_l','M19,61 C13,73 12,92 15,110 C17,122 24,126 31,122 C38,118 39,102 39,86 C39,68 30,55 19,61 Z')}
+  <!-- Grand dorsal droit -->
+  ${M('lat_r','M71,61 C77,73 78,92 75,110 C73,122 66,126 59,122 C52,118 51,102 51,86 C51,68 60,55 71,61 Z')}
 
-  <!-- Érecteurs -->
-  <rect x="38" y="80" width="7" height="42" rx="3" fill="${c(h('erect_l'))}" stroke="${s(h('erect_l'))}" stroke-width="1"/>
-  <rect x="45" y="80" width="7" height="42" rx="3" fill="${c(h('erect_r'))}" stroke="${s(h('erect_r'))}" stroke-width="1"/>
+  <!-- Érecteur gauche -->
+  ${M('erect_l','M37,80 L37,124 C38,126 40,126 41,124 L41,80 Q39,78 37,80 Z')}
+  <!-- Érecteur droit -->
+  ${M('erect_r','M49,80 L49,124 C50,126 52,126 53,124 L53,80 Q51,78 49,80 Z')}
 
   <!-- Fessier gauche -->
-  <ellipse cx="33" cy="148" rx="13" ry="15" fill="${c(h('glute_l'))}" stroke="${s(h('glute_l'))}" stroke-width="1"/>
+  ${M('glute_l','M23,126 C18,137 18,154 22,164 C26,172 34,174 40,170 C45,166 46,153 45,140 C44,128 35,118 23,126 Z')}
   <!-- Fessier droit -->
-  <ellipse cx="57" cy="148" rx="13" ry="15" fill="${c(h('glute_r'))}" stroke="${s(h('glute_r'))}" stroke-width="1"/>
+  ${M('glute_r','M67,126 C72,137 72,154 68,164 C64,172 56,174 50,170 C45,166 44,153 45,140 C46,128 55,118 67,126 Z')}
 
   <!-- Ischio gauche -->
-  <ellipse cx="33" cy="180" rx="11" ry="25" fill="${c(h('ham_l'))}" stroke="${s(h('ham_l'))}" stroke-width="1"/>
+  ${M('ham_l','M24,168 C20,180 20,196 23,206 C25,212 30,214 35,210 C40,206 40,192 38,180 C36,167 29,162 24,168 Z')}
   <!-- Ischio droit -->
-  <ellipse cx="57" cy="180" rx="11" ry="25" fill="${c(h('ham_r'))}" stroke="${s(h('ham_r'))}" stroke-width="1"/>
+  ${M('ham_r','M66,168 C70,180 70,196 67,206 C65,212 60,214 55,210 C50,206 50,192 52,180 C54,167 61,162 66,168 Z')}
 
   <!-- Genou gauche -->
-  <ellipse cx="33" cy="192" rx="8" ry="5" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <ellipse cx="32" cy="208" rx="7.5" ry="5" fill="${C_JOINT}" stroke="${C_LINE}" stroke-width="0.5"/>
   <!-- Genou droit -->
-  <ellipse cx="57" cy="192" rx="8" ry="5" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <ellipse cx="58" cy="208" rx="7.5" ry="5" fill="${C_JOINT}" stroke="${C_LINE}" stroke-width="0.5"/>
 
   <!-- Mollet gauche (arrière) -->
-  <ellipse cx="32" cy="212" rx="8.5" ry="15" fill="${c(h('bcalf_l'))}" stroke="${s(h('bcalf_l'))}" stroke-width="1"/>
+  ${M('bcalf_l','M23,212 C20,222 20,232 22,238 C24,242 29,242 33,238 C37,234 37,224 35,214 Z')}
   <!-- Mollet droit (arrière) -->
-  <ellipse cx="58" cy="212" rx="8.5" ry="15" fill="${c(h('bcalf_r'))}" stroke="${s(h('bcalf_r'))}" stroke-width="1"/>
+  ${M('bcalf_r','M67,212 C70,222 70,232 68,238 C66,242 61,242 57,238 C53,234 53,224 55,214 Z')}
 
   <!-- Pieds -->
-  <ellipse cx="32" cy="228" rx="9" ry="4" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
-  <ellipse cx="58" cy="228" rx="9" ry="4" fill="${BODY}" stroke="${BODY_OUTLINE}" stroke-width="1"/>
+  <ellipse cx="30" cy="244" rx="10" ry="4" fill="${C_JOINT}" stroke="${C_LINE}" stroke-width="0.5"/>
+  <ellipse cx="60" cy="244" rx="10" ry="4" fill="${C_JOINT}" stroke="${C_LINE}" stroke-width="0.5"/>
 </g>`;
   }
 
-  /* ─── Génère le SVG complet ──────────────────────────── */
+  /* ─── Assemble le SVG complet ───────────────────────────── */
   function buildSVG(exercise) {
-    const muscles = exercise.muscles || [];
-    const active  = getActive(muscles);
+    const muscles  = exercise.muscles || [];
+    const active   = getActive(muscles);
     const hasBack  = active.back.size  > 0;
     const hasFront = active.front.size > 0 || !hasBack;
 
-    const W = 210, H = 250;
-    const fView  = frontView(active);
-    const bView  = backView(active);
-    const fLabel = hasFront && !hasBack ? '#B6FF00' : (hasFront ? '#B6FF00' : '#444');
-    const bLabel = hasBack  && !hasFront ? '#B6FF00' : (hasBack  ? '#B6FF00' : '#444');
+    const W = 220, H = 268;
+    const fLabel = hasFront ? '#B6FF00' : '#555';
+    const bLabel = hasBack  ? '#B6FF00' : '#555';
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block">
+    return `<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"
+     style="display:block">
   <defs>
-    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <filter id="glowS" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <!-- Dégradé radial — muscle actif (rouge) -->
+    <radialGradient id="mRed" cx="38%" cy="30%" r="70%">
+      <stop offset="0%"   stop-color="#FF7055"/>
+      <stop offset="50%"  stop-color="#FF2D00"/>
+      <stop offset="100%" stop-color="#9A0E00"/>
+    </radialGradient>
+    <!-- Dégradé radial — muscle inactif (gris) -->
+    <radialGradient id="mGray" cx="38%" cy="30%" r="70%">
+      <stop offset="0%"   stop-color="#DEDEDE"/>
+      <stop offset="55%"  stop-color="#C0C0C0"/>
+      <stop offset="100%" stop-color="#8E8E8E"/>
+    </radialGradient>
+    <!-- Halo lumineux sur muscles actifs -->
+    <filter id="glow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
   </defs>
 
-  <!-- Vue avant (x offset 5) -->
-  <g transform="translate(5, 5)" filter="${hasFront ? 'url(#glowS)' : 'none'}">
-    ${fView}
+  <!-- Vue avant -->
+  <g transform="translate(5,8)" opacity="${hasFront ? 1 : 0.6}">
+    ${frontView(active)}
   </g>
 
   <!-- Séparateur -->
-  <line x1="107" y1="10" x2="107" y2="240" stroke="#222" stroke-width="1"/>
+  <line x1="111" y1="6" x2="111" y2="260"
+        stroke="#444" stroke-width="0.7" opacity="0.35"/>
 
-  <!-- Vue arrière (x offset 115) -->
-  <g transform="translate(115, 5)" filter="${hasBack ? 'url(#glowS)' : 'none'}">
-    ${bView}
+  <!-- Vue arrière -->
+  <g transform="translate(118,8)" opacity="${hasBack ? 1 : 0.6}">
+    ${backView(active)}
   </g>
 
-  <!-- Labels -->
-  <text x="55" y="247" text-anchor="middle"
-        font-family="-apple-system,sans-serif" font-size="9" font-weight="700"
-        fill="${fLabel}" letter-spacing="0.8">AVANT</text>
-  <text x="160" y="247" text-anchor="middle"
-        font-family="-apple-system,sans-serif" font-size="9" font-weight="700"
-        fill="${bLabel}" letter-spacing="0.8">ARRIÈRE</text>
+  <!-- Labels AVANT / ARRIÈRE -->
+  <text x="58"  y="${H - 3}" text-anchor="middle"
+        font-family="-apple-system,sans-serif" font-size="8.5" font-weight="700"
+        fill="${fLabel}" letter-spacing="1">AVANT</text>
+  <text x="162" y="${H - 3}" text-anchor="middle"
+        font-family="-apple-system,sans-serif" font-size="8.5" font-weight="700"
+        fill="${bLabel}" letter-spacing="1">ARRIÈRE</text>
 </svg>`;
   }
 
-  /* ─── Retourne un data URI SVG ────────────────────────── */
+  /* ─── Retourne src pour un exercice ─────────────────────── */
   function getVisualSrc(exercise) {
     if (!exercise || exercise.isCustom) return null;
-    // PNG en priorité
     if (IMGS[exercise.id]) return IMGS[exercise.id];
-    // Fallback SVG pour les exercices sans image
     const svg = buildSVG(exercise);
     if (!svg) return null;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
