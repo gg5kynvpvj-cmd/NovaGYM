@@ -246,7 +246,7 @@ window.Nutrition = (() => {
     if (stepsEl) {
       const parts = [];
       const ico = (n) => `<span class="nutr-info-icon">${Icons.s(n, 13)}</span>`;
-      if (stepsBurned > 0) parts.push(`${ico('footsteps')}+${stepsBurned} kcal`);
+      if (stepsBurned > 0) parts.push(`${ico('activity')}+${stepsBurned} kcal`);
       if (carryOver > 0)   parts.push(`${ico('rotate-ccw')}-${carryOver} kcal surplus`);
       else if (carryOver < 0) parts.push(`${ico('rotate-ccw')}+${Math.abs(carryOver)} kcal déficit`);
       if (parts.length) {
