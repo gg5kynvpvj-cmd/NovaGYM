@@ -437,6 +437,7 @@ window.I18n = (() => {
       'reset.new_pwd': 'Nouveau mot de passe',
       // Offline
       'offline.social': 'Connexion internet requise pour le social',
+      'dm.confirm_delete': 'Supprimer cette conversation ?',
       // Splash
       'splash.tagline': 'Forge ton corps',
       // Settings extras
@@ -1022,6 +1023,7 @@ window.I18n = (() => {
       'reset.new_pwd': 'New password',
       // Offline
       'offline.social': 'Internet connection required for social features',
+      'dm.confirm_delete': 'Delete this conversation?',
       // Splash
       'splash.tagline': 'Forge your body',
       // Settings extras

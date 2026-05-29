@@ -4542,16 +4542,36 @@ img.dm-header-av {
 }
 
 /* ─── Liste conversations (onglet social) ────────────────── */
+.dm-convo-swipe-wrap {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.dm-convo-swipe-wrap:last-child { border-bottom: none; }
+
+.dm-convo-delete-btn {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 72px; background: #FF3B30;
+  border: none; cursor: pointer; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.dm-convo-delete-btn:active { background: #CC2A22; }
+
+.dm-convo-swipe-inner {
+  position: relative;
+  background: var(--bg);
+  will-change: transform;
+}
+
 .dm-convo-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
   cursor: pointer;
   transition: opacity 0.15s;
 }
-.dm-convo-item:last-child { border-bottom: none; }
 .dm-convo-item:active { opacity: 0.7; }
 
 .dm-convo-av {

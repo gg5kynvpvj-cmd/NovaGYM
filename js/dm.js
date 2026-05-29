@@ -398,6 +398,56 @@ window.DM = (() => {
     renderConversationsList();
   }
 
+  async function deleteConversation(convId) {
+    if (!App.supabase || !convId) return;
+    await App.supabase.from('messages').delete().eq('conversation_id', convId);
+    await App.supabase.from('private_conversations').delete().eq('id', convId);
+    conversations = conversations.filter(c => c.id !== convId);
+    renderConversationsList();
+  }
+
+  function attachSwipeToDelete(item) {
+    const THRESHOLD = 72;
+    let startX = 0, currentX = 0, swiping = false, open = false;
+    const inner = item.querySelector('.dm-convo-swipe-inner');
+
+    function setX(x) {
+      currentX = Math.min(0, Math.max(-THRESHOLD, x));
+      inner.style.transform = `translateX(${currentX}px)`;
+      inner.style.transition = 'none';
+    }
+    function snapTo(x) {
+      inner.style.transition = 'transform 0.2s ease';
+      inner.style.transform = `translateX(${x}px)`;
+      currentX = x;
+      open = x < 0;
+    }
+
+    item.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      swiping = true;
+      inner.style.transition = 'none';
+    }, { passive: true });
+
+    item.addEventListener('touchmove', e => {
+      if (!swiping) return;
+      const dx = e.touches[0].clientX - startX;
+      if (Math.abs(dx) < 5) return;
+      setX((open ? -THRESHOLD : 0) + dx);
+    }, { passive: true });
+
+    item.addEventListener('touchend', () => {
+      swiping = false;
+      snapTo(currentX < -THRESHOLD / 2 ? -THRESHOLD : 0);
+    });
+
+    item.querySelector('.dm-convo-delete-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      if (!confirm(I18n?.t?.('dm.confirm_delete') || 'Supprimer cette conversation ?')) return;
+      deleteConversation(item.dataset.cid);
+    });
+  }
+
   function renderConversationsList() {
     const section = document.getElementById('dm-conversations-section');
     const list    = document.getElementById('dm-conversations-list');
@@ -419,15 +469,20 @@ window.DM = (() => {
       const isUnread   = !isLastMe && msgTime > 0 && msgTime > readTime;
       if (isUnread) anyUnread = true;
       const lastClass  = isLastMe ? '' : 'dm-convo-last-received';
-      return `<div class="dm-convo-item${isUnread ? ' dm-convo-unread' : ''}" data-cid="${c.id}" data-uid="${c.other.id}">
-        ${avatarEl(c.other.avatar_url, c.other.username, 'dm-convo-av')}
-        <div class="dm-convo-info">
-          <span class="dm-convo-name">${esc(c.other.username || '?')}</span>
-          <span class="dm-convo-last ${lastClass}">${lastText}</span>
-        </div>
-        <div class="dm-convo-right">
-          <span class="dm-convo-time">${fmtShort(c.last_message_at)}</span>
-          ${isUnread ? '<span class="dm-unread-dot"></span>' : ''}
+      return `<div class="dm-convo-swipe-wrap" data-cid="${c.id}">
+        <button class="dm-convo-delete-btn" aria-label="Supprimer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+        <div class="dm-convo-swipe-inner dm-convo-item${isUnread ? ' dm-convo-unread' : ''}" data-cid="${c.id}" data-uid="${c.other.id}">
+          ${avatarEl(c.other.avatar_url, c.other.username, 'dm-convo-av')}
+          <div class="dm-convo-info">
+            <span class="dm-convo-name">${esc(c.other.username || '?')}</span>
+            <span class="dm-convo-last ${lastClass}">${lastText}</span>
+          </div>
+          <div class="dm-convo-right">
+            <span class="dm-convo-time">${fmtShort(c.last_message_at)}</span>
+            ${isUnread ? '<span class="dm-unread-dot"></span>' : ''}
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -435,12 +490,25 @@ window.DM = (() => {
     const badge = document.getElementById('nav-social-badge');
     if (badge) badge.classList.toggle('hidden', !anyUnread);
 
-    list.querySelectorAll('.dm-convo-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const conv = conversations.find(c => c.id === item.dataset.cid);
+    list.querySelectorAll('.dm-convo-swipe-wrap').forEach(wrap => {
+      wrap.querySelector('.dm-convo-swipe-inner').addEventListener('click', () => {
+        const inner = wrap.querySelector('.dm-convo-swipe-inner');
+        if (inner.style.transform && inner.style.transform !== 'translateX(0px)') return;
+        const conv = conversations.find(c => c.id === wrap.dataset.cid);
         if (conv) openDMFromConv(conv);
       });
+      attachSwipeToDelete(wrap);
     });
+
+    /* Ferme les swipes ouverts si on touche ailleurs */
+    document.addEventListener('touchstart', e => {
+      if (!e.target.closest('.dm-convo-swipe-wrap')) {
+        list.querySelectorAll('.dm-convo-swipe-inner').forEach(inner => {
+          inner.style.transition = 'transform 0.2s ease';
+          inner.style.transform = 'translateX(0)';
+        });
+      }
+    }, { passive: true });
   }
 
   async function openDMFromConv(conv) {
