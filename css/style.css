@@ -29,7 +29,8 @@
 
 /* ── RESET ──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+* { touch-action: manipulation; }
 img {
   -webkit-touch-callout: none; /* iOS : désactive le menu long-press */
   -webkit-user-select: none;
