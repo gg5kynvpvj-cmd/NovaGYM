@@ -43,6 +43,8 @@ window.Icons = (() => {
     download:  `<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>`,
     send:      `<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>`,
     image:     `<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>`,
+    footsteps: `<circle cx="10" cy="4" r="2"/><path d="M7 8l-2 7h4l1-3 1.5 1.5V20h2v-7.5L12 11l.5-3H17V6h-5.5L10 8z"/>`,
+    'rotate-ccw': `<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/>`,
   };
 
   function s(name, size = 18) {

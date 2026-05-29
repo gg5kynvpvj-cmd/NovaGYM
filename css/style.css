@@ -4411,10 +4411,20 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 
 /* Label marche nutrition */
 .nutr-steps-burned {
-  font-size: 11px;
-  color: var(--accent);
-  font-weight: 600;
-  margin-top: 2px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 11px; color: var(--accent);
+  font-weight: 600; margin-top: 2px;
+}
+.nutr-info-icon { display: inline-flex; align-items: center; opacity: 0.85; }
+.nutr-info-sep  { color: var(--text-3); font-weight: 400; margin: 0 2px; }
+
+/* ─── Fallback scanner manuel ──────────────────────────── */
+.scanner-manual-fallback {
+  padding: 16px;
+}
+.scanner-fallback-msg {
+  text-align: center; font-size: 14px;
+  color: var(--text-2); margin-bottom: 16px;
 }
 
 /* Light mode overrides pour la carte quotidienne */

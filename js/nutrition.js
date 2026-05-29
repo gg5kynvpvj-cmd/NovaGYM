@@ -245,11 +245,12 @@ window.Nutrition = (() => {
     const stepsEl = document.getElementById('nutr-steps-burned');
     if (stepsEl) {
       const parts = [];
-      if (stepsBurned > 0) parts.push(`👟 +${stepsBurned} kcal`);
-      if (carryOver > 0)   parts.push(`↩ -${carryOver} kcal (surplus accumulé)`);
-      else if (carryOver < 0) parts.push(`↩ +${Math.abs(carryOver)} kcal (déficit accumulé)`);
+      const ico = (n) => `<span class="nutr-info-icon">${Icons.s(n, 13)}</span>`;
+      if (stepsBurned > 0) parts.push(`${ico('footsteps')}+${stepsBurned} kcal`);
+      if (carryOver > 0)   parts.push(`${ico('rotate-ccw')}-${carryOver} kcal surplus`);
+      else if (carryOver < 0) parts.push(`${ico('rotate-ccw')}+${Math.abs(carryOver)} kcal déficit`);
       if (parts.length) {
-        stepsEl.textContent = parts.join('  ');
+        stepsEl.innerHTML = parts.join('<span class="nutr-info-sep">·</span>');
         stepsEl.classList.remove('hidden');
       } else {
         stepsEl.classList.add('hidden');
@@ -729,24 +730,82 @@ window.Nutrition = (() => {
   }
 
   /* ─── Scanner caméra ─────────────────────────────────────── */
-  function openScanner() {
-    document.getElementById('modal-barcode-scanner')?.classList.remove('hidden');
-    if (typeof Html5Qrcode === 'undefined') return;
+  async function openScanner() {
+    const modal = document.getElementById('modal-barcode-scanner');
+    if (!modal) return;
+    modal.classList.remove('hidden');
 
-    html5Scanner = new Html5Qrcode('barcode-scanner-view');
-    html5Scanner.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 280, height: 100 } },
-      async (code) => {
+    /* Si Html5Qrcode n'est pas disponible → fallback manuel direct */
+    if (typeof Html5Qrcode === 'undefined') {
+      showScannerFallback(modal);
+      return;
+    }
+
+    /* Vérifie l'accès caméra avant de lancer */
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(s => s.getTracks().forEach(t => t.stop()));
+    } catch {
+      showScannerFallback(modal);
+      return;
+    }
+
+    try {
+      html5Scanner = new Html5Qrcode('barcode-scanner-view');
+      await html5Scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 260, height: 90 } },
+        async (code) => { await closeScanner(); await fetchProductByBarcode(code); },
+        () => {}
+      );
+    } catch {
+      showScannerFallback(modal);
+    }
+  }
+
+  function showScannerFallback(modal) {
+    /* Cache la vue caméra, affiche une saisie manuelle dans le modal */
+    const view = modal.querySelector('#barcode-scanner-view');
+    const hint = modal.querySelector('[data-i18n="modal.barcode_hint"]');
+    if (view) view.style.display = 'none';
+    if (hint) hint.style.display = 'none';
+
+    if (!modal.querySelector('.scanner-manual-fallback')) {
+      const fb = document.createElement('div');
+      fb.className = 'scanner-manual-fallback';
+      fb.innerHTML = `
+        <p class="scanner-fallback-msg">${I18n?.t?.('scan.no_camera') || 'Caméra non disponible'}</p>
+        <input id="scanner-fallback-input" class="food-barcode-input" type="text"
+          inputmode="numeric" placeholder="Ex : 3017620422003" style="width:100%;margin-bottom:12px">
+        <button id="scanner-fallback-btn" class="btn-primary btn-full">
+          ${Icons?.s?.('camera', 16) || ''} ${I18n?.t?.('food.barcode_validate') || 'Rechercher'}
+        </button>`;
+      modal.querySelector('.modal-sheet').appendChild(fb);
+
+      const input = fb.querySelector('#scanner-fallback-input');
+      const btn   = fb.querySelector('#scanner-fallback-btn');
+      const doSearch = async () => {
+        const code = input.value.trim();
+        if (!code) return;
         await closeScanner();
         await fetchProductByBarcode(code);
-      },
-      () => {}
-    ).catch(() => closeScanner());
+      };
+      btn.addEventListener('click', doSearch);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    }
   }
 
   async function closeScanner() {
-    document.getElementById('modal-barcode-scanner')?.classList.add('hidden');
+    const modal = document.getElementById('modal-barcode-scanner');
+    if (modal) {
+      modal.classList.add('hidden');
+      /* Reset fallback pour la prochaine ouverture */
+      modal.querySelector('.scanner-manual-fallback')?.remove();
+      const view = modal.querySelector('#barcode-scanner-view');
+      const hint = modal.querySelector('[data-i18n="modal.barcode_hint"]');
+      if (view) view.style.display = '';
+      if (hint) hint.style.display = '';
+    }
     if (html5Scanner) {
       try { await html5Scanner.stop(); } catch {}
       try { html5Scanner.clear(); } catch {}
