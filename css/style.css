@@ -4556,10 +4556,10 @@ img.dm-header-av {
 
 .dm-convo-more-btn {
   background: none; border: none; color: var(--text-2);
-  font-size: 18px; cursor: pointer; padding: 4px 2px;
-  line-height: 1; flex-shrink: 0;
+  cursor: pointer; padding: 8px 4px 8px 8px;
+  flex-shrink: 0; display: flex; align-items: center;
 }
-.dm-convo-more-btn:active { opacity: 0.5; }
+.dm-convo-more-btn:active { opacity: 0.4; }
 
 /* ─── Action sheet suppression conversation ──────────────── */
 .dm-action-sheet-overlay {

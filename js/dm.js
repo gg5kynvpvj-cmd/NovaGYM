@@ -469,8 +469,10 @@ window.DM = (() => {
         <div class="dm-convo-right">
           <span class="dm-convo-time">${fmtShort(c.last_message_at)}</span>
           ${isUnread ? '<span class="dm-unread-dot"></span>' : ''}
-          <button class="dm-convo-more-btn" data-cid="${c.id}">⋯</button>
         </div>
+        <button class="dm-convo-more-btn" data-cid="${c.id}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
       </div>`;
     }).join('');
 
