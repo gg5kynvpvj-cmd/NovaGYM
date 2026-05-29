@@ -1,0 +1,12 @@
+{
+  "appId": "com.novagym.app",
+  "appName": "NovaGYM",
+  "webDir": "www",
+  "server": {
+    "iosScheme": "novagym"
+  },
+  "ios": {
+    "contentInset": "always",
+    "preferredContentMode": "mobile"
+  }
+}
