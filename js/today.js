@@ -105,6 +105,25 @@ window.Today = (() => {
     });
   }
 
+  /* ─── Lecture des pas depuis Apple Santé ─────────────── */
+  async function syncStepsFromHealth() {
+    if (!window.Capacitor?.isNativePlatform?.()) return;
+    const { Health } = window.Capacitor.Plugins;
+    if (!Health) return;
+    try {
+      const { granted } = await Health.requestPermission();
+      if (!granted) return;
+      const { steps } = await Health.getTodaySteps();
+      if (typeof steps !== 'number' || steps <= 0) return;
+      const data = getDailyData();
+      if (steps !== data.steps) {
+        data.steps = steps;
+        saveDailyData(data);
+        renderDailyCard();
+      }
+    } catch { /* HealthKit indisponible, on garde la saisie manuelle */ }
+  }
+
   /* ─── Carte quotidienne (pas + défis personnels) ────── */
   function dailyStorageKey() {
     return 'daily_' + new Date().toISOString().split('T')[0];
@@ -1966,6 +1985,10 @@ window.Today = (() => {
 
     initSessionTypeChange();
     initDailyCard();
+
+    /* Sync pas Apple Santé au démarrage puis toutes les 5 min */
+    syncStepsFromHealth();
+    setInterval(syncStepsFromHealth, 5 * 60 * 1000);
   }
 
   return { init, render, openExercisePicker, openWorkoutLib, renderWaterChallenge };
