@@ -75,7 +75,6 @@ window.DM = (() => {
 
     dmMessages = data || [];
     renderMessages();
-    scrollToBottom();
   }
 
   /* ─── Envoi texte ──────────────────────────────────────── */
@@ -311,7 +310,7 @@ window.DM = (() => {
     </div>`;
   }
 
-  function renderMessages() {
+  function renderMessages(keepScroll = false) {
     const body = document.getElementById('dm-body');
     if (!body) return;
 
@@ -319,6 +318,10 @@ window.DM = (() => {
       body.innerHTML = `<p class="dm-empty">${t('dm.empty')}</p>`;
       return;
     }
+
+    const prevBottom = keepScroll
+      ? body.scrollHeight - body.scrollTop
+      : null;
 
     body.innerHTML = dmMessages.map(renderMessage).join('');
 
@@ -328,15 +331,26 @@ window.DM = (() => {
     body.querySelectorAll('.chat-delete-btn').forEach(btn => {
       btn.addEventListener('click', () => deleteMessage(btn.dataset.mid));
     });
+
+    if (keepScroll && prevBottom !== null) {
+      body.scrollTop = body.scrollHeight - prevBottom;
+    } else {
+      scrollToBottom();
+    }
   }
 
-  function scrollToBottom(instant = true) {
+  function scrollToBottom() {
     const body = document.getElementById('dm-body');
     if (!body) return;
-    const go = () => { body.scrollTop = body.scrollHeight; };
-    /* Deux passages : après rendu DOM + après animation de page */
+    const go = () => {
+      const last = body.lastElementChild;
+      if (last) last.scrollIntoView({ block: 'end', behavior: 'instant' });
+      else body.scrollTop = body.scrollHeight;
+    };
+    /* 3 passes : DOM, fin animation page (350ms), sécurité */
     requestAnimationFrame(go);
-    setTimeout(go, 320);
+    setTimeout(go, 380);
+    setTimeout(go, 600);
   }
 
   /* ─── Edition inline ───────────────────────────────────── */

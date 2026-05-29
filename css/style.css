@@ -4524,6 +4524,8 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
   display: flex;
   flex-direction: column;
   gap: 4px;
+  scroll-behavior: auto;
+  overflow-anchor: none;
 }
 
 .dm-empty {
