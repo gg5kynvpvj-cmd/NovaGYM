@@ -406,28 +406,37 @@ window.DM = (() => {
     renderConversationsList();
   }
 
-  function showConvMenu(btn, convId) {
-    document.querySelectorAll('.dm-conv-menu').forEach(m => m.remove());
-    const menu = document.createElement('div');
-    menu.className = 'dm-conv-menu';
-    menu.innerHTML = `<button class="dm-conv-menu-item dm-conv-menu-delete">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-      ${I18n?.t?.('dm.delete_conv') || 'Supprimer la conversation'}
-    </button>`;
+  function showConvActionSheet(convId, name) {
+    document.querySelectorAll('.dm-action-sheet-overlay').forEach(m => m.remove());
 
-    const rect = btn.getBoundingClientRect();
-    menu.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
-    menu.style.right = (window.innerWidth - rect.right) + 'px';
-    document.body.appendChild(menu);
+    const overlay = document.createElement('div');
+    overlay.className = 'dm-action-sheet-overlay';
+    overlay.innerHTML = `
+      <div class="dm-action-sheet">
+        <div class="dm-action-sheet-title">${esc(name)}</div>
+        <button class="dm-action-sheet-btn dm-action-sheet-delete">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          ${I18n?.t?.('dm.delete_conv') || 'Supprimer la conversation'}
+        </button>
+        <button class="dm-action-sheet-btn dm-action-sheet-cancel">
+          ${I18n?.t?.('ob.back') || 'Annuler'}
+        </button>
+      </div>`;
 
-    menu.querySelector('.dm-conv-menu-delete').addEventListener('click', async () => {
-      menu.remove();
-      if (!confirm(I18n?.t?.('dm.confirm_delete') || 'Supprimer cette conversation ?')) return;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('dm-action-sheet-visible'));
+
+    const close = () => {
+      overlay.classList.remove('dm-action-sheet-visible');
+      setTimeout(() => overlay.remove(), 250);
+    };
+
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    overlay.querySelector('.dm-action-sheet-cancel').addEventListener('click', close);
+    overlay.querySelector('.dm-action-sheet-delete').addEventListener('click', async () => {
+      close();
       await deleteConversation(convId);
     });
-
-    const close = e => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', close, true); } };
-    setTimeout(() => document.addEventListener('click', close, true), 10);
   }
 
   function renderConversationsList() {
@@ -479,7 +488,8 @@ window.DM = (() => {
     list.querySelectorAll('.dm-convo-more-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        showConvMenu(btn, btn.dataset.cid);
+        const conv = conversations.find(c => c.id === btn.dataset.cid);
+        showConvActionSheet(btn.dataset.cid, conv?.other?.username || '?');
       });
     });
   }
