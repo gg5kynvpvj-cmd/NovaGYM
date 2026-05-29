@@ -175,9 +175,10 @@
     StatusBar?.setStyle?.({ style: 'DARK' });
     StatusBar?.setBackgroundColor?.({ color: '#000000' });
     StatusBar?.setOverlaysWebView?.({ overlay: true });
-    /* Empêche le scroll natif quand le clavier s'ouvre */
-    Keyboard?.setResizeMode?.({ mode: 'body' });
-    Keyboard?.setScroll?.({ isDisabled: true });
+    /* Redimensionne la WebView quand le clavier s'ouvre
+       → la barre de saisie monte, le header reste en haut */
+    Keyboard?.setResizeMode?.({ mode: 'native' });
+    Keyboard?.setAccessoryBarVisible?.({ isVisible: false });
   }
 
   /* ─── Lancement ──────────────────────────────────────── */
