@@ -891,6 +891,10 @@ window.Today = (() => {
     App.local.set('sessions', sessions);
     App.state.sessions = sessions;
 
+    // Sauvegarde cloud IMMÉDIATE (ne pas attendre le debounce de 2s :
+    // sur iOS l'app peut être fermée avant, la séance serait perdue)
+    if (window.Sync) { try { await window.Sync.saveToSupabase(); } catch {} }
+
     // Compte les exercices dont toutes les séries sont validées
     const completedCount = currentExercises.filter(ex => {
       const sets  = ex.sets_config || [];
