@@ -4493,6 +4493,7 @@ input.set-reps-input, input.set-weight-input { -moz-appearance: textfield; }
 /* ─── Page DM ────────────────────────────────────────────── */
 #page-dm {
   background: var(--bg);
+  height: 100dvh;
   overflow: hidden;
 }
 
