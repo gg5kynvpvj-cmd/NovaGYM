@@ -4542,37 +4542,44 @@ img.dm-header-av {
 }
 
 /* ─── Liste conversations (onglet social) ────────────────── */
-.dm-convo-swipe-wrap {
-  position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border);
-}
-.dm-convo-swipe-wrap:last-child { border-bottom: none; }
-
-.dm-convo-delete-btn {
-  position: absolute; right: 0; top: 0; bottom: 0;
-  width: 72px; background: #FF3B30;
-  border: none; cursor: pointer; color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.dm-convo-delete-btn:active { background: #CC2A22; }
-
-.dm-convo-swipe-inner {
-  position: relative;
-  background: var(--bg);
-  will-change: transform;
-}
-
 .dm-convo-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: opacity 0.15s;
 }
+.dm-convo-item:last-child { border-bottom: none; }
 .dm-convo-item:active { opacity: 0.7; }
+
+.dm-convo-more-btn {
+  background: none; border: none; color: var(--text-2);
+  font-size: 18px; cursor: pointer; padding: 4px 2px;
+  line-height: 1; flex-shrink: 0;
+}
+.dm-convo-more-btn:active { opacity: 0.5; }
+
+/* Menu contextuel conversation */
+.dm-conv-menu {
+  position: fixed; z-index: 9999;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  min-width: 210px;
+}
+.dm-conv-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 14px 16px;
+  background: none; border: none; cursor: pointer;
+  font-size: 15px; text-align: left;
+  color: var(--text); transition: background 0.1s;
+}
+.dm-conv-menu-item:active { background: var(--border); }
+.dm-conv-menu-delete { color: #FF3B30; }
 
 .dm-convo-av {
   width: 44px;

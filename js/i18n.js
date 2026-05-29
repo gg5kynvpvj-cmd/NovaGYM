@@ -438,6 +438,7 @@ window.I18n = (() => {
       // Offline
       'offline.social': 'Connexion internet requise pour le social',
       'dm.confirm_delete': 'Supprimer cette conversation ?',
+      'dm.delete_conv': 'Supprimer la conversation',
       // Splash
       'splash.tagline': 'Forge ton corps',
       // Settings extras
@@ -1024,6 +1025,7 @@ window.I18n = (() => {
       // Offline
       'offline.social': 'Internet connection required for social features',
       'dm.confirm_delete': 'Delete this conversation?',
+      'dm.delete_conv': 'Delete conversation',
       // Splash
       'splash.tagline': 'Forge your body',
       // Settings extras
