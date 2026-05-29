@@ -106,22 +106,22 @@ window.Today = (() => {
   }
 
   /* ─── Lecture des pas depuis Apple Santé ─────────────── */
-  async function syncStepsFromHealth() {
-    if (!window.Capacitor?.isNativePlatform?.()) return;
-    const { Health } = window.Capacitor.Plugins;
-    if (!Health) return;
+  /* Callback appelé par le code natif (AppDelegate.swift) */
+  window.__onHealthSteps = function(steps) {
+    if (typeof steps !== 'number' || steps <= 0) return;
+    const data = getDailyData();
+    if (steps !== data.steps) {
+      data.steps = steps;
+      saveDailyData(data);
+      renderDailyCard();
+    }
+  };
+
+  function syncStepsFromHealth() {
+    /* Demande les pas au code natif via le message handler WebKit */
     try {
-      const { granted } = await Health.requestPermission();
-      if (!granted) return;
-      const { steps } = await Health.getTodaySteps();
-      if (typeof steps !== 'number' || steps <= 0) return;
-      const data = getDailyData();
-      if (steps !== data.steps) {
-        data.steps = steps;
-        saveDailyData(data);
-        renderDailyCard();
-      }
-    } catch { /* HealthKit indisponible, on garde la saisie manuelle */ }
+      window.webkit?.messageHandlers?.health?.postMessage('getSteps');
+    } catch { /* pas sur iOS natif, saisie manuelle conservée */ }
   }
 
   /* ─── Carte quotidienne (pas + défis personnels) ────── */
